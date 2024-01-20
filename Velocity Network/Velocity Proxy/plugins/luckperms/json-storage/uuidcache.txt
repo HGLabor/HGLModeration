@@ -1,0 +1,2 @@
+# LuckPerms UUID lookup cache
+564ed59b-c9f9-41a0-a088-6f56ec1697d7:togarAragot
