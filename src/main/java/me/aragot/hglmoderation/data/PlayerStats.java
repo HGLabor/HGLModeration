@@ -21,4 +21,36 @@ public class PlayerStats {
         this.punishmentScore = punishmentScore;
         this.playerId = playerId;
     }
+
+    public static PlayerStats getPlayerStats(Player player){
+        for(PlayerStats stats : statList)
+            if(stats.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return stats;
+        PlayerStats stats = new PlayerStats(player);
+        statList.add(stats);
+        return stats;
+    }
+
+    public int getPunishmentScore() {
+        return punishmentScore;
+    }
+
+    public void setPunishmentScore(int punishmentScore) {
+        this.punishmentScore = punishmentScore;
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
+    }
+
+    public int getReportScore() {
+        return reportScore;
+    }
+
+    public void setReportScore(int reportScore) {
+        this.reportScore = reportScore;
+    }
 }

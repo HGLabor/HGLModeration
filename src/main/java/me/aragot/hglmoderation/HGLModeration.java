@@ -6,12 +6,14 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.commands.DiscordBotCommand;
 import me.aragot.hglmoderation.commands.ReportCommand;
+import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.slf4j.Logger;
 
 @Plugin(
@@ -34,7 +36,16 @@ public class HGLModeration {
     public void onProxyInitialization(ProxyInitializeEvent event) {
         registerEventListeners();
         registerCommands();
+        Config.loadConfig();
+
+        HGLBot.init(this.logger);
     }
+
+   @Subscribe
+   public void onProxyShutdown(ProxyShutdownEvent event){
+        Config.saveConfig();
+        this.logger.info("Config saved! Bye bye!");
+   }
 
     private void registerEventListeners(){
         this.server.getEventManager().register(this, new PlayerListener());
@@ -51,8 +62,16 @@ public class HGLModeration {
 
         BrigadierCommand reportCommand = ReportCommand.createBrigadierCommand(this.server);
 
+        CommandMeta dcBotMeta = manager.metaBuilder("dcbot")
+                .aliases("dc")
+                .plugin(this)
+                .build();
+
+        BrigadierCommand dcBotCommand = DiscordBotCommand.createBrigadierCommand(this.server, this.logger);
 
         //Actual register
         manager.register(reportMeta, reportCommand);
+        manager.register(dcBotMeta, dcBotCommand);
     }
+
 }
