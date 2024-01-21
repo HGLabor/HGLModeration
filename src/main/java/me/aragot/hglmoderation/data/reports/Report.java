@@ -15,7 +15,7 @@ public class Report {
     private ReportState state;
     private Priority priority;
 
-    private String
+    private String reviewedBy;
 
     private static ArrayList<Report> reportLog = new ArrayList<>();
 
@@ -56,5 +56,13 @@ public class Report {
         if(stats.getReportScore() < 0) return Priority.LOW;
         if(stats.getReportScore() > 5) return Priority.HIGH;
         return Priority.MEDIUM;
+    }
+
+    public void setReviewer(String reviewerName){
+        this.reviewedBy = reviewerName;
+    }
+
+    public String getReviewedBy(){
+        return this.reviewedBy;
     }
 }
