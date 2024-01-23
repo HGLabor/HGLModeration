@@ -14,6 +14,7 @@ public class Config {
     private String dbConnectionString = "";
     private String discordBotToken = "";
     private String reportChannelId = "";
+    private String reportPingroleId = "";
 
     public static Config instance;
 
@@ -77,5 +78,23 @@ public class Config {
 
     public String getDbConnectionString() {
         return dbConnectionString;
+    }
+
+    public String getReportChannelId() {
+        return reportChannelId;
+    }
+
+    public void setReportChannelId(String reportChannelId) {
+        this.reportChannelId = reportChannelId;
+        saveConfig();
+    }
+
+    public String getReportPingroleId() {
+        return reportPingroleId;
+    }
+
+    public void setReportPingroleId(String reportPingroleId) {
+        this.reportPingroleId = reportPingroleId;
+        saveConfig();
     }
 }

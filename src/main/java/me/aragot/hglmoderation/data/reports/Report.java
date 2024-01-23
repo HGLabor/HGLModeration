@@ -2,7 +2,9 @@ package me.aragot.hglmoderation.data.reports;
 
 import com.velocitypowered.api.proxy.Player;
 import me.aragot.hglmoderation.data.PlayerStats;
+import me.aragot.hglmoderation.events.PlayerListener;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class Report {
@@ -17,6 +19,8 @@ public class Report {
 
     private String reviewedBy;
 
+    private ArrayList<String> reportedUserMessages;
+
     private static ArrayList<Report> reportLog = new ArrayList<>();
 
     public Report(long reportId, String reportedUUID, String reporterUUID,  long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
@@ -25,6 +29,7 @@ public class Report {
         this.reporterUUID = reporterUUID;
         this.submittedAt = submittedAt;
         this.reasoning = reasoning;
+        if(reasoning == Reasoning.INSULTING) this.reportedUserMessages = PlayerListener.userMessages.get(reportedUUID);
         this.priority = priority;
         this.state = state;
     }
@@ -38,7 +43,7 @@ public class Report {
                 getNextReportId(),
                 reportedUUID,
                 reporterUUID,
-                System.currentTimeMillis(),
+                Instant.now().getEpochSecond(),
                 reasoning,
                 priority,
                 ReportState.OPEN);
@@ -64,5 +69,36 @@ public class Report {
 
     public String getReviewedBy(){
         return this.reviewedBy;
+    }
+    public long getReportId() {
+        return reportId;
+    }
+
+    public String getReportedUUID() {
+        return reportedUUID;
+    }
+
+    public String getReporterUUID() {
+        return reporterUUID;
+    }
+
+    public long getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public Reasoning getReasoning() {
+        return reasoning;
+    }
+
+    public ReportState getState() {
+        return state;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public ArrayList<String> getReportedUserMessages() {
+        return reportedUserMessages;
     }
 }
