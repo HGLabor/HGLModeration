@@ -12,6 +12,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.commands.DiscordBotCommand;
 import me.aragot.hglmoderation.commands.ReportCommand;
+import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 import org.slf4j.Logger;
@@ -26,6 +28,7 @@ public class HGLModeration {
 
     private final Logger logger;
     private final ProxyServer server;
+
     @Inject
     public HGLModeration(ProxyServer server, Logger logger){
         this.server = server;
@@ -38,13 +41,18 @@ public class HGLModeration {
         registerCommands();
         Config.loadConfig();
 
-        HGLBot.init(this.logger);
+        HGLBot.init(this.server, this.logger);
+        ModerationDB.loadData();
+
     }
 
    @Subscribe
    public void onProxyShutdown(ProxyShutdownEvent event){
         Config.saveConfig();
-        this.logger.info("Config saved! Bye bye!");
+        if(Report.synchronizeDB())
+            this.logger.info("Config saved and Data uploaded. Bye bye!");
+        else
+            this.logger.info("Unable to push data to DB.");
    }
 
     private void registerEventListeners(){
@@ -54,20 +62,19 @@ public class HGLModeration {
     private void registerCommands(){
         CommandManager manager = this.server.getCommandManager();
 
-        //Create CommandMetas here
+        BrigadierCommand reportCommand = ReportCommand.createBrigadierCommand(this.server);
         CommandMeta reportMeta = manager.metaBuilder("report")
                 .aliases("rep")
                 .plugin(this)
                 .build();
 
-        BrigadierCommand reportCommand = ReportCommand.createBrigadierCommand(this.server);
 
+        BrigadierCommand dcBotCommand = DiscordBotCommand.createBrigadierCommand(this.server, this.logger);
         CommandMeta dcBotMeta = manager.metaBuilder("dcbot")
                 .aliases("dc")
                 .plugin(this)
                 .build();
 
-        BrigadierCommand dcBotCommand = DiscordBotCommand.createBrigadierCommand(this.server, this.logger);
 
         //Actual register
         manager.register(reportMeta, reportCommand);
