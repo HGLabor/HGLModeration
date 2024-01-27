@@ -5,28 +5,29 @@ import com.velocitypowered.api.proxy.Player;
 
 import java.util.ArrayList;
 
-public class PlayerStats {
-    private int reportScore; //Score of successful reports, needed to get Priority of a Player
+public class PlayerData {
+    private int reportScore; //Score of successful reports, needed to get Report Priority of a Player
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
     private String playerId;
+    private String discordId;
 
-    public static ArrayList<PlayerStats> statList = new ArrayList<>();
-    public PlayerStats(Player player){
+    public static ArrayList<PlayerData> dataList = new ArrayList<>();
+    public PlayerData(Player player){
         this.playerId = player.getUniqueId().toString();
     }
 
-    public PlayerStats(int reportScore, int punishmentScore, String playerId){
+    public PlayerData(int reportScore, int punishmentScore, String playerId){
         this.reportScore = reportScore;
         this.punishmentScore = punishmentScore;
         this.playerId = playerId;
     }
 
-    public static PlayerStats getPlayerStats(Player player){
-        for(PlayerStats stats : statList)
+    public static PlayerData getPlayerData(Player player){
+        for(PlayerData stats : dataList)
             if(stats.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return stats;
-        PlayerStats stats = new PlayerStats(player);
-        statList.add(stats);
+        PlayerData stats = new PlayerData(player);
+        dataList.add(stats);
         return stats;
     }
 
@@ -52,5 +53,13 @@ public class PlayerStats {
 
     public void setReportScore(int reportScore) {
         this.reportScore = reportScore;
+    }
+
+    public String getDiscordId(){
+        return this.discordId;
+    }
+
+    public void setDiscordId(){
+        this.discordId = discordId;
     }
 }
