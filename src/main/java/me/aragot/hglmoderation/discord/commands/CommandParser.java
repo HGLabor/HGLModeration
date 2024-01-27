@@ -12,7 +12,7 @@ public class CommandParser extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
         CommandExecutor executor = new CommandExecutor(event);
 
-        switch(event.getFullCommandName()){
+        switch(event.getFullCommandName().split(" ")[0]){
             case "logs":
                 executor.onLogs();
                 break;
