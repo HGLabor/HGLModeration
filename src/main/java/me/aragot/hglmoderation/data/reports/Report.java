@@ -1,7 +1,10 @@
 package me.aragot.hglmoderation.data.reports;
 
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.data.PlayerStats;
+import me.aragot.hglmoderation.data.PlayerData;
+import me.aragot.hglmoderation.data.Reasoning;
+import me.aragot.hglmoderation.database.ModerationDB;
+import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 
 import java.time.Instant;
@@ -17,11 +20,12 @@ public class Report {
     private ReportState state;
     private Priority priority;
 
-    private String reviewedBy;
+    private String reviewedBy; //Minecraft Player UUID
+    private long punishmentId;
 
     private ArrayList<String> reportedUserMessages;
 
-    private static ArrayList<Report> reportLog = new ArrayList<>();
+    public static ArrayList<Report> reportLog = new ArrayList<>();
 
     public Report(long reportId, String reportedUUID, String reporterUUID,  long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
         this.reportId = reportId;
@@ -29,16 +33,35 @@ public class Report {
         this.reporterUUID = reporterUUID;
         this.submittedAt = submittedAt;
         this.reasoning = reasoning;
-        if(reasoning == Reasoning.INSULTING) this.reportedUserMessages = PlayerListener.userMessages.get(reportedUUID);
+        if(Reasoning.getChatReasons().contains(reasoning)) this.reportedUserMessages = PlayerListener.userMessages.get(reportedUUID);
         this.priority = priority;
         this.state = state;
     }
 
 
+    public static boolean synchronizeDB(){
+        ArrayList<Report> prevReports = ModerationDB.getAllReports();
+        ArrayList<Report> missingReports = new ArrayList<>();
+
+        //Remove all Reports that are in the database from the reports that have to be pushed to the database
+        for(Report report : reportLog){
+
+            boolean found = false;
+
+            for(Report prevReport : prevReports){
+                if(report.getReportId() == prevReport.getReportId()){
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found) missingReports.add(report);
+        }
+
+        return ModerationDB.pushReports(missingReports);
+    }
 
     public static void submitReport(String reportedUUID, String reporterUUID, Reasoning reasoning, Priority priority){
-        //Discord Webhook integration
-        //Database submission
         Report report = new Report(
                 getNextReportId(),
                 reportedUUID,
@@ -49,6 +72,10 @@ public class Report {
                 ReportState.OPEN);
 
         reportLog.add(report);
+
+        if(HGLBot.instance != null){
+            HGLBot.logReport(report);
+        }
     }
 
     public static long getNextReportId(){
@@ -56,7 +83,7 @@ public class Report {
     }
 
     public static Priority getPriorityForReporter(Player player){
-        PlayerStats stats = PlayerStats.getPlayerStats(player);
+        PlayerData stats = PlayerData.getPlayerData(player);
 
         if(stats.getReportScore() < 0) return Priority.LOW;
         if(stats.getReportScore() > 5) return Priority.HIGH;
@@ -99,6 +126,14 @@ public class Report {
     }
 
     public ArrayList<String> getReportedUserMessages() {
-        return reportedUserMessages;
+        return reportedUserMessages == null ? new ArrayList<>() : reportedUserMessages;
+    }
+
+    public void setPunishmentId(long punishmentId){
+        this.punishmentId = punishmentId;
+    }
+
+    public long getPunishmentId(){
+        return this.punishmentId;
     }
 }
