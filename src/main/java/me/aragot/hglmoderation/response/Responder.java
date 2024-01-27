@@ -13,8 +13,11 @@ public class Responder {
             case ERROR:
                 player.sendMessage(mm.deserialize(prefix + " <red>" + raw));
                 break;
-            default:
+            case DEFAULT:
                 player.sendMessage(mm.deserialize(prefix + " " + raw));
+                break;
+            default:
+                player.sendMessage(mm.deserialize(prefix + "<yellow> " + raw));
                 break;
         }
 
