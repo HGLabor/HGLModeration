@@ -1,10 +1,9 @@
 package me.aragot.hglmoderation.discord;
 
 import com.velocitypowered.api.proxy.ProxyServer;
-import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.reports.Priority;
-import me.aragot.hglmoderation.data.reports.Reasoning;
+import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
@@ -12,6 +11,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -19,14 +20,14 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.slf4j.Logger;
 
 import java.awt.*;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class HGLBot {
 
-    private static JDA instance;
-    private static ProxyServer server;
-    private static final String authorId = "974206098364071977";
+    public static JDA instance;
+    public static ProxyServer server;
+    public static final String authorId = "974206098364071977";
+    private static User author;
 
     public static void init(ProxyServer server, Logger logger){
         if(Config.instance.getDiscordBotToken().isEmpty()){
@@ -73,7 +74,7 @@ public class HGLBot {
                         )
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
         ).queue();
-
+        author = instance.retrieveUserById(authorId).complete();
         logger.info("Discord Bot has been initialized started!");
     }
 
@@ -92,7 +93,7 @@ public class HGLBot {
                 eb.setColor(Color.blue);
         }
 
-        eb.setFooter("Found a bug? Please contact my author: <@" + authorId + ">", instance.getUserById(authorId).getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         return eb;
     }
     public static EmbedBuilder getEmbedTemplate(ResponseType type, String description){
@@ -106,13 +107,26 @@ public class HGLBot {
             case SUCCESS:
                 eb.setTitle("Success!");
                 eb.setColor(Color.green);
+                break;
             case DEFAULT:
                 eb.setTitle("Hey, listen!");
                 eb.setColor(Color.blue);
+                break;
         }
 
-        eb.setFooter("Found a bug? Please contact my author: <@" + authorId + ">", instance.getUserById(authorId).getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         return eb;
+    }
+
+    public static void logReport(Report report){
+        if(Config.instance.getReportChannelId().isEmpty()) return;
+        TextChannel logChannel = instance.getTextChannelById(Config.instance.getReportChannelId());
+        if(Reasoning.getChatReasons().contains(report.getReasoning())){
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue();
+        } else {
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build()).queue();
+        }
+
     }
 
     public static EmbedBuilder getReportEmbed(Report report, boolean incoming){
@@ -124,17 +138,45 @@ public class HGLBot {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle(title);
         eb.setColor(color);
-        eb.setFooter("Found a bug? Please contact my author: <@" + authorId + ">", instance.getUserById(authorId).getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
 
-        String description = "Reported Name: " + server.getPlayer(UUID.fromString(report.getReportedUUID())) + "\n" +
-                "Reported by: " + server.getPlayer(UUID.fromString(report.getReporterUUID())) + "\n" +
+        String description = "Reported Name: " + server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername() + "\n" +
+                "Reported by: " + server.getPlayer(UUID.fromString(report.getReporterUUID())).get().getUsername() + "\n" +
                 "Reasoning: " + report.getReasoning().name() + "\n" +
-                "Report ID" + report.getReportId() + "\n" +
+                "Report ID: " + report.getReportId() + "\n" +
                 "Priority: " + report.getPriority() + "\n" +
                 "Submitted at: <t:" + report.getSubmittedAt() + ":f>\n" +
                 "State: " + report.getState().name();
+        eb.setThumbnail("https://mc-heads.net/avatar/" + report.getReportedUUID());
+        eb.setDescription(description);
+        return eb;
+    }
+
+    public static EmbedBuilder getReportMessagesEmbed(Report report){
+        String title = "Message Log";
+        Color color = Color.green;
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle(title);
+        eb.setColor(Color.blue);
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+
+        String description = "```";
+        String username = server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername();
+
+        if(report.getReportedUserMessages().isEmpty()){
+            eb.setDescription("No messages sent");
+            return eb;
+        }
+
+        for(String message : report.getReportedUserMessages()){
+            description += username + ": " + message + "\n";
+        }
+
+        description += "```";
 
         eb.setDescription(description);
         return eb;
+
     }
 }
