@@ -1,2 +1,0 @@
-{"timestamp":1705779515,"source":{"uniqueId":"00000000-0000-0000-0000-000000000000","name":"Console@proxy"},"target":{"type":"GROUP","name":"default"},"description":"permission set hglmoderation.report true"}
-{"timestamp":1705843483,"source":{"uniqueId":"00000000-0000-0000-0000-000000000000","name":"Console@proxy"},"target":{"type":"GROUP","name":"default"},"description":"permission set hglmoderation.config true"}
