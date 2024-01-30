@@ -4,6 +4,7 @@ package me.aragot.hglmoderation.data;
 import com.velocitypowered.api.proxy.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PlayerData {
     private int reportScore; //Score of successful reports, needed to get Report Priority of a Player
@@ -11,8 +12,12 @@ public class PlayerData {
 
     private String playerId;
     private String discordId;
+    private ArrayList<Notification> notifications;
+    private ArrayList<String> punishments = new ArrayList<>();
 
     public static ArrayList<PlayerData> dataList = new ArrayList<>();
+    public static HashMap<Notification, ArrayList<String>> notificationGroups = new HashMap<>();
+
     public PlayerData(Player player){
         this.playerId = player.getUniqueId().toString();
     }
@@ -24,11 +29,12 @@ public class PlayerData {
     }
 
     public static PlayerData getPlayerData(Player player){
-        for(PlayerData stats : dataList)
-            if(stats.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return stats;
-        PlayerData stats = new PlayerData(player);
-        dataList.add(stats);
-        return stats;
+        for(PlayerData data : dataList)
+            if(data.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return data;
+
+        PlayerData data = new PlayerData(player);
+        dataList.add(data);
+        return data;
     }
 
     public int getPunishmentScore() {
@@ -40,7 +46,7 @@ public class PlayerData {
     }
 
     public String getPlayerId() {
-        return playerId;
+        return this.playerId;
     }
 
     public void setPlayerId(String playerId) {
@@ -59,7 +65,36 @@ public class PlayerData {
         return this.discordId;
     }
 
-    public void setDiscordId(){
+    public void setDiscordId(String discordId){
         this.discordId = discordId;
+    }
+
+    public void addNotification(Notification notif){
+        if(this.notifications == null) this.notifications = new ArrayList<>();
+        if(!this.notifications.contains(notif)) this.notifications.add(notif);
+        if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
+
+        notificationGroups.get(notif).add(this.playerId);
+    }
+
+    public void removeNotification(Notification notif){
+        if(this.notifications == null) return;
+        if(this.notifications.contains(notif)) this.notifications.remove(notif);
+        if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
+
+        notificationGroups.get(notif).remove(this.playerId);
+    }
+
+    public ArrayList<String> getPunishments(){
+        return this.punishments;
+    }
+
+    public void addPunishment(String id){
+        this.punishments.add(id);
+    }
+
+    public ArrayList<Notification> getNotifications(){
+        if(this.notifications == null) this.notifications = new ArrayList<>();
+        return this.notifications;
     }
 }

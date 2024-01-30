@@ -72,7 +72,12 @@ public class HGLBot {
                                 reportGet,
                                 reportDecline
                         )
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
+                Commands.slash("link", "Link your Minecraft profile with your discord account")
+                        .addSubcommands(
+                                new SubcommandData("reset", "Resets your current minecraft Link"),
+                                new SubcommandData("generate", "Generates a new key to Link your account with")
+                        )
         ).queue();
         author = instance.retrieveUserById(authorId).complete();
         logger.info("Discord Bot has been initialized started!");
@@ -130,7 +135,7 @@ public class HGLBot {
     }
 
     public static EmbedBuilder getReportEmbed(Report report, boolean incoming){
-        String title = incoming ? "New Report coming in" : "Report Information";
+        String title = incoming ? "Incoming Report" : "Report Information";
         Color color = Color.green;
 
         if(report.getPriority() == Priority.MEDIUM) color = Color.yellow;
@@ -154,14 +159,13 @@ public class HGLBot {
 
     public static EmbedBuilder getReportMessagesEmbed(Report report){
         String title = "Message Log";
-        Color color = Color.green;
 
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle(title);
         eb.setColor(Color.blue);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
 
-        String description = "```";
+        StringBuilder description = new StringBuilder("```");
         String username = server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername();
 
         if(report.getReportedUserMessages().isEmpty()){
@@ -170,12 +174,12 @@ public class HGLBot {
         }
 
         for(String message : report.getReportedUserMessages()){
-            description += username + ": " + message + "\n";
+            description.append(username).append(": ").append(message).append("\n");
         }
 
-        description += "```";
+        description.append("```");
 
-        eb.setDescription(description);
+        eb.setDescription(description.toString());
         return eb;
 
     }

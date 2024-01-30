@@ -11,6 +11,8 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.commands.DiscordBotCommand;
+import me.aragot.hglmoderation.commands.LinkCommand;
+import me.aragot.hglmoderation.commands.NotificationCommand;
 import me.aragot.hglmoderation.commands.ReportCommand;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.database.ModerationDB;
@@ -29,10 +31,13 @@ public class HGLModeration {
     private final Logger logger;
     private final ProxyServer server;
 
+    public static HGLModeration instance;
+
     @Inject
     public HGLModeration(ProxyServer server, Logger logger){
         this.server = server;
         this.logger = logger;
+        instance = this;
     }
 
     @Subscribe
@@ -42,7 +47,8 @@ public class HGLModeration {
         Config.loadConfig();
 
         HGLBot.init(this.server, this.logger);
-        ModerationDB.loadData();
+        ModerationDB database = new ModerationDB(Config.instance.getDbConnectionString());
+        database.loadData();
 
     }
 
@@ -75,10 +81,28 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
+        BrigadierCommand notifCommand = NotificationCommand.createBrigadierCommand();
+        CommandMeta notifMeta = manager.metaBuilder("notification")
+                .aliases("notif")
+                .plugin(this)
+                .build();
+
+        BrigadierCommand linkCommand = LinkCommand.createBrigadierCommand();
+        CommandMeta linkMeta = manager.metaBuilder("link")
+                .plugin(this)
+                .build();
+
 
         //Actual register
         manager.register(reportMeta, reportCommand);
         manager.register(dcBotMeta, dcBotCommand);
+        manager.register(notifMeta, notifCommand);
+        manager.register(linkMeta, linkCommand);
+    }
+
+
+    public Logger getLogger(){
+        return this.logger;
     }
 
 }

@@ -19,6 +19,9 @@ public class CommandParser extends ListenerAdapter {
             case "report":
                 executor.onReport();
                 break;
+            case "link":
+                executor.onLink();
+                break;
             default:
                 EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.ERROR);
                 eb.setDescription("How did you get here? Read the footer! This is definitely a bug!");
