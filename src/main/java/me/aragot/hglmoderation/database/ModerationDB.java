@@ -1,32 +1,37 @@
 package me.aragot.hglmoderation.database;
 
 import com.google.gson.Gson;
+import com.mongodb.MongoException;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.WriteModel;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.data.reports.ReportState;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ModerationDB {
 
     /*
         To Change:
             - Gson.fromJson(Document.toJson, Class.Class); -> Maybe change, not very efficient, could retrieve Data doing: Document.get(key);
+            - Recode needed, poorly used db so far.
      */
 
     private static final String dbPrefix = "hglmod_";
     private MongoClient mongoClient;
     private MongoDatabase mongoDB;
-    private MongoCollection reportCollection;
-    private MongoCollection punishmentCollection;
-    private MongoCollection playerDataCollection;
+    private MongoCollection<Document> reportCollection;
+    private MongoCollection<Document> punishmentCollection;
+    private MongoCollection<Document> playerDataCollection;
 
     public ModerationDB(String authURI){
         this.mongoClient = MongoClients.create(authURI);
@@ -35,6 +40,7 @@ public class ModerationDB {
 
         if(!collectionNames.contains(dbPrefix + "reports")) this.mongoDB.createCollection(dbPrefix + "reports");
         if(!collectionNames.contains(dbPrefix + "punishments")) this.mongoDB.createCollection(dbPrefix + "punishments");
+        if(!collectionNames.contains(dbPrefix + "playerdata")) this.mongoDB.createCollection(dbPrefix + "playerdata");
 
         this.reportCollection = this.mongoDB.getCollection(dbPrefix + "reports");
         this.punishmentCollection = this.mongoDB.getCollection(dbPrefix + "punishments");
@@ -59,25 +65,23 @@ public class ModerationDB {
         return reportList;
     }
 
-    public static ArrayList<Report> getAllReports(){
+    //<Date, Report> Because ObjectId is represented by the date
+    public ArrayList<Report> getAllReports(){
 
-        ModerationDB db = new ModerationDB(Config.instance.getDbConnectionString());
-
-        MongoCursor<Document> cursor = db.getReportCollection().find().iterator();
+        MongoCursor<Document> cursor = this.reportCollection.find().iterator();
 
         ArrayList<Report> reportList = new ArrayList<>();
+
         Gson gson = new Gson();
         while(cursor.hasNext()){
             Document document = cursor.next();
+
             reportList.add(gson.fromJson(document.toJson(), Report.class));
         }
-        db.closeConnection();
         return reportList;
     }
 
-    public static boolean pushReports(ArrayList<Report> reports){
-
-        ModerationDB db = new ModerationDB(Config.instance.getDbConnectionString());
+    public boolean pushReports(ArrayList<Report> reports){
 
         List<Document> reportList = new ArrayList<>();
 
@@ -86,38 +90,69 @@ public class ModerationDB {
             Gson gson = new Gson();
             for(Report report : reports)
                 reportList.add(Document.parse(gson.toJson(report)));
-            db.reportCollection.insertMany(reportList);
-            db.closeConnection();
+            this.reportCollection.insertMany(reportList);
             return true;
 
-        } catch (Exception x) {
-            db.closeConnection();
+        } catch (MongoException x) {
             return false;
         }
 
     }
 
-    private void closeConnection(){
+    public boolean updateReports(ArrayList<Report> reportList){
+        List<WriteModel<Document>> operations = new ArrayList<>();
+        for(Report report : reportList){
+            Document query = new Document("reportId", report.getReportId());
+            Document change = new Document("$set",
+                    new Document("state", report.getState())
+                    .append("punishmentId", report.getPunishmentId())
+            );
+            operations.add(new UpdateOneModel<>(query, change));
+        }
+
+        if(operations.isEmpty()) return true;
+
+        BulkWriteResult result = this.reportCollection.bulkWrite(operations);
+
+        return result.wasAcknowledged();
+    }
+
+
+    public boolean updatePlayerData(HashMap<Date, Report> reportMap){
+        List<WriteModel<Document>> operations = new ArrayList<>();
+        for(Map.Entry<Date, Report> reportEntry : reportMap.entrySet()){
+            Document query = new Document("_id", new ObjectId(reportEntry.getKey()));
+            Document change = new Document("$set", new Document("state", reportEntry.getValue().getState()));
+            operations.add(new UpdateOneModel<>(query, change));
+        }
+
+        if(operations.isEmpty()) return true;
+
+        BulkWriteResult result = this.reportCollection.bulkWrite(operations);
+
+        return result.wasAcknowledged();
+    }
+
+    public void closeConnection(){
         this.mongoClient.close();
     }
 
-    private MongoCollection getReportCollection(){
+    private MongoCollection<Document> getReportCollection(){
         return this.reportCollection;
     }
 
-    private MongoCollection getPunishmentCollection(){
+    private MongoCollection<Document> getPunishmentCollection(){
         return this.punishmentCollection;
     }
 
-    private MongoCollection getPlayerDataCollection(){
+    private MongoCollection<Document> getPlayerDataCollection(){
         return this.playerDataCollection;
     }
 
     //Load and initzializes all Data. Less connection -> less console spam -> more efficient connections
-    public static void loadData(){
-        ModerationDB db = new ModerationDB(Config.instance.getDbConnectionString());
+    public void loadData(){
 
-        MongoCursor<Document> cursor = db.getReportCollection().find().iterator();
+        MongoCursor<Document> cursor = this.reportCollection.find().iterator();
 
         ArrayList<Report> reportList = new ArrayList<>();
         Gson gson = new Gson();
@@ -128,7 +163,7 @@ public class ModerationDB {
         Report.reportLog = reportList;
 
 
-        cursor = db.getPlayerDataCollection().find().iterator();
+        cursor = this.playerDataCollection.find().iterator();
 
         ArrayList<PlayerData> dataList = new ArrayList<>();
         while(cursor.hasNext()){
@@ -138,7 +173,7 @@ public class ModerationDB {
         PlayerData.dataList = dataList;
 
 
-        cursor = db.getPunishmentCollection().find().iterator();
+        cursor = this.punishmentCollection.find().iterator();
 
         ArrayList<Punishment> punishments = new ArrayList<>();
         while(cursor.hasNext()){
@@ -146,8 +181,6 @@ public class ModerationDB {
             punishments.add(gson.fromJson(document.toJson(), Punishment.class));
         }
         Punishment.punishments = punishments;
-
-        db.closeConnection();
 
     }
 
