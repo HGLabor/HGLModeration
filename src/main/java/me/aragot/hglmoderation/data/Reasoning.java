@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 public enum Reasoning {
     HACKING,
-    INAPPROPRIATE_NAME,
     INSULTING,
     TEAMING;
 

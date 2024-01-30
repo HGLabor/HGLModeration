@@ -47,8 +47,9 @@ public class ReportCommand {
                             if(!isValidPlayer(server, reporter, reported))
                                 return Command.SINGLE_SUCCESS;
 
-                            if(server.getPlayer(reported).get().equals(reporter)){
+                            if(server.getPlayer(reported).get().getUniqueId().equals(reporter.getUniqueId())){
                                 Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
+                                return Command.SINGLE_SUCCESS;
                             }
 
                             reportSuggestion(reporter, reported);
@@ -75,6 +76,7 @@ public class ReportCommand {
 
                                 if(reportedPlayer.equals(reporter)){
                                     Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
                                 }
 
                                 String reasoning = context.getArgument("reasoning", String.class);

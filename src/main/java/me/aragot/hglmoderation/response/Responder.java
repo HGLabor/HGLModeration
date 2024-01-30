@@ -11,7 +11,7 @@ public class Responder {
 
         switch(type){
             case ERROR:
-                player.sendMessage(mm.deserialize(prefix + " <red>" + raw));
+                player.sendMessage(mm.deserialize(prefix + "<red> " + raw));
                 break;
             case DEFAULT:
                 player.sendMessage(mm.deserialize(prefix + " " + raw));

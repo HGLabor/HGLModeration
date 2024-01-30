@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 public class DiscordBotCommand {
 
     public static BrigadierCommand createBrigadierCommand(ProxyServer server, Logger logger){
-        LiteralCommandNode<CommandSource> reportNode = BrigadierCommand.literalArgumentBuilder("dcbot")
+        LiteralCommandNode<CommandSource> dcBotNode = BrigadierCommand.literalArgumentBuilder("dcbot")
                 .requires(source -> source.hasPermission("hglmoderation.dcbot"))
                 //execute when /report
                 .executes(context -> {
@@ -50,6 +50,6 @@ public class DiscordBotCommand {
                         })
                 )
                 .build();
-        return new BrigadierCommand(reportNode);
+        return new BrigadierCommand(dcBotNode);
     }
 }
