@@ -58,6 +58,9 @@ public class PlayerListener {
         String uuid = event.getPlayer().getUniqueId().toString();
         for(Notification notif : data.getNotifications())
             PlayerData.notificationGroups.get(notif).remove(uuid);
+
+        HGLModeration.instance.getDatabase().updatePlayerData(data);
+        PlayerData.dataList.remove(data);
     }
 
 }

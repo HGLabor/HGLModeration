@@ -2,6 +2,7 @@ package me.aragot.hglmoderation.discord;
 
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Priority;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.reports.Report;
@@ -43,6 +44,7 @@ public class HGLBot {
 
 
         SubcommandData setChannel = new SubcommandData("set", "Set a log channel to receive updates");
+        setChannel.addOption(OptionType.STRING, "type", "Log channel type, use 'report' or 'punishment'", true);
         setChannel.addOption(OptionType.CHANNEL, "logchannel", "Log channel for reports and status updates", true);
 
         SubcommandData setPingRole = new SubcommandData("pingrole", "Sets a role to ping when receiving a new report.");
@@ -127,9 +129,13 @@ public class HGLBot {
         if(Config.instance.getReportChannelId().isEmpty()) return;
         TextChannel logChannel = instance.getTextChannelById(Config.instance.getReportChannelId());
         if(Reasoning.getChatReasons().contains(report.getReasoning())){
-            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue();
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue(message -> {
+                report.setDiscordLog(message.getId());
+            });
         } else {
-            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build()).queue();
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build()).queue(message -> {
+                report.setDiscordLog(message.getId());
+            });
         }
 
     }
@@ -182,5 +188,8 @@ public class HGLBot {
         eb.setDescription(description.toString());
         return eb;
 
+    }
+
+    public static void logPunishment(Report report, Punishment punishment){
     }
 }

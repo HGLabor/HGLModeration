@@ -1,15 +1,18 @@
 package me.aragot.hglmoderation.data.reports;
 
 import com.velocitypowered.api.proxy.Player;
+import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
+import me.aragot.hglmoderation.response.ResponseType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.time.Instant;
 import java.util.*;
+
 
 public class Report {
 
@@ -23,10 +26,9 @@ public class Report {
 
     private String reviewedBy; //Minecraft Player UUID
     private String punishmentId;
+    private String discordLog;
 
     private ArrayList<String> reportedUserMessages;
-
-    public static ArrayList<Report> reportLog = new ArrayList<>();
 
     public Report(String reportId, String reportedUUID, String reporterUUID,  long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
         this.reportId = reportId;
@@ -40,32 +42,6 @@ public class Report {
     }
 
 
-    public static boolean synchronizeDB(){
-        ModerationDB database = new ModerationDB(Config.instance.getDbConnectionString());
-        ArrayList<Report> prevReports = database.getAllReports();
-        ArrayList<Report> missingReports = new ArrayList<>();
-        ArrayList<Report> changedReports = new ArrayList<>();
-
-        //Remove all Reports that are in the database from the reports that have to be pushed to the database
-        for(Report report : reportLog){
-
-            boolean found = false;
-
-            for(Report prevReport : prevReports){
-                if(report.getReportId() == prevReport.getReportId()){
-                    found = true;
-                    if(report.getState() != prevReport.getState())
-                        changedReports.add(prevReport);
-                    break;
-                }
-            }
-
-            if(!found) missingReports.add(report);
-        }
-
-        return database.pushReports(missingReports) && database.updateReports(changedReports);
-    }
-
     public static void submitReport(String reportedUUID, String reporterUUID, Reasoning reasoning, Priority priority){
         Report report = new Report(
                 getNextReportId(),
@@ -76,10 +52,18 @@ public class Report {
                 priority,
                 ReportState.OPEN);
 
-        reportLog.add(report);
+        if(HGLBot.instance == null) return;
 
-        if(HGLBot.instance != null){
-            HGLBot.logReport(report);
+        HGLBot.logReport(report);
+
+        if(!HGLModeration.instance.getDatabase().pushReport(report)){
+            TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getReportChannelId());
+
+            if(channel == null) return;
+            channel.sendMessageEmbeds(
+                    HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push report to Database (ID:" + report.getReportId() + ")").build()
+            ).queue();
+
         }
     }
 
@@ -95,7 +79,7 @@ public class Report {
             for(int i = 0; i < 8; i++)
                 id += table[rand.nextInt(16)];
 
-            if(getReportById(id) != null){
+            if(HGLModeration.instance.getDatabase().getReportById(id) != null){
                 id = "";
                 continue;
             }
@@ -112,13 +96,6 @@ public class Report {
         if(stats.getReportScore() < 0) return Priority.LOW;
         if(stats.getReportScore() > 5) return Priority.HIGH;
         return Priority.MEDIUM;
-    }
-
-    public static Report getReportById(String reportId){
-       for(Report report : reportLog)
-           if(reportId.equals(report.getReportId())) return report;
-
-       return null;
     }
 
     public void setReviewer(String reviewerName){
@@ -166,5 +143,13 @@ public class Report {
 
     public String getPunishmentId(){
         return this.punishmentId;
+    }
+
+    public String getDiscordLog(){
+        return this.discordLog;
+    }
+
+    public void setDiscordLog(String messageId){
+        this.discordLog = messageId;
     }
 }

@@ -30,16 +30,27 @@ public class CommandExecutor {
         switch(event.getSubcommandName()){ //Cannot be null
             case "set":
                 Channel ch = event.getOption("logchannel").getAsChannel(); //Cannot be null
+                String channelType = event.getOption("type").getAsString();
+
                 if(ch.getType() != ChannelType.TEXT)
                     event.replyEmbeds(
                        HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
                     ).queue();
 
-                Config.instance.setReportChannelId(ch.getId());
+                if(channelType.equalsIgnoreCase("report"))
+                    Config.instance.setReportChannelId(ch.getId());
+                else if(channelType.equalsIgnoreCase("punishment"))
+                    Config.instance.setPunishmentChannelId(ch.getId());
+                else {
+                    event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "The type " + channelType + " is not valid.").build()).queue();
+                    return;
+                }
+
                 event.replyEmbeds(
                         HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully set the log channel to: <#" + Config.instance.getReportChannelId() + ">").build()
                 ).queue();
                break;
+
             case "pingrole":
 
                 if(event.getOption("role") == null){

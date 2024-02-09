@@ -2,6 +2,7 @@ package me.aragot.hglmoderation.data;
 
 
 import com.velocitypowered.api.proxy.Player;
+import me.aragot.hglmoderation.HGLModeration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,17 +23,17 @@ public class PlayerData {
         this.playerId = player.getUniqueId().toString();
     }
 
-    public PlayerData(int reportScore, int punishmentScore, String playerId){
-        this.reportScore = reportScore;
-        this.punishmentScore = punishmentScore;
-        this.playerId = playerId;
-    }
-
     public static PlayerData getPlayerData(Player player){
         for(PlayerData data : dataList)
             if(data.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return data;
 
-        PlayerData data = new PlayerData(player);
+
+        PlayerData data = HGLModeration.instance.getDatabase().getPlayerDataById(player.getUniqueId().toString());
+        if(data == null){
+            data = new PlayerData(player);
+            HGLModeration.instance.getDatabase().pushPlayerData(data);
+        }
+
         dataList.add(data);
         return data;
     }

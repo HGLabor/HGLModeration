@@ -4,10 +4,8 @@ import com.google.gson.Gson;
 import com.mongodb.MongoException;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.*;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.model.*;
+import com.mongodb.client.result.UpdateResult;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
@@ -47,11 +45,10 @@ public class ModerationDB {
         this.playerDataCollection = this.mongoDB.getCollection(dbPrefix + "playerdata");
     }
 
-    public static ArrayList<Report> getReportsByState(ReportState state){
+    public ArrayList<Report> getReportsByState(ReportState state){
 
-        ModerationDB db = new ModerationDB(Config.instance.getDbConnectionString());
 
-        MongoCursor<Document> cursor =  db.getReportCollection().aggregate(
+        MongoCursor<Document> cursor =  this.reportCollection.aggregate(
                 List.of(Aggregates.match(Filters.eq("state", state.name())))
         ).iterator();
 
@@ -61,36 +58,21 @@ public class ModerationDB {
             Document document = cursor.next();
             reportList.add(gson.fromJson(document.toJson(), Report.class));
         }
-        db.closeConnection();
         return reportList;
     }
 
-    //<Date, Report> Because ObjectId is represented by the date
-    public ArrayList<Report> getAllReports(){
-
-        MongoCursor<Document> cursor = this.reportCollection.find().iterator();
-
-        ArrayList<Report> reportList = new ArrayList<>();
-
+    public Report getReportById(String reportId){
+        Document report = this.reportCollection.find(Filters.eq("reportId", reportId)).first();
+        if(report == null) return null;
         Gson gson = new Gson();
-        while(cursor.hasNext()){
-            Document document = cursor.next();
-
-            reportList.add(gson.fromJson(document.toJson(), Report.class));
-        }
-        return reportList;
+        return gson.fromJson(report.toJson(), Report.class);
     }
 
-    public boolean pushReports(ArrayList<Report> reports){
-
-        List<Document> reportList = new ArrayList<>();
+    public boolean pushReport(Report report){
 
         try {
-
             Gson gson = new Gson();
-            for(Report report : reports)
-                reportList.add(Document.parse(gson.toJson(report)));
-            this.reportCollection.insertMany(reportList);
+            this.reportCollection.insertOne(Document.parse(gson.toJson(report)));
             return true;
 
         } catch (MongoException x) {
@@ -99,89 +81,66 @@ public class ModerationDB {
 
     }
 
-    public boolean updateReports(ArrayList<Report> reportList){
-        List<WriteModel<Document>> operations = new ArrayList<>();
-        for(Report report : reportList){
-            Document query = new Document("reportId", report.getReportId());
-            Document change = new Document("$set",
-                    new Document("state", report.getState())
-                    .append("punishmentId", report.getPunishmentId())
-            );
-            operations.add(new UpdateOneModel<>(query, change));
-        }
+    public boolean updateReport(Report report){
 
-        if(operations.isEmpty()) return true;
+        UpdateResult res = this.reportCollection.updateOne(
+                Filters.eq("reportId", report.getReportId()),
+                Updates.set("state", report.getState())
+        );
 
-        BulkWriteResult result = this.reportCollection.bulkWrite(operations);
-
-        return result.wasAcknowledged();
-    }
-
-
-    public boolean updatePlayerData(HashMap<Date, Report> reportMap){
-        List<WriteModel<Document>> operations = new ArrayList<>();
-        for(Map.Entry<Date, Report> reportEntry : reportMap.entrySet()){
-            Document query = new Document("_id", new ObjectId(reportEntry.getKey()));
-            Document change = new Document("$set", new Document("state", reportEntry.getValue().getState()));
-            operations.add(new UpdateOneModel<>(query, change));
-        }
-
-        if(operations.isEmpty()) return true;
-
-        BulkWriteResult result = this.reportCollection.bulkWrite(operations);
-
-        return result.wasAcknowledged();
+        return res.wasAcknowledged();
     }
 
     public void closeConnection(){
         this.mongoClient.close();
     }
 
-    private MongoCollection<Document> getReportCollection(){
-        return this.reportCollection;
-    }
 
-    private MongoCollection<Document> getPunishmentCollection(){
-        return this.punishmentCollection;
-    }
-
-    private MongoCollection<Document> getPlayerDataCollection(){
-        return this.playerDataCollection;
-    }
-
-    //Load and initzializes all Data. Less connection -> less console spam -> more efficient connections
-    public void loadData(){
-
-        MongoCursor<Document> cursor = this.reportCollection.find().iterator();
-
-        ArrayList<Report> reportList = new ArrayList<>();
+    public Punishment getPunishmentById(String punishmentId){
+        Document punishment = this.punishmentCollection.find(Filters.eq("punishmentId", punishmentId)).first();
+        if(punishment == null) return null;
         Gson gson = new Gson();
-        while(cursor.hasNext()){
-            Document document = cursor.next();
-            reportList.add(gson.fromJson(document.toJson(), Report.class));
+        return gson.fromJson(punishment.toJson(), Punishment.class);
+    }
+
+    public PlayerData getPlayerDataById(String playerId){
+        Document playerData = this.playerDataCollection.find(Filters.eq("playerId", playerId)).first();
+        if(playerData == null) return null;
+        Gson gson = new Gson();
+        return gson.fromJson(playerData.toJson(), PlayerData.class);
+    }
+
+    public boolean pushPlayerData(PlayerData data){
+
+        try {
+            Gson gson = new Gson();
+            this.playerDataCollection.insertOne(Document.parse(gson.toJson(data)));
+            return true;
+
+        } catch (MongoException x) {
+            return false;
         }
-        Report.reportLog = reportList;
-
-
-        cursor = this.playerDataCollection.find().iterator();
-
-        ArrayList<PlayerData> dataList = new ArrayList<>();
-        while(cursor.hasNext()){
-            Document document = cursor.next();
-            dataList.add(gson.fromJson(document.toJson(), PlayerData.class));
-        }
-        PlayerData.dataList = dataList;
-
-
-        cursor = this.punishmentCollection.find().iterator();
-
-        ArrayList<Punishment> punishments = new ArrayList<>();
-        while(cursor.hasNext()){
-            Document document = cursor.next();
-            punishments.add(gson.fromJson(document.toJson(), Punishment.class));
-        }
-        Punishment.punishments = punishments;
 
     }
 
+    public boolean updatePlayerData(PlayerData data){
+        Gson gson = new Gson();
+        return this.playerDataCollection.replaceOne(
+                new Document("playerId", data.getPlayerId()),
+                Document.parse(gson.toJson(data)))
+                .wasAcknowledged();
+    }
+
+    public boolean pushPunishment(Punishment punishment){
+
+        try {
+            Gson gson = new Gson();
+            this.punishmentCollection.insertOne(Document.parse(gson.toJson(punishment)));
+            return true;
+
+        } catch (MongoException x) {
+            return false;
+        }
+
+    }
 }

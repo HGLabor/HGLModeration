@@ -30,8 +30,10 @@ public class HGLModeration {
 
     private final Logger logger;
     private final ProxyServer server;
+    private ModerationDB database;
 
     public static HGLModeration instance;
+
 
     @Inject
     public HGLModeration(ProxyServer server, Logger logger){
@@ -48,17 +50,14 @@ public class HGLModeration {
 
         HGLBot.init(this.server, this.logger);
         ModerationDB database = new ModerationDB(Config.instance.getDbConnectionString());
-        database.loadData();
+        this.database = database;
 
     }
 
    @Subscribe
-   public void onProxyShutdown(ProxyShutdownEvent event){
-        Config.saveConfig();
-        if(Report.synchronizeDB())
-            this.logger.info("Config saved and Data uploaded. Bye bye!");
-        else
-            this.logger.info("Unable to push data to DB.");
+   public void onProxyShutdown(ProxyShutdownEvent event) {
+       Config.saveConfig();
+       database.closeConnection();
    }
 
     private void registerEventListeners(){
@@ -103,6 +102,10 @@ public class HGLModeration {
 
     public Logger getLogger(){
         return this.logger;
+    }
+
+    public ModerationDB getDatabase(){
+        return this.database;
     }
 
 }

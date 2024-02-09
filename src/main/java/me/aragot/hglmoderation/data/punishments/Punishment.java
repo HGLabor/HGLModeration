@@ -1,6 +1,12 @@
 package me.aragot.hglmoderation.data.punishments;
 
+import me.aragot.hglmoderation.HGLModeration;
+import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.Reasoning;
+import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.discord.HGLBot;
+import me.aragot.hglmoderation.response.ResponseType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,15 +37,38 @@ public class Punishment {
         this.note = note;
     }
 
-    public static void submitPunishment(){
+    public static void submitPunishmentFromReport(Report report, PunishmentType type, long endsAt, String note){
+        Punishment punishment = new Punishment(
+                getNextPunishmentId(),
+                Instant.now().getEpochSecond(),
+                report.getReportedUUID(),
+                report.getReviewedBy(),
+                type,
+                endsAt,
+                report.getReasoning(),
+                note
+        );
+
+        if(HGLBot.instance == null) return;
+
+        if(!HGLModeration.instance.getDatabase().pushPunishment(punishment)){
+            TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+
+            if(channel == null) return;
+
+            channel.sendMessageEmbeds(
+                    HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push Punishment to Database (ID:" + punishment.getId() + ")").build()
+            ).queue();
+
+            return;
+        }
+
+        HGLBot.logPunishment(report, punishment);
 
     }
 
     public static Punishment getPunishmentById(String id){
-        for(Punishment punishment : punishments){
-            if(punishment.getId() == id) return punishment;
-        }
-        return null;
+        return HGLModeration.instance.getDatabase().getPunishmentById(id);
     }
 
     public static String getNextPunishmentId(){
@@ -102,5 +131,4 @@ public class Punishment {
     public String getId(){
         return this.punishmentId;
     }
-
 }

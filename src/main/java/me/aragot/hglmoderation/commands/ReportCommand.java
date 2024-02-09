@@ -73,11 +73,13 @@ public class ReportCommand {
                                 if(!isValidPlayer(server, reporter, reported))
                                     return Command.SINGLE_SUCCESS;
                                 Player reportedPlayer = server.getPlayer(reported).get();
-
+                                /*
                                 if(reportedPlayer.equals(reporter)){
                                     Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
                                     return Command.SINGLE_SUCCESS;
                                 }
+
+                                */
 
                                 String reasoning = context.getArgument("reasoning", String.class);
 
