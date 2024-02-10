@@ -49,8 +49,7 @@ public class HGLModeration {
         Config.loadConfig();
 
         HGLBot.init(this.server, this.logger);
-        ModerationDB database = new ModerationDB(Config.instance.getDbConnectionString());
-        this.database = database;
+        this.database =  new ModerationDB(Config.instance.getDbConnectionString());
 
     }
 
