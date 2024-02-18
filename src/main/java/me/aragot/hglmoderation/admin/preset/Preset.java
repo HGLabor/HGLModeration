@@ -12,9 +12,10 @@ public class Preset {
     private int start;
     private int end; // end == -1 -> Meaning no end;
 
-    public Preset(String presetName, String presetDescription, ArrayList<Reasoning> reasoningScope,  int start, int end){
+    public Preset(String presetName, String presetDescription, int start, int end){
         this.presetName = presetName;
-        this.reasoningScope = reasoningScope;
+        this.presetDescription = presetDescription;
+        this.reasoningScope = new ArrayList<>();
         this.start = start;
         this.end = end;
     }

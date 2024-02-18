@@ -3,6 +3,8 @@ package me.aragot.hglmoderation.response;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+
+//Used for Ingame Responses to the Player
 public class Responder {
 
     public static final String prefix = "<white>[<aqua>HGLModeration</aqua>]</white>";

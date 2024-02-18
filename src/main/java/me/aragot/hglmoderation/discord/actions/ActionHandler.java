@@ -7,6 +7,7 @@ import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -18,8 +19,11 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 
-//Modal Handling missing
+// Modal for Preset editing missing
+// Buttons for preset editing missing
+// Button for punishment selection and time missing
 public class ActionHandler extends ListenerAdapter {
 
     @Override
@@ -65,16 +69,10 @@ public class ActionHandler extends ListenerAdapter {
                         .build();
 
                 event.replyModal(modal).queue();
-
+                return;
             }
 
-            StringSelectMenu.Builder reasonScope = StringSelectMenu.create(preset.getPresetName().toLowerCase() + "-scopes");
-
-            for(Reasoning reason : preset.getReasoningScope()){
-                reasonScope.addOption(StringUtils.capitalize(reason.name().toLowerCase()),
-                        preset.getPresetName().toLowerCase() + "-" + StringUtils.capitalize(reason.name().toLowerCase()),
-                        Emoji.fromUnicode("\uD83E\uDEAC"));
-            }
+            StringSelectMenu.Builder reasonScope = getSelectMenuForPreset(preset);
 
             event.replyEmbeds(getPresetEmbed(preset).build()).addActionRow(reasonScope.build()).queue();
             return;
@@ -86,7 +84,17 @@ public class ActionHandler extends ListenerAdapter {
     public void onModalInteraction(ModalInteractionEvent event){
         switch(event.getModalId()){
             case "preset-create":
-                event.replyEmbeds(createPresetFromModal(event).build()).queue();
+                MessageEmbed eb = createPresetFromModal(event).build();
+                if(eb.getTitle().equalsIgnoreCase("Success!")){
+                    String presetName = event.getValue("preset-name").getAsString();
+                    event.getChannel().sendMessageEmbeds(eb).queue();
+                    Preset preset = PresetHandler.instance.getPresetByName(presetName);
+                    event.replyEmbeds(getPresetEmbed(preset).build())
+                            .addActionRow(getSelectMenuForPreset(preset).build())
+                            .queue();
+                } else {
+                    event.replyEmbeds(eb).queue();
+                }
                 break;
             default:
                 event.replyEmbeds(
@@ -99,9 +107,34 @@ public class ActionHandler extends ListenerAdapter {
     }
 
     public EmbedBuilder createPresetFromModal(ModalInteractionEvent event){
-        EmbedBuilder eb = new EmbedBuilder();
+        String presetName = event.getValue("preset-name").getAsString();
+        if(presetName.contains(" "))
+            return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your Preset Name cannot contain spaces!");
 
-        return eb;
+        if(PresetHandler.instance.containsPreset(presetName))
+            return HGLBot.getEmbedTemplate(ResponseType.ERROR, "There is already a preset named like that. Please choose a unique name.");
+
+        String presetDescription = event.getValue("preset-description").getAsString();
+        int start;
+        int end;
+
+
+        try {
+            start = Integer.parseInt(event.getValue("preset-start").getAsString());
+            end = Integer.parseInt(event.getValue("preset-end").getAsString());
+        } catch (NumberFormatException x) {
+            return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your Preset Start and End must be whole integers.");
+        }
+
+
+        if(start > end)
+            return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Preset Range start value cannot be greater than the end value.");
+
+        Preset preset = new Preset(presetName, presetDescription, start, end);
+        PresetHandler.instance.addPreset(preset);
+        PresetHandler.savePresets();
+
+        return HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully created new Preset.");
     }
 
 
@@ -115,6 +148,29 @@ public class ActionHandler extends ListenerAdapter {
                         "Starts at Punishment Score > " + preset.getStart() + "\n" +
                         "Ends at Punishment Score < " + endsAt);
         return eb;
+    }
+
+    public StringSelectMenu.Builder getSelectMenuForPreset(Preset preset){
+        StringSelectMenu.Builder reasonScope = StringSelectMenu.create(preset.getPresetName().toLowerCase() + "-scopes");
+
+        for(Reasoning reason : Reasoning.values()){
+            reasonScope.addOption(StringUtils.capitalize(reason.name().toLowerCase()),
+                    preset.getPresetName().toLowerCase() + "-" + reason.name().toLowerCase(),
+                    Emoji.fromUnicode("\uD83E\uDEAC"));
+        }
+
+        ArrayList<String> reasoningIds = new ArrayList<>();
+        for(Reasoning reason : preset.getReasoningScope())
+            reasoningIds.add(preset.getPresetName().toLowerCase() + "-" + reason.name().toLowerCase());
+
+        reasonScope.setDefaultValues(reasoningIds);
+        return reasonScope;
+    }
+
+    public ArrayList<ActionRow> getPresetActionRows(){
+        ArrayList<ActionRow> actionRows = new ArrayList<>();
+
+        return actionRows;
     }
 
 }

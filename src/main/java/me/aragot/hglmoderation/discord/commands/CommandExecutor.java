@@ -7,13 +7,11 @@ import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 
 import java.time.Instant;
@@ -28,7 +26,6 @@ public class CommandExecutor {
     }
 
     public void onReport(){
-
     }
 
     public void onPreset(){

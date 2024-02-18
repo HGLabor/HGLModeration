@@ -76,6 +76,18 @@ public class PresetHandler {
         return this.presetList;
     }
 
+    public void addPreset(Preset preset){
+        this.presetList.add(preset);
+    }
+
+    public boolean containsPreset(String presetName){
+        for(Preset preset : presetList){
+            if(preset.getPresetName().equalsIgnoreCase(presetName))
+                return true;
+        }
+        return false;
+    }
+
     public Preset getPresetByName(String presetName){
         for(Preset preset : presetList){
             if(preset.getPresetName().equalsIgnoreCase(presetName))
