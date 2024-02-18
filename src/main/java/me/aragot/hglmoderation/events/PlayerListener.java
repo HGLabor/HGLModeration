@@ -46,8 +46,10 @@ public class PlayerListener {
 
 
         String uuid = event.getPlayer().getUniqueId().toString();
-        for(Notification notif : data.getNotifications())
+        for(Notification notif : data.getNotifications()){
+            if(PlayerData.notificationGroups.get(notif) == null) PlayerData.notificationGroups.put(notif, new ArrayList<>());
             PlayerData.notificationGroups.get(notif).add(uuid);
+        }
 
     }
 

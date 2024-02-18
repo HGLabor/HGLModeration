@@ -13,7 +13,7 @@ public class PlayerData {
 
     private String playerId;
     private String discordId;
-    private ArrayList<Notification> notifications;
+    private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
 
     public static ArrayList<PlayerData> dataList = new ArrayList<>();
@@ -21,6 +21,8 @@ public class PlayerData {
 
     public PlayerData(Player player){
         this.playerId = player.getUniqueId().toString();
+        this.notifications.add(Notification.GENERAL);
+        this.notifications.add(Notification.REPORT_STATE);
     }
 
     public static PlayerData getPlayerData(Player player){
@@ -71,7 +73,6 @@ public class PlayerData {
     }
 
     public void addNotification(Notification notif){
-        if(this.notifications == null) this.notifications = new ArrayList<>();
         if(!this.notifications.contains(notif)) this.notifications.add(notif);
         if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
 
@@ -79,8 +80,7 @@ public class PlayerData {
     }
 
     public void removeNotification(Notification notif){
-        if(this.notifications == null) return;
-        if(this.notifications.contains(notif)) this.notifications.remove(notif);
+        this.notifications.remove(notif);
         if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
 
         notificationGroups.get(notif).remove(this.playerId);

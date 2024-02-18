@@ -1,15 +1,20 @@
 package me.aragot.hglmoderation.discord.commands;
 
 import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.admin.preset.Preset;
+import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.data.PlayerData;
-import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 
 import java.time.Instant;
 import java.util.*;
@@ -23,6 +28,28 @@ public class CommandExecutor {
     }
 
     public void onReport(){
+
+    }
+
+    public void onPreset(){
+
+        EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
+        eb.setTitle("Presets");
+        eb.setDescription("Welcome to the PresetGUI. You can view, modify, add and remove the current presets! Please choose an option from the menu below to start your journey.");
+
+        StringSelectMenu.Builder presetPicker = StringSelectMenu.create("preset-picker");
+        presetPicker.setPlaceholder("Choose an Option");
+        presetPicker.setMaxValues(1);
+
+        for(Preset preset : PresetHandler.instance.getPresetList()){
+            presetPicker.addOption(preset.getPresetName(), preset.getPresetName().toLowerCase(), preset.getPresetDescription(), Emoji.fromUnicode("\uD83D\uDD27"));
+        }
+
+        presetPicker.addOption("Add new Preset", "preset-add", "Creates a new Preset to the list", Emoji.fromUnicode("\u2795"));
+
+        event.replyEmbeds(eb.build()).setEphemeral(true)
+                .addActionRow(presetPicker.build())
+                .queue();
 
     }
 

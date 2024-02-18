@@ -1,6 +1,8 @@
 package me.aragot.hglmoderation.data;
 
 public enum Notification {
+    GENERAL,
+    REPORT_STATE,
     REPORT,
     BAN,
     MUTE;

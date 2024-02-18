@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class Config {
 
-    private static final File dir = new File("./HGLModeration");
+    public static final File dir = new File("./HGLModeration");
     private String dbConnectionString = "";
     private String discordBotToken = "";
     private String reportChannelId = "";

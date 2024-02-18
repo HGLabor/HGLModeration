@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Punishment {
 
-    public String punishmentId;
-    public long issuedAt; //Unix Timestamp
+    private String punishmentId;
+    private long issuedAt; //Unix Timestamp
     private String issuedTo;
     private String issuedBy; //Minecraft Player UUID
     private PunishmentType type;
@@ -63,7 +63,7 @@ public class Punishment {
             return;
         }
 
-        HGLBot.logPunishment(report, punishment);
+        HGLBot.logPunishment(punishment);
 
     }
 
@@ -92,6 +92,14 @@ public class Punishment {
         }
 
         return id;
+    }
+
+    public String getPunishedUUID(){
+        return this.issuedTo;
+    }
+
+    public String getIssuerUUID(){
+        return this.issuedBy;
     }
 
     public boolean isActive(){
@@ -131,4 +139,25 @@ public class Punishment {
     public String getId(){
         return this.punishmentId;
     }
+
+    public PunishmentType getType(){
+        return this.type;
+    }
+
+    public Reasoning getReasoning(){
+        return this.reason;
+    }
+
+    public long getIssuedAtTimestamp(){
+        return this.issuedAt;
+    }
+
+    public long getEndsAtTimestamp(){
+        return this.endsAt;
+    }
+
+    public String getNote(){
+        return this.note;
+    }
+
 }

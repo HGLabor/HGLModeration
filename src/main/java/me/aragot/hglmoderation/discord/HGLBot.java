@@ -6,13 +6,16 @@ import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Priority;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.discord.actions.ActionHandler;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
+import me.aragot.hglmoderation.tools.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -22,6 +25,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.slf4j.Logger;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class HGLBot {
@@ -40,6 +44,7 @@ public class HGLBot {
         JDABuilder builder = JDABuilder.createDefault(Config.instance.getDiscordBotToken());
 
         builder.addEventListeners(new CommandParser());
+        builder.addEventListeners(new ActionHandler());
 
         instance = builder.build();
 
@@ -80,7 +85,9 @@ public class HGLBot {
                         .addSubcommands(
                                 new SubcommandData("reset", "Resets your current minecraft Link"),
                                 new SubcommandData("generate", "Generates a new key to Link your account with")
-                        )
+                        ),
+                Commands.slash("preset", "Displays the PresetGUI to modify punishment presets.")
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
         ).queue();
         author = instance.retrieveUserById(authorId).complete();
         logger.info("Discord Bot has been initialized started!");
@@ -91,14 +98,14 @@ public class HGLBot {
         switch(type){
             case ERROR:
                 eb.setTitle("Error!");
-                eb.setColor(Color.red);
+                eb.setColor(Color.RED);
                 break;
             case SUCCESS:
                 eb.setTitle("Success!");
-                eb.setColor(Color.green);
+                eb.setColor(Color.GREEN);
             case DEFAULT:
                 eb.setTitle("Hey, listen!");
-                eb.setColor(Color.blue);
+                eb.setColor(Color.BLUE);
         }
 
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
@@ -129,6 +136,8 @@ public class HGLBot {
     public static void logReport(Report report){
         if(Config.instance.getReportChannelId().isEmpty()) return;
         TextChannel logChannel = instance.getTextChannelById(Config.instance.getReportChannelId());
+        if(logChannel == null) return;
+
         if(Reasoning.getChatReasons().contains(report.getReasoning())){
             logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue(message -> {
                 report.setDiscordLog(message.getId());
@@ -191,10 +200,43 @@ public class HGLBot {
 
     }
 
-    public static void logPunishment(Report report, Punishment punishment){
-        TextChannel reportChannel = instance.getTextChannelById(Config.instance.getReportChannelId());
-        Message reportLog = reportChannel.getHistory().getMessageById(report.getDiscordLog());
-        //GetReportEmbed with and without Message log and edit the report log
-        reportLog.editMessageEmbeds();
+    public static ArrayList<MessageEmbed> getPunishmentEmbeds(Punishment punishment){
+        ArrayList<MessageEmbed> embeds = new ArrayList<>();
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("Incoming " + StringUtils.capitalize(punishment.getType().name()).toLowerCase());
+        eb.setColor(Color.red);
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
+
+        String punishmentInfo = "Punished Player: " + server.getPlayer(UUID.fromString(punishment.getPunishedUUID())).get().getUsername() + "\n" +
+                "Punished by: " + server.getPlayer(UUID.fromString(punishment.getIssuerUUID())).get().getUsername() + "\n" +
+                "Reasoning: " + punishment.getReasoning().name() + "\n" +
+                "Punishment ID: " + punishment.getId() + "\n" +
+                "Duration: " + punishment.getDuration() + "\n" +
+                "Submitted at: <t:" + punishment.getIssuedAtTimestamp() + ":f>\n" +
+                "Ends at: <t:" + punishment.getEndsAtTimestamp() + ":f>";
+
+        eb.setDescription(punishmentInfo);
+        embeds.add(eb.build());
+
+        if(punishment.getNote().isEmpty())
+            return embeds;
+
+        eb.setTitle("Reviewers Note");
+        eb.setColor(Color.BLUE);
+        eb.setThumbnail("");
+        eb.setDescription("```" + punishment.getNote() + "```");
+
+        embeds.add(eb.build());
+        return embeds;
+    }
+
+    public static void logPunishment(Punishment punishment){
+        if(Config.instance.getReportChannelId().isEmpty()) return;
+        TextChannel punishmentChannel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+        if(punishmentChannel == null) return;
+
+        punishmentChannel.sendMessageEmbeds(getPunishmentEmbeds(punishment)).queue();
     }
 }

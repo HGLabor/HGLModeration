@@ -10,11 +10,11 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.commands.DiscordBotCommand;
 import me.aragot.hglmoderation.commands.LinkCommand;
 import me.aragot.hglmoderation.commands.NotificationCommand;
 import me.aragot.hglmoderation.commands.ReportCommand;
-import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
@@ -47,6 +47,7 @@ public class HGLModeration {
         registerEventListeners();
         registerCommands();
         Config.loadConfig();
+        PresetHandler.loadPresets();
 
         HGLBot.init(this.server, this.logger);
         this.database =  new ModerationDB(Config.instance.getDbConnectionString());
@@ -56,6 +57,7 @@ public class HGLModeration {
    @Subscribe
    public void onProxyShutdown(ProxyShutdownEvent event) {
        Config.saveConfig();
+       PresetHandler.savePresets();
        database.closeConnection();
    }
 
@@ -98,9 +100,12 @@ public class HGLModeration {
         manager.register(linkMeta, linkCommand);
     }
 
-
     public Logger getLogger(){
         return this.logger;
+    }
+
+    public ProxyServer getServer(){
+        return this.server;
     }
 
     public ModerationDB getDatabase(){
