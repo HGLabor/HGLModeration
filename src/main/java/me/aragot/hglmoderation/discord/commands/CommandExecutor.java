@@ -36,10 +36,9 @@ public class CommandExecutor {
 
         StringSelectMenu.Builder presetPicker = StringSelectMenu.create("preset-picker");
         presetPicker.setPlaceholder("Choose an Option");
-        presetPicker.setMaxValues(1);
 
         for(Preset preset : PresetHandler.instance.getPresetList()){
-            presetPicker.addOption(preset.getPresetName(), preset.getPresetName().toLowerCase(), preset.getPresetDescription(), Emoji.fromUnicode("\uD83D\uDD27"));
+            presetPicker.addOption(preset.getName(), preset.getName().toLowerCase(), preset.getDescription(), Emoji.fromUnicode("\uD83D\uDD27"));
         }
 
         presetPicker.addOption("Add new Preset", "preset-add", "Creates a new Preset to the list", Emoji.fromUnicode("\u2795"));

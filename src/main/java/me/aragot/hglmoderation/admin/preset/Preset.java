@@ -3,16 +3,21 @@ package me.aragot.hglmoderation.admin.preset;
 import me.aragot.hglmoderation.data.Reasoning;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Preset {
 
     private String presetName;
     private String presetDescription;
     private ArrayList<Reasoning> reasoningScope;
+
+    private int weight;
     private int start;
     private int end; // end == -1 -> Meaning no end;
 
-    public Preset(String presetName, String presetDescription, int start, int end){
+    private long duration;
+
+    public Preset(String presetName, String presetDescription, int start, int end, int weight){
         this.presetName = presetName;
         this.presetDescription = presetDescription;
         this.reasoningScope = new ArrayList<>();
@@ -20,11 +25,11 @@ public class Preset {
         this.end = end;
     }
 
-    public void setPresetName(String presetName){
+    public void setName(String presetName){
         this.presetName = presetName;
     }
 
-    public String getPresetName() {
+    public String getName() {
         return presetName;
     }
 
@@ -48,26 +53,49 @@ public class Preset {
         this.end = end;
     }
 
-    public void addReasoningToScope(Reasoning reason){
-        if(!this.reasoningScope.contains(reason))
-            this.reasoningScope.add(reason);
+    public void setReasoningScope(ArrayList<Reasoning> reasoningScope){
+        this.reasoningScope = reasoningScope;
     }
-
-    public void removeReasoningFromScope(Reasoning reason){
-        if(this.reasoningScope.contains(reason))
-            this.reasoningScope.remove(reason);
-    }
-
     public boolean isInScope(Reasoning reason){
         return this.reasoningScope.contains(reason);
     }
 
-    public void setPresetDescription(String description){
+    public void setDescription(String description){
         this.presetDescription = description;
     }
 
-    public String getPresetDescription(){
+    public String getDescription(){
         return this.presetDescription;
     }
 
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    public long getDuration(){
+        return this.duration;
+    }
+
+    public void setDuration(long duration){
+        this.duration = duration;
+    }
+
+    public String getDurationAsString(){
+        if(this.duration == 0) return "No duration specified";
+
+        long days = TimeUnit.SECONDS.toDays(duration);
+        long hours = TimeUnit.SECONDS.toHours(duration) % 24;
+        long minutes = TimeUnit.SECONDS.toMinutes(duration) % 60;
+
+        String time = "";
+        if(days != 0) time += days + "D ";
+        if(hours != 0) time += hours + "H ";
+        if(minutes != 0) time += minutes + "M ";
+
+        return time;
+    }
 }

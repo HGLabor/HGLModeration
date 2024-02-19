@@ -80,9 +80,13 @@ public class PresetHandler {
         this.presetList.add(preset);
     }
 
+    public void removePreset(Preset preset){
+        this.presetList.remove(preset);
+    }
+
     public boolean containsPreset(String presetName){
         for(Preset preset : presetList){
-            if(preset.getPresetName().equalsIgnoreCase(presetName))
+            if(preset.getName().equalsIgnoreCase(presetName))
                 return true;
         }
         return false;
@@ -90,7 +94,7 @@ public class PresetHandler {
 
     public Preset getPresetByName(String presetName){
         for(Preset preset : presetList){
-            if(preset.getPresetName().equalsIgnoreCase(presetName))
+            if(preset.getName().equalsIgnoreCase(presetName))
                 return preset;
         }
         return null;
