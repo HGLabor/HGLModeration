@@ -3,6 +3,7 @@ package me.aragot.hglmoderation.admin.preset;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.data.Reasoning;
 
 import java.io.File;
 import java.io.FileReader;
@@ -97,6 +98,13 @@ public class PresetHandler {
             if(preset.getName().equalsIgnoreCase(presetName))
                 return preset;
         }
+        return null;
+    }
+
+    public Preset getPresetForScore(Reasoning scope, int score){
+        for(Preset preset : this.presetList)
+            if(preset.isInScope(scope) && preset.isInRange(score)) return preset;
+
         return null;
     }
 }
