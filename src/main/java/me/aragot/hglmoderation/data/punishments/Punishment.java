@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Punishment {
 
-    private String punishmentId;
+    private String _id;
     private long issuedAt; //Unix Timestamp
     private String issuedTo;
     private String issuedBy; //Minecraft Player UUID
@@ -26,8 +26,8 @@ public class Punishment {
 
     public static ArrayList<Punishment> punishments;
 
-    public Punishment(String punishmentId, long issuedAt, String issuedTo, String issuedBy, PunishmentType type, long endsAt, Reasoning reason, String note) {
-        this.punishmentId = punishmentId;
+    public Punishment(String _id, long issuedAt, String issuedTo, String issuedBy, PunishmentType type, long endsAt, Reasoning reason, String note) {
+        this._id = _id;
         this.issuedAt = issuedAt;
         this.issuedTo = issuedTo;
         this.issuedBy = issuedBy;
@@ -137,7 +137,7 @@ public class Punishment {
     }
 
     public String getId(){
-        return this.punishmentId;
+        return this._id;
     }
 
     public PunishmentType getType(){

@@ -151,7 +151,7 @@ public class HGLBot {
     }
 
     public static EmbedBuilder getReportEmbed(Report report, boolean incoming){
-        String title = incoming ? "Incoming Report" : "Report Information";
+        String title = incoming ? "Incoming Report: " + report.getReportId() : "Report: " + report.getReportId();
         Color color = Color.green;
 
         if(report.getPriority() == Priority.MEDIUM) color = Color.yellow;

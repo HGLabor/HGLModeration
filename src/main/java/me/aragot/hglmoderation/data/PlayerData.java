@@ -11,7 +11,7 @@ public class PlayerData {
     private int reportScore; //Score of successful reports, needed to get Report Priority of a Player
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
-    private String playerId;
+    private String _id;
     private String discordId;
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
@@ -20,7 +20,7 @@ public class PlayerData {
     public static HashMap<Notification, ArrayList<String>> notificationGroups = new HashMap<>();
 
     public PlayerData(Player player){
-        this.playerId = player.getUniqueId().toString();
+        this._id = player.getUniqueId().toString();
         this.notifications.add(Notification.GENERAL);
         this.notifications.add(Notification.REPORT_STATE);
     }
@@ -49,11 +49,11 @@ public class PlayerData {
     }
 
     public String getPlayerId() {
-        return this.playerId;
+        return this._id;
     }
 
     public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+        this._id = playerId;
     }
 
     public int getReportScore() {
@@ -76,14 +76,14 @@ public class PlayerData {
         if(!this.notifications.contains(notif)) this.notifications.add(notif);
         if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
 
-        notificationGroups.get(notif).add(this.playerId);
+        notificationGroups.get(notif).add(this._id);
     }
 
     public void removeNotification(Notification notif){
         this.notifications.remove(notif);
         if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
 
-        notificationGroups.get(notif).remove(this.playerId);
+        notificationGroups.get(notif).remove(this._id);
     }
 
     public ArrayList<String> getPunishments(){

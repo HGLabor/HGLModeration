@@ -25,15 +25,15 @@ public class ModerationDB {
      */
 
     private static final String dbPrefix = "hglmod_";
-    private MongoClient mongoClient;
+    private final MongoClient mongoClient;
     private MongoDatabase mongoDB;
-    private MongoCollection<Document> reportCollection;
-    private MongoCollection<Document> punishmentCollection;
-    private MongoCollection<Document> playerDataCollection;
+    private final MongoCollection<Document> reportCollection;
+    private final MongoCollection<Document> punishmentCollection;
+    private final MongoCollection<Document> playerDataCollection;
 
     public ModerationDB(String authURI){
         this.mongoClient = MongoClients.create(authURI);
-        this.mongoDB = this.mongoClient.getDatabase("moderation");
+        this.mongoDB = this.mongoClient.getDatabase("Moderation");
         ArrayList<String> collectionNames = this.mongoDB.listCollectionNames().into(new ArrayList<>());
 
         if(!collectionNames.contains(dbPrefix + "reports")) this.mongoDB.createCollection(dbPrefix + "reports");
@@ -62,7 +62,7 @@ public class ModerationDB {
     }
 
     public Report getReportById(String reportId){
-        Document report = this.reportCollection.find(Filters.eq("reportId", reportId)).first();
+        Document report = this.reportCollection.find(Filters.eq("_id", reportId)).first();
         if(report == null) return null;
         Gson gson = new Gson();
         return gson.fromJson(report.toJson(), Report.class);
@@ -84,7 +84,7 @@ public class ModerationDB {
     public boolean updateReport(Report report){
 
         UpdateResult res = this.reportCollection.updateOne(
-                Filters.eq("reportId", report.getReportId()),
+                Filters.eq("_id", report.getReportId()),
                 Updates.set("state", report.getState())
         );
 
@@ -97,14 +97,14 @@ public class ModerationDB {
 
 
     public Punishment getPunishmentById(String punishmentId){
-        Document punishment = this.punishmentCollection.find(Filters.eq("punishmentId", punishmentId)).first();
+        Document punishment = this.punishmentCollection.find(Filters.eq("_id", punishmentId)).first();
         if(punishment == null) return null;
         Gson gson = new Gson();
         return gson.fromJson(punishment.toJson(), Punishment.class);
     }
 
     public PlayerData getPlayerDataById(String playerId){
-        Document playerData = this.playerDataCollection.find(Filters.eq("playerId", playerId)).first();
+        Document playerData = this.playerDataCollection.find(Filters.eq("_id", playerId)).first();
         if(playerData == null) return null;
         Gson gson = new Gson();
         return gson.fromJson(playerData.toJson(), PlayerData.class);
@@ -126,7 +126,7 @@ public class ModerationDB {
     public boolean updatePlayerData(PlayerData data){
         Gson gson = new Gson();
         return this.playerDataCollection.replaceOne(
-                new Document("playerId", data.getPlayerId()),
+                new Document("_id", data.getPlayerId()),
                 Document.parse(gson.toJson(data)))
                 .wasAcknowledged();
     }

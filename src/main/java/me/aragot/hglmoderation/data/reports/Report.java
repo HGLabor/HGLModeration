@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
@@ -23,13 +22,13 @@ import java.util.*;
 
 public class Report {
 
-    private String reportId;
-    private String reportedUUID; //Reported Player UUID
-    private String reporterUUID; //Reporter Player UUID
-    private long submittedAt;
-    private Reasoning reasoning;
+    private final String _id;
+    private final String reportedUUID; //Reported Player UUID
+    private final String reporterUUID; //Reporter Player UUID
+    private final long submittedAt;
+    private final Reasoning reasoning;
     private ReportState state;
-    private Priority priority;
+    private final Priority priority;
 
     private String reviewedBy; //Minecraft Player UUID
     private String punishmentId;
@@ -37,8 +36,8 @@ public class Report {
 
     private ArrayList<String> reportedUserMessages;
 
-    public Report(String reportId, String reportedUUID, String reporterUUID,  long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
-        this.reportId = reportId;
+    public Report(String reportId, String reportedUUID, String reporterUUID, long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
+        this._id = reportId;
         this.reportedUUID = reportedUUID;
         this.reporterUUID = reporterUUID;
         this.submittedAt = submittedAt;
@@ -115,7 +114,7 @@ public class Report {
         return this.reviewedBy;
     }
     public String getReportId() {
-        return reportId;
+        return _id;
     }
 
     public String getReportedUUID() {
@@ -168,7 +167,7 @@ public class Report {
         String reason = "<white>Reasoning:</white> <red>" + this.reasoning.name() + "</red>";
         String reportState = "<white>State:</white> <red>" + this.state.name() + "</red>";
         String reported = "<white>Reported:</white> <red>" + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getUsername() + "</red>";
-        String reportDetails = "<yellow><b>Report #" + this.reportId + "</b></yellow>\n\n" +
+        String reportDetails = "<yellow><b>Report #" + this._id + "</b></yellow>\n\n" +
                 "<gray>Reported Player:</gray> <red>" +  HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getUsername() + "</red>\n" +
                 "<gray>Reported By:</gray> <red>" + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reporterUUID)).get().getUsername() + "</red>\n" +
                 "<gray>Reasoning:</gray> <red>" + this.reasoning.name() + "</red>\n" +
@@ -200,7 +199,7 @@ public class Report {
                     .append(getMcReportOverview())
                     .append(Component.text("\n")).append(getMCReportActions());
 
-        return mm.deserialize(Responder.prefix + " <b><yellow>Report #" + this.reportId + "</yellow></b>\n")
+        return mm.deserialize(Responder.prefix + " <b><yellow>Report #" + this._id + "</yellow></b>\n")
                 .append(getMcReportOverview())
                 .append(Component.text("\n")).append(getMCReportActions());
     }
