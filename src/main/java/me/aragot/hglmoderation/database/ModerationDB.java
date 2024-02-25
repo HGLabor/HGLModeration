@@ -20,12 +20,6 @@ import java.util.*;
 
 public class ModerationDB {
 
-    /*
-        To Change:
-            - Gson.fromJson(Document.toJson, Class.Class); -> Maybe change, not very efficient, could retrieve Data doing: Document.get(key);
-            - Recode needed, poorly used db so far.
-     */
-
     private static final String dbPrefix = "hglmod_";
     private final MongoClient mongoClient;
     private final MongoCollection<Report> reportCollection;
