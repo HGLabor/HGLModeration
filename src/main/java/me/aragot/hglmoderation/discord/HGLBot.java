@@ -9,12 +9,10 @@ import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.discord.actions.ActionHandler;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -151,7 +149,7 @@ public class HGLBot {
     }
 
     public static EmbedBuilder getReportEmbed(Report report, boolean incoming){
-        String title = incoming ? "Incoming Report: " + report.getReportId() : "Report: " + report.getReportId();
+        String title = incoming ? "Incoming Report: " + report.getId() : "Report: " + report.getId();
         Color color = Color.green;
 
         if(report.getPriority() == Priority.MEDIUM) color = Color.yellow;
@@ -164,7 +162,7 @@ public class HGLBot {
         String description = "Reported Name: " + server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername() + "\n" +
                 "Reported by: " + server.getPlayer(UUID.fromString(report.getReporterUUID())).get().getUsername() + "\n" +
                 "Reasoning: " + report.getReasoning().name() + "\n" +
-                "Report ID: " + report.getReportId() + "\n" +
+                "Report ID: " + report.getId() + "\n" +
                 "Priority: " + report.getPriority() + "\n" +
                 "Submitted at: <t:" + report.getSubmittedAt() + ":f>\n" +
                 "State: " + report.getState().name();
@@ -204,7 +202,7 @@ public class HGLBot {
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("Incoming " + StringUtils.capitalize(punishment.getType().name()).toLowerCase());
+        eb.setTitle("Incoming " + punishment.getTypesAsString());
         eb.setColor(Color.red);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
@@ -225,7 +223,7 @@ public class HGLBot {
 
         eb.setTitle("Reviewers Note");
         eb.setColor(Color.BLUE);
-        eb.setThumbnail("");
+        eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
         eb.setDescription("```" + punishment.getNote() + "```");
 
         embeds.add(eb.build());

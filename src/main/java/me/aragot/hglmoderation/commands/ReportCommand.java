@@ -32,9 +32,10 @@ public class ReportCommand {
                 })
                 .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                         .suggests((context, builder) -> {
-                            server.getAllPlayers().forEach(player -> builder.suggest(
-                                    player.getUsername()
-                            ));
+                            Player reporter = context.getSource() instanceof Player ? (Player) context.getSource() : null;
+                            if(reporter == null) return builder.buildFuture();
+
+                            reporter.getCurrentServer().get().getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername()));
 
                             return builder.buildFuture();
                         })
@@ -73,13 +74,11 @@ public class ReportCommand {
                                 if(!isValidPlayer(server, reporter, reported))
                                     return Command.SINGLE_SUCCESS;
                                 Player reportedPlayer = server.getPlayer(reported).get();
-                                /*
+
                                 if(reportedPlayer.equals(reporter)){
                                     Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
                                     return Command.SINGLE_SUCCESS;
                                 }
-
-                                */
 
                                 String reasoning = context.getArgument("reasoning", String.class);
 

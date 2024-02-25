@@ -8,13 +8,18 @@ import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.reports.Report;
 import net.kyori.adventure.text.Component;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class Notifier {
 
     public static void notify(Notification group, Component component){
         ProxyServer server = HGLModeration.instance.getServer();
-        for(String playerId : PlayerData.notificationGroups.get(group)){
+        ArrayList<String> notifGroup = PlayerData.notificationGroups.get(group);
+        if(notifGroup == null)
+            return;
+
+        for(String playerId : notifGroup){
             Player player = server.getPlayer(UUID.fromString(playerId)).get();
             player.sendMessage(component);
         }

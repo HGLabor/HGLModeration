@@ -19,6 +19,8 @@ public class Config {
 
     public static Config instance;
 
+    public static final String discordLink = "discord.gg/hglabor";
+
     public static void loadConfig(){
         if(!dir.exists()){
             dir.mkdir();

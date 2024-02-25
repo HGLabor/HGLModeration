@@ -1,8 +1,15 @@
 package me.aragot.hglmoderation.admin.preset;
 
+import me.aragot.hglmoderation.HGLModeration;
+import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
+import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.punishments.PunishmentType;
+import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.database.ModerationDB;
+import me.aragot.hglmoderation.tools.StringUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -73,7 +80,7 @@ public class Preset {
     }
 
     public int getWeight() {
-        return weight;
+        return this.weight;
     }
 
     public void setWeight(int weight) {
@@ -97,9 +104,9 @@ public class Preset {
         long minutes = TimeUnit.SECONDS.toMinutes(duration) % 60;
 
         String time = "";
-        if(days != 0) time += days + "D ";
-        if(hours != 0) time += hours + "H ";
-        if(minutes != 0) time += minutes + "M ";
+        if(days != 0) time += days + "d ";
+        if(hours != 0) time += hours + "h ";
+        if(minutes != 0) time += minutes + "min ";
 
         return time;
     }
@@ -125,6 +132,32 @@ public class Preset {
     }
 
     public boolean isInRange(int score){
-        return (score > this.start && score < this.end) || (this.end == -1 && score > this.start);
+        return (score >= this.start && score < this.end) || (this.end == -1 && score >= this.start);
+    }
+
+    public String getReasoningScopeAsString(){
+        StringBuilder builder = new StringBuilder();
+
+        for(Reasoning reasoning : this.getReasoningScope())
+            builder.append(reasoning.name()).append(",");
+
+        builder.replace(builder.length() - 1, builder.length(), "");
+        return builder.toString();
+    }
+
+    public String getPunishmentTypesAsString(){
+        StringBuilder builder = new StringBuilder();
+
+        for(PunishmentType reasoning : this.getPunishmentsTypes())
+            builder.append(reasoning.name()).append(",");
+
+        builder.replace(builder.length() - 1, builder.length(), "");
+        return builder.toString();
+    }
+
+    public void apply(Report report){
+        PlayerData data = PlayerData.getPlayerData(report.getReportedUUID());
+        data.setPunishmentScore(data.getPunishmentScore() + this.getWeight());
+        Punishment.submitPunishmentFromReport(data, report, this.getPunishmentsTypes(), Instant.now().getEpochSecond() + this.getDuration(), "Preset Used: " + this.getName());
     }
 }

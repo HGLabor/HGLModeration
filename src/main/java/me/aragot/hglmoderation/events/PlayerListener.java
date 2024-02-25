@@ -8,16 +8,32 @@ import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.Notification;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
+import me.aragot.hglmoderation.data.punishments.PunishmentType;
 
+import java.time.Instant;
 import java.util.*;
 
 public class PlayerListener {
 
     public static HashMap<String, ArrayList<String>> userMessages = new HashMap<>();
+    public static HashMap<String, Punishment> playerMutes = new HashMap<>();
 
     @Subscribe
     public void onPlayerChat(PlayerChatEvent event){
-        ArrayList<String> messages =  userMessages.get(event.getPlayer().getUniqueId().toString());
+
+        Punishment mute = playerMutes.get(event.getPlayer().getUniqueId().toString());
+
+        if(mute != null){
+            if(mute.isActive()){
+                event.setResult(PlayerChatEvent.ChatResult.denied());
+                event.getPlayer().sendMessage(mute.getMuteComponent());
+                return;
+            }
+            playerMutes.remove(event.getPlayer().getUniqueId().toString());
+        }
+
+
+        ArrayList<String> messages = userMessages.get(event.getPlayer().getUniqueId().toString());
         if(messages == null){
             userMessages.put(event.getPlayer().getUniqueId().toString(), new ArrayList<>(Arrays.asList(event.getMessage())));
             return;
@@ -35,13 +51,19 @@ public class PlayerListener {
 
     @Subscribe
     public void onPlayerJoin(LoginEvent event){
-        HGLModeration.instance.getLogger().info("Player UUID: " + event.getPlayer().getUniqueId().toString());
         PlayerData data = PlayerData.getPlayerData(event.getPlayer());
+        String hostAddress = event.getPlayer().getRemoteAddress().getAddress().getHostAddress();
 
         if(!data.getPunishments().isEmpty()){
-            Punishment punishment = Punishment.getPunishmentById(data.getPunishments().get( data.getPunishments().size() - 1));
-            //punishment null == error contact staff;
-            //else check if still active
+            Punishment punishment = Punishment.getPunishmentById(data.getPunishments().get(data.getPunishments().size() - 1));
+            if(punishment.isActive()){
+                if(punishment.getTypes().contains(PunishmentType.BAN)){
+                    punishment.enforce(event);
+                    return;
+                } else if(punishment.getTypes().contains(PunishmentType.MUTE)){
+                    punishment.enforce(event.getPlayer());
+                }
+            }
         }
 
 
@@ -61,6 +83,8 @@ public class PlayerListener {
         for(Notification notif : data.getNotifications())
             PlayerData.notificationGroups.get(notif).remove(uuid);
 
+        playerMutes.remove(event.getPlayer().getUniqueId().toString());
+        userMessages.remove(uuid);
         HGLModeration.instance.getDatabase().updatePlayerData(data);
         PlayerData.dataList.remove(data);
     }

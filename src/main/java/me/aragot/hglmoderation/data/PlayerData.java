@@ -12,7 +12,7 @@ public class PlayerData {
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
     private String _id;
-    private String discordId;
+    private String discordId = "";
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
 
@@ -23,6 +23,16 @@ public class PlayerData {
         this._id = player.getUniqueId().toString();
         this.notifications.add(Notification.GENERAL);
         this.notifications.add(Notification.REPORT_STATE);
+    }
+
+    //Used only for Codec
+    public PlayerData(String _id, int reportScore, int punishmentScore, String discordId, ArrayList<Notification> notifications, ArrayList<String> punishments) {
+        this.reportScore = reportScore;
+        this.punishmentScore = punishmentScore;
+        this._id = _id;
+        this.discordId = discordId;
+        this.notifications = notifications;
+        this.punishments = punishments;
     }
 
     public static PlayerData getPlayerData(Player player){
@@ -38,6 +48,14 @@ public class PlayerData {
 
         dataList.add(data);
         return data;
+    }
+
+    public static PlayerData getPlayerData(String uuid){
+        for(PlayerData data : dataList)
+            if(data.getPlayerId().equalsIgnoreCase(uuid)) return data;
+
+
+        return HGLModeration.instance.getDatabase().getPlayerDataById(uuid);
     }
 
     public int getPunishmentScore() {

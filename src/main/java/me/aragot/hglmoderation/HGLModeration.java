@@ -11,10 +11,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
-import me.aragot.hglmoderation.commands.DiscordBotCommand;
-import me.aragot.hglmoderation.commands.LinkCommand;
-import me.aragot.hglmoderation.commands.NotificationCommand;
-import me.aragot.hglmoderation.commands.ReportCommand;
+import me.aragot.hglmoderation.commands.*;
 import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
@@ -26,6 +23,19 @@ import org.slf4j.Logger;
         version = "1.0-SNAPSHOT",
         authors = {"Aragot"}
 )
+
+/**
+ * To do:
+ * Something like /report list to see all currently active reports -> Discord as well
+ * /Punish command for minecraft ingame -> No Discord Integration
+ * Discord Integration of using punishment preset
+ * Discord Log change message?
+ *  -> Maybe ignore and delete options on click if its already reviewed?
+ * Permission checks
+ * Message Reporters when finishing review?
+ * How to handle
+ */
+
 public class HGLModeration {
 
     private final Logger logger;
@@ -92,12 +102,23 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
+        BrigadierCommand reviewCommand = ReviewCommand.createBrigadierCommand(this.server);
+        CommandMeta reviewMeta = manager.metaBuilder("review")
+                .plugin(this)
+                .build();
+
+        BrigadierCommand presetCommand = PresetCommand.createBrigadierCommand(this.server);
+        CommandMeta presetMeta = manager.metaBuilder("preset")
+                .plugin(this)
+                .build();
 
         //Actual register
         manager.register(reportMeta, reportCommand);
         manager.register(dcBotMeta, dcBotCommand);
         manager.register(notifMeta, notifCommand);
         manager.register(linkMeta, linkCommand);
+        manager.register(reviewMeta, reviewCommand);
+        manager.register(presetMeta, presetCommand);
     }
 
     public Logger getLogger(){

@@ -39,44 +39,41 @@ public class LinkCommand {
                             String action = context.getArgument("action", String.class);
                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
 
-                            if(player != null){
-                                if(action.equalsIgnoreCase("reset")){
-                                    PlayerData data = PlayerData.getPlayerData(player);
-                                    data.setDiscordId("");
+                            if(player == null) return BrigadierCommand.FORWARD;
 
-                                    Responder.respond(player, "Successfully unbound your account!", ResponseType.SUCCESS);
-                                } else {
-                                    Map.Entry<Instant, String> keyData;
-                                    try{
-                                        keyData = CommandExecutor.discordLinkKeys.get(UUID.fromString(action));
-                                    } catch (IllegalArgumentException x) {
-                                        Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
-                                        return Command.SINGLE_SUCCESS;
-                                    }
 
-                                    if(keyData == null){
-                                        Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
-                                        return Command.SINGLE_SUCCESS;
-                                    }
+                            if(action.equalsIgnoreCase("reset")){
+                                PlayerData data = PlayerData.getPlayerData(player);
+                                data.setDiscordId("");
 
-                                    //900 Secs == 15 Minutes
-                                    if(keyData.getKey().plusSeconds(900).isBefore(Instant.now())){
-                                        Responder.respond(player, "Your key expired. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
-                                        return Command.SINGLE_SUCCESS;
-                                    }
-
-                                    //If here then it exists and is less than 15 minutes ago
-                                    PlayerData data = PlayerData.getPlayerData(player);
-                                    data.setDiscordId(keyData.getValue());
-
-                                    Responder.respond(player, "Successfully linked your account to your discord account!", ResponseType.SUCCESS);
+                                Responder.respond(player, "Successfully unbound your account!", ResponseType.SUCCESS);
+                            } else {
+                                Map.Entry<Instant, String> keyData;
+                                try{
+                                    keyData = CommandExecutor.discordLinkKeys.get(UUID.fromString(action));
+                                } catch (IllegalArgumentException x) {
+                                    Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
                                 }
-                                return Command.SINGLE_SUCCESS;
+
+                                if(keyData == null){
+                                    Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+
+                                //900 Secs == 15 Minutes
+                                if(keyData.getKey().plusSeconds(900).isBefore(Instant.now())){
+                                    Responder.respond(player, "Your key expired. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+
+                                //If here then it exists and is less than 15 minutes ago
+                                PlayerData data = PlayerData.getPlayerData(player);
+                                data.setDiscordId(keyData.getValue());
+
+                                Responder.respond(player, "Successfully linked your account to your discord account!", ResponseType.SUCCESS);
                             }
-
-
-
-                            return BrigadierCommand.FORWARD;
+                            return Command.SINGLE_SUCCESS;
                         })
                 )
 
