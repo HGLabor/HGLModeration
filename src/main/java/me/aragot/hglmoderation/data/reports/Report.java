@@ -13,6 +13,7 @@ import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.Notifier;
+import me.aragot.hglmoderation.tools.PlayerUtils;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -187,23 +188,13 @@ public class Report {
 
     public Component getMcReportOverview(){
         MiniMessage mm = MiniMessage.miniMessage();
+        String reportedUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reportedUUID));
         String prio = "<white>Priority:</white> <red>" + this.priority.name() + "</red>";
         String reason = "<white>Reasoning:</white> <red>" + this.reasoning.name() + "</red>";
         String reportState = "<white>State:</white> <red>" + this.state.name() + "</red>";
-        String reported = "<white>Reported:</white> <red>" + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getUsername() + "</red>";
+        String reported = "<white>Reported:</white> <red>" + reportedUserName + "</red>";
 
-        String reportDetails = "<yellow><b>Report #" + this._id + "</b></yellow>\n\n" +
-                "<gray>Reported Player:</gray> <red>" +  HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getUsername() + "</red>\n" +
-                "<gray>Reported By:</gray> <red>" + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reporterUUID)).get().getUsername() + "</red>\n" +
-                "<gray>Reasoning:</gray> <red>" + this.reasoning.name() + "</red>\n" +
-                "<gray>Priority:</gray> <red>" + this.priority.name() + "</red>\n" +
-                "<gray>Submitted at:</gray> <red>" + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date(this.submittedAt * 1000)) + "</red>\n" +
-                "<gray>State:</gray> <red>" + this.state.name() + "</red>";
-
-        if(Reasoning.getChatReasons().contains(this.getReasoning()))
-            reportDetails += "\n<gray>User Messages:</gray>\n" + this.getFormattedUserMessages();
-
-        String viewDetails = "<hover:show_text:'" + reportDetails + "'><white>[<blue><b>View Details</b></blue>]</white></hover>";
+        String viewDetails = getViewDetailsRaw();
 
         String reviewReport = "<click:run_command:'/review " + this.getId() + "'><white>[<yellow><b>Review</b></yellow>]</white></click>";
 
@@ -216,14 +207,29 @@ public class Report {
         return mm.deserialize(deserialize);
     }
 
+    public String getViewDetailsRaw(){
+        String reportedUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reportedUUID));
+        String reporterUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reporterUUID));
+
+        String reportDetails = "<yellow><b>Report #" + this._id + "</b></yellow>\n\n" +
+                "<gray>Reported Player:</gray> <red>" + reportedUserName + "</red>\n" +
+                "<gray>Reported By:</gray> <red>" + reporterUserName + "</red>\n" +
+                "<gray>Reasoning:</gray> <red>" + this.reasoning.name() + "</red>\n" +
+                "<gray>Priority:</gray> <red>" + this.priority.name() + "</red>\n" +
+                "<gray>Submitted at:</gray> <red>" + new SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(new Date(this.submittedAt * 1000)) + "</red>\n" +
+                "<gray>State:</gray> <red>" + this.state.name() + "</red>";
+
+        if(Reasoning.getChatReasons().contains(this.getReasoning()))
+            reportDetails += "\n<gray>User Messages:</gray>\n" + this.getFormattedUserMessages();
+
+        return "<hover:show_text:'" + reportDetails + "'><white>[<blue><b>View Details</b></blue>]</white></hover>";
+    }
+
     public Component getMCReportActions(){
-        //HoverText
+        //HoverText missing
         MiniMessage mm = MiniMessage.miniMessage();
         Preset preset = PresetHandler.instance.getPresetForScore(this.reasoning, PlayerData.getPlayerData(this.getReportedUUID()).getPunishmentScore());
         String presetName = preset == null ? "None" : preset.getName();
-        //Missing Punishment preset for command
-        // /review <punishmentId> <boolean:accept> <preset/punishReporter>
-        // /punish <type:[ban/mute/]> <boolean:notifReporters?trueByDefault>
         return mm.deserialize("<click:suggest_command:'/preset apply " + presetName + " " + this.getId() + "'><white>[<green><b>Punish</b></green>]</white></click>" +
                 "   <click:suggest_command:'/review " + this.getId() + " decline'><white>[<red><b>Decline</b></red>]</white></click>" +
                 "   <click:suggest_command:'/review " + this.getId() + " malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click>\n" +
@@ -239,7 +245,7 @@ public class Report {
             return mm.deserialize("<gold>============= <white>Incoming</white> <red>Report: #" + this.getId() + "</red> =============</gold>\n")
                     .append(getMcReportOverview());
 
-        return mm.deserialize(" <b><yellow>Report #" + this._id + "</yellow></b>\n")
+        return mm.deserialize("<gold>================= <red>Report: #" + this.getId() + "</red> =================</gold>\n")
                 .append(getMcReportOverview());
     }
 

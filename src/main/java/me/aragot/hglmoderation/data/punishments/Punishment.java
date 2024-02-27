@@ -12,6 +12,7 @@ import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
+import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.Notifier;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +33,7 @@ public class Punishment {
     private final String issuedTo;
     private final String issuedBy; //Minecraft Player UUID
     private ArrayList<PunishmentType> types;
-    private final long endsAt; // Unix Timestamp; Value(-1) = Permanent Punishment;
+    private long endsAt; // Unix Timestamp; Value(-1) = Permanent Punishment;
     private Reasoning reason;
     private String note;
 
@@ -63,14 +65,7 @@ public class Punishment {
         boolean isBotActive = HGLBot.instance != null;
 
         if(!HGLModeration.instance.getDatabase().pushPunishment(punishment) && isBotActive){
-            TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
-
-            if(channel == null) return;
-
-            channel.sendMessageEmbeds(
-                    HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push Punishment to Database (ID:" + punishment.getId() + ")").build()
-            ).queue();
-
+            HGLBot.logPunishmentPushFailure(punishment);
             return;
         }
 
@@ -78,14 +73,7 @@ public class Punishment {
         report.setState(ReportState.DONE);
 
         if(!HGLModeration.instance.getDatabase().updateReportsBasedOn(report) && isBotActive){
-            TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
-
-            if(channel == null) return;
-
-            channel.sendMessageEmbeds(
-                    HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't update Reports in Database for Punishment (ID:" + punishment.getId() + ")").build()
-            ).queue();
-
+            HGLBot.logReportUpdateFailure(report);
             return;
         }
 
@@ -96,19 +84,33 @@ public class Punishment {
         HGLBot.logPunishment(punishment);
     }
 
-    public static void submitPunishment(Player toPunish, Player punisher, ArrayList<PunishmentType> types, Reasoning reason, long endsAt){
+    public static void submitPunishment(Player toPunish, Player punisher, List<PunishmentType> types, Reasoning reason, long endsAt, int weight){
         Punishment punishment = new Punishment(
                 getNextPunishmentId(),
                 Instant.now().getEpochSecond(),
                 toPunish.getUniqueId().toString(),
                 punisher.getUniqueId().toString(),
-                types,
+                new ArrayList<>(types),
                 endsAt,
                 reason,
                 ""
         );
 
+        boolean isBotActive = HGLBot.instance != null;
+        PlayerData data = PlayerData.getPlayerData(toPunish);
 
+        if(!HGLModeration.instance.getDatabase().pushPunishment(punishment) && isBotActive){
+            HGLBot.logPunishmentPushFailure(punishment);
+            return;
+        }
+
+        data.addPunishment(punishment.getId());
+
+        punishment.enforce();
+
+        Responder.respond(punisher, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+
+        HGLBot.logPunishment(punishment);
     }
 
     public static Punishment getPunishmentById(String id){
@@ -116,7 +118,7 @@ public class Punishment {
     }
 
     public static String getNextPunishmentId(){
-        //table is hex number
+        //table is a hex number
         //Report id is random 8 digit hex number
         String [] table = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
         boolean isUnique = false;
@@ -166,6 +168,10 @@ public class Punishment {
         if(seconds != 0) time += seconds + "sec ";
 
         return time;
+    }
+
+    public void setEndsAt(long endsAt){
+        this.endsAt = endsAt;
     }
 
     public String getDuration(){

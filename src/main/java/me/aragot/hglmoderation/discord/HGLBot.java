@@ -2,6 +2,7 @@ package me.aragot.hglmoderation.discord;
 
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
+import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Priority;
 import me.aragot.hglmoderation.data.Reasoning;
@@ -9,6 +10,7 @@ import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.discord.actions.ActionHandler;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
+import me.aragot.hglmoderation.tools.PlayerUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -207,8 +209,14 @@ public class HGLBot {
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
 
-        String punishmentInfo = "Punished Player: " + server.getPlayer(UUID.fromString(punishment.getPunishedUUID())).get().getUsername() + "\n" +
-                "Punished by: " + server.getPlayer(UUID.fromString(punishment.getIssuerUUID())).get().getUsername() + "\n" +
+        String punishedName = PlayerUtils.getUsernameFromUUID(UUID.fromString(punishment.getPunishedUUID()));
+        String punisherName = PlayerUtils.getUsernameFromUUID(UUID.fromString(punishment.getIssuerUUID()));
+
+        if(punishedName == null || punisherName == null)
+            return embeds;
+
+        String punishmentInfo = "Punished Player: " + punishedName + "\n" +
+                "Punished by: " + punisherName + "\n" +
                 "Reasoning: " + punishment.getReasoning().name() + "\n" +
                 "Punishment ID: " + punishment.getId() + "\n" +
                 "Duration: " + punishment.getDuration() + "\n" +
@@ -236,5 +244,25 @@ public class HGLBot {
         if(punishmentChannel == null) return;
 
         punishmentChannel.sendMessageEmbeds(getPunishmentEmbeds(punishment)).queue();
+    }
+
+    public static void logPunishmentPushFailure(Punishment punishment){
+        TextChannel channel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+
+        if(channel == null) return;
+
+        channel.sendMessageEmbeds(
+                HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push Punishment to Database (ID:" + punishment.getId() + ")").build()
+        ).queue();
+    }
+
+    public static void logReportUpdateFailure(Report report){
+        TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+
+        if(channel == null) return;
+
+        channel.sendMessageEmbeds(
+                HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't update Reports in Database for Punishment (ID:" + report.getPunishmentId() + ")").build()
+        ).queue();
     }
 }

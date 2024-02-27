@@ -112,6 +112,21 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
+        BrigadierCommand punishCommand = PunishCommand.createBrigadierCommand(this.server);
+        CommandMeta punishMeta = manager.metaBuilder("punish")
+                .plugin(this)
+                .build();
+
+        BrigadierCommand unpunishCommand = UnpunishCommand.createBrigadierCommand();
+        CommandMeta unpunishMeta = manager.metaBuilder("unpunish")
+                .plugin(this)
+                .build();
+
+        BrigadierCommand fetcherCommand = FetcherCommand.createBrigadierCommand();
+        CommandMeta fetcherMeta = manager.metaBuilder("fetcher")
+                .plugin(this)
+                .build();
+
         //Actual register
         manager.register(reportMeta, reportCommand);
         manager.register(dcBotMeta, dcBotCommand);
@@ -119,6 +134,9 @@ public class HGLModeration {
         manager.register(linkMeta, linkCommand);
         manager.register(reviewMeta, reviewCommand);
         manager.register(presetMeta, presetCommand);
+        manager.register(punishMeta, punishCommand);
+        manager.register(unpunishMeta, unpunishCommand);
+        manager.register(fetcherMeta, fetcherCommand);
     }
 
     public Logger getLogger(){

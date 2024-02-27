@@ -6,6 +6,7 @@ import me.aragot.hglmoderation.HGLModeration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class PlayerData {
     private int reportScore; //Score of successful reports, needed to get Report Priority of a Player

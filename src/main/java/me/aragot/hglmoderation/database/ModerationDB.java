@@ -164,4 +164,11 @@ public class ModerationDB {
     public ArrayList<Report> getReportsForPlayerExcept(String playerId, String reportId){
         return this.reportCollection.find(Filters.and(Filters.eq("reportedUUID", playerId), Filters.ne("_id", reportId), Filters.ne("state", ReportState.DONE.name()))).into(new ArrayList<>());
     }
+
+    public boolean updatePunishment(Punishment punishment){
+        return this.punishmentCollection.replaceOne(
+                        Filters.eq("_id", punishment.getId()),
+                        punishment)
+                .wasAcknowledged();
+    }
 }

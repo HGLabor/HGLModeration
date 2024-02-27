@@ -11,7 +11,6 @@ import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.data.reports.ReportState;
-import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 
