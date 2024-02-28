@@ -38,25 +38,23 @@ public class NotificationCommand {
                             String action = context.getArgument("action", String.class);
                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
 
-                            if(player != null){
-                                if(action.equalsIgnoreCase("list")){
-                                    PlayerData data = PlayerData.getPlayerData(player);
-                                    StringBuilder notificationGroups = new StringBuilder(data.getNotifications().isEmpty() ? "<br><gray>-</gray> <white>None</white>" : "");
+                            if(player == null)
+                                return BrigadierCommand.FORWARD;
 
-                                    for(Notification notif : data.getNotifications())
-                                        notificationGroups.append("<br><gray>-</gray> <white>").append(StringUtils.capitalize(notif.name().toLowerCase())).append("</white>");
+                            if(action.equalsIgnoreCase("list")){
+                                PlayerData data = PlayerData.getPlayerData(player);
+                                StringBuilder notificationGroups = new StringBuilder(data.getNotifications().isEmpty() ? "<br><gray>-</gray> <white>None</white>" : "");
 
-                                    Responder.respond(player, "You're currently in the following notification groups:<br>" + notificationGroups, ResponseType.SUCCESS);
-                                } else {
-                                    Responder.respond(player, "Invalid usage. Please try using <white>/notification <add/remove/list> <type></white>", ResponseType.ERROR);
-                                }
+                                for(Notification notif : data.getNotifications())
+                                    notificationGroups.append("<br><gray>-</gray> <white>").append(StringUtils.capitalize(notif.name().toLowerCase())).append("</white>");
 
+                                Responder.respond(player, "You're currently in the following notification groups:<br>" + notificationGroups, ResponseType.SUCCESS);
                                 return Command.SINGLE_SUCCESS;
                             }
 
+                            Responder.respond(player, "Invalid usage. Please try using <white>/notification <add/remove/list> <type></white>", ResponseType.ERROR);
 
-
-                            return BrigadierCommand.FORWARD;
+                            return Command.SINGLE_SUCCESS;
                         })
                         .then(BrigadierCommand.requiredArgumentBuilder("type", StringArgumentType.word())
                                 .suggests((context, builder) -> {
@@ -94,6 +92,7 @@ public class NotificationCommand {
                                     }
 
                                     //Retrieve data in if statements to be more efficient
+
                                     if(action.equalsIgnoreCase("add")){
                                         PlayerData data = PlayerData.getPlayerData(player);
                                         data.addNotification(notif);

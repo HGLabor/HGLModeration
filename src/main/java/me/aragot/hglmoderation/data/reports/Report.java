@@ -94,6 +94,22 @@ public class Report {
         Notifier.notify(Notification.REPORT, report.getMCReportComponent(true));
     }
 
+    public static Report getReportById(String id){
+        return HGLModeration.instance.getDatabase().getReportById(id);
+    }
+
+    public static ArrayList<Report> getReportsInProgress(){
+        return HGLModeration.instance.getDatabase().getReportsByState(ReportState.UNDER_REVIEW);
+    }
+
+    public static ArrayList<Report> getOpenReports(){
+        return HGLModeration.instance.getDatabase().getReportsByState(ReportState.OPEN);
+    }
+
+    public static ArrayList<Report> getReportsForPlayer(String uuid){
+        return HGLModeration.instance.getDatabase().getReportsByPlayer(uuid);
+    }
+
     public static String getNextReportId(){
         //table is hex number
         //Report id is random 8 digit hex number
@@ -188,7 +204,7 @@ public class Report {
 
     public Component getMcReportOverview(){
         MiniMessage mm = MiniMessage.miniMessage();
-        String reportedUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reportedUUID));
+        String reportedUserName = PlayerUtils.getUsernameFromUUID(this.reportedUUID);
         String prio = "<white>Priority:</white> <red>" + this.priority.name() + "</red>";
         String reason = "<white>Reasoning:</white> <red>" + this.reasoning.name() + "</red>";
         String reportState = "<white>State:</white> <red>" + this.state.name() + "</red>";
@@ -208,8 +224,8 @@ public class Report {
     }
 
     public String getViewDetailsRaw(){
-        String reportedUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reportedUUID));
-        String reporterUserName = PlayerUtils.getUsernameFromUUID(UUID.fromString(this.reporterUUID));
+        String reportedUserName = PlayerUtils.getUsernameFromUUID(this.reportedUUID);
+        String reporterUserName = PlayerUtils.getUsernameFromUUID(this.reporterUUID);
 
         String reportDetails = "<yellow><b>Report #" + this._id + "</b></yellow>\n\n" +
                 "<gray>Reported Player:</gray> <red>" + reportedUserName + "</red>\n" +
@@ -230,10 +246,11 @@ public class Report {
         MiniMessage mm = MiniMessage.miniMessage();
         Preset preset = PresetHandler.instance.getPresetForScore(this.reasoning, PlayerData.getPlayerData(this.getReportedUUID()).getPunishmentScore());
         String presetName = preset == null ? "None" : preset.getName();
+        PlayerData data = PlayerData.getPlayerData(this.reportedUUID);
         return mm.deserialize("<click:suggest_command:'/preset apply " + presetName + " " + this.getId() + "'><white>[<green><b>Punish</b></green>]</white></click>" +
                 "   <click:suggest_command:'/review " + this.getId() + " decline'><white>[<red><b>Decline</b></red>]</white></click>" +
                 "   <click:suggest_command:'/review " + this.getId() + " malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click>\n" +
-                "<hover:show_text:'" + getFormattedPunishments() + "'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>" +
+                "<hover:show_text:'" + data.getFormattedPunishments() + "'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>" +
                 "   <hover:show_text:'" + getOtherFormattedReports() + "'><white>[<blue><b>Other Reports</b></blue>]</white></hover>\n" +
                 "<click:run_command:'/server " + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getCurrentServer().get().getServerInfo().getName() + "'>" +
                 "<white>[<blue><b>Follow Player</b></blue>]</white></click>");
@@ -263,22 +280,6 @@ public class Report {
 
     public String getFormattedState(){
         return this.getState() == ReportState.DONE ? "was already <blue>reviewed</blue>" : "is already <yellow>under review</yellow>";
-    }
-
-    //Change display!!!!!
-    private String getFormattedPunishments(){
-        PlayerData data = PlayerData.getPlayerData(this.getReportedUUID());
-        if(data.getPunishments().isEmpty()) return "No Punishments found";
-        ArrayList<Punishment> punishments = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(this.getReportedUUID());
-        StringBuilder formatted = new StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>");
-        for(Punishment punishment : punishments) {
-            formatted.append("\n<gray>").append(punishment.getId()).append(" |</gray> <yellow>")
-                    .append(punishment.getTypesAsString()).append("</yellow> <gray>|</gray> <red>")
-                    .append(punishment.getReasoning()).append("</red> <gray>|</gray> ")
-                    .append(punishment.isActive() ? "<green>⊙</green>" : "<red>⊙</red>");
-        }
-
-        return formatted.toString();
     }
 
     private String getOtherFormattedReports(){

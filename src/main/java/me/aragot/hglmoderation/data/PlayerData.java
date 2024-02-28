@@ -3,6 +3,7 @@ package me.aragot.hglmoderation.data;
 
 import com.velocitypowered.api.proxy.Player;
 import me.aragot.hglmoderation.HGLModeration;
+import me.aragot.hglmoderation.data.punishments.Punishment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,12 +56,25 @@ public class PlayerData {
         for(PlayerData data : dataList)
             if(data.getPlayerId().equalsIgnoreCase(uuid)) return data;
 
-
         return HGLModeration.instance.getDatabase().getPlayerDataById(uuid);
     }
 
     public int getPunishmentScore() {
         return punishmentScore;
+    }
+
+    public String getFormattedPunishments(){
+        if(this.getPunishments().isEmpty()) return "No Punishments found";
+        ArrayList<Punishment> punishments = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(this.getPlayerId());
+        StringBuilder formatted = new StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>");
+        for(Punishment punishment : punishments) {
+            formatted.append("\n<gray>").append(punishment.getId()).append(" |</gray> <yellow>")
+                    .append(punishment.getTypesAsString()).append("</yellow> <gray>|</gray> <red>")
+                    .append(punishment.getReasoning()).append("</red> <gray>|</gray> ")
+                    .append(punishment.isActive() ? "<green>⊙</green>" : "<red>⊙</red>");
+        }
+
+        return formatted.toString();
     }
 
     public void setPunishmentScore(int punishmentScore) {

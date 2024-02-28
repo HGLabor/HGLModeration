@@ -209,8 +209,8 @@ public class HGLBot {
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
 
-        String punishedName = PlayerUtils.getUsernameFromUUID(UUID.fromString(punishment.getPunishedUUID()));
-        String punisherName = PlayerUtils.getUsernameFromUUID(UUID.fromString(punishment.getIssuerUUID()));
+        String punishedName = PlayerUtils.getUsernameFromUUID(punishment.getPunishedUUID());
+        String punisherName = PlayerUtils.getUsernameFromUUID(punishment.getIssuerUUID());
 
         if(punishedName == null || punisherName == null)
             return embeds;

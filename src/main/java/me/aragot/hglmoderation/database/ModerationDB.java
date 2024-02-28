@@ -158,11 +158,15 @@ public class ModerationDB {
     }
 
     public ArrayList<Punishment> getPunishmentsForPlayer(String uuid){
-        return this.punishmentCollection.find(Filters.eq("issuedTo", uuid)).into(new ArrayList<>());
+        return this.punishmentCollection.find(Filters.eq("issuedTo", uuid)).sort(Sorts.descending("issuedAt")).into(new ArrayList<>());
     }
 
     public ArrayList<Report> getReportsForPlayerExcept(String playerId, String reportId){
         return this.reportCollection.find(Filters.and(Filters.eq("reportedUUID", playerId), Filters.ne("_id", reportId), Filters.ne("state", ReportState.DONE.name()))).into(new ArrayList<>());
+    }
+
+    public ArrayList<Report> getReportsByPlayer(String playerId){
+        return this.reportCollection.find(Filters.and(Filters.eq("reportedUUID", playerId), Filters.ne("state", ReportState.DONE.name()))).into(new ArrayList<>());
     }
 
     public boolean updatePunishment(Punishment punishment){

@@ -64,6 +64,10 @@ public class PlayerListener {
                     punishment.enforce(event.getPlayer());
                 }
             }
+
+            if(punishment.getEndsAtTimestamp() + (60 * 60 * 24 * 365) <= Instant.now().getEpochSecond()){
+                data.setPunishmentScore(0);
+            }
         }
 
 
