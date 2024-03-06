@@ -7,13 +7,12 @@ import me.aragot.hglmoderation.data.punishments.Punishment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.UUID;
 
 public class PlayerData {
     private int reportScore; //Score of successful reports, needed to get Report Priority of a Player
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
-    private String _id;
+    private final String _id;
     private String discordId = "";
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
@@ -85,10 +84,6 @@ public class PlayerData {
         return this._id;
     }
 
-    public void setPlayerId(String playerId) {
-        this._id = playerId;
-    }
-
     public int getReportScore() {
         return reportScore;
     }
@@ -107,14 +102,14 @@ public class PlayerData {
 
     public void addNotification(Notification notif){
         if(!this.notifications.contains(notif)) this.notifications.add(notif);
-        if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
+        notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
 
         notificationGroups.get(notif).add(this._id);
     }
 
     public void removeNotification(Notification notif){
         this.notifications.remove(notif);
-        if(notificationGroups.get(notif) == null) notificationGroups.put(notif, new ArrayList<>());
+        notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
 
         notificationGroups.get(notif).remove(this._id);
     }

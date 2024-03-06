@@ -17,6 +17,8 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
+import java.util.NoSuchElementException;
+
 public class ReportCommand {
 
     public static BrigadierCommand createBrigadierCommand(ProxyServer server){
@@ -26,7 +28,7 @@ public class ReportCommand {
                 .executes(context -> {
                     CommandSource source = context.getSource();
                     if(source instanceof Player)
-                        Responder.respond((Player) source, "Invalid usage. Please try using <white>/report <player></white>", ResponseType.ERROR);
+                        Responder.respond(source, "Invalid usage. Please try using <white>/report <player></white>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
                 })
@@ -35,9 +37,10 @@ public class ReportCommand {
                             Player reporter = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             if(reporter == null) return builder.buildFuture();
 
-                            reporter.getCurrentServer().get().getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername()));
-
-                            return builder.buildFuture();
+                            reporter.getCurrentServer().ifPresent((currentServer) -> {
+                                currentServer.getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername()));
+                            });
+                           return builder.buildFuture();
                         })
 
                         .executes(context -> {
@@ -45,13 +48,18 @@ public class ReportCommand {
                             Player reporter = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             if(reporter == null) return BrigadierCommand.FORWARD;
 
-                            if(!isValidPlayer(server, reporter, reported))
-                                return Command.SINGLE_SUCCESS;
+                            try {
+                                Player reportedPlayer = server.getPlayer(reported).orElseThrow();
 
-                            if(server.getPlayer(reported).get().getUniqueId().equals(reporter.getUniqueId())){
-                                Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
+                                if(reportedPlayer.getUniqueId().equals(reporter.getUniqueId())){
+                                    Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            } catch(NoSuchElementException x) {
+                                Responder.respond(reporter, "The player '" + reported + "' is currently not online.", ResponseType.ERROR);
                                 return Command.SINGLE_SUCCESS;
                             }
+
 
                             reportSuggestion(reporter, reported);
 
@@ -71,15 +79,19 @@ public class ReportCommand {
 
                                 if(reporter == null) return BrigadierCommand.FORWARD;
 
-                                if(!isValidPlayer(server, reporter, reported))
+                                Player reportedPlayer;
+                                try {
+                                    reportedPlayer = server.getPlayer(reported).orElseThrow();
+                                } catch(NoSuchElementException x){
+                                    Responder.respond(reporter, "The player '" + reported + "' is currently not online.", ResponseType.ERROR);
                                     return Command.SINGLE_SUCCESS;
-                                Player reportedPlayer = server.getPlayer(reported).get();
-/*
+                                }
+
                                 if(reportedPlayer.equals(reporter)){
                                     Responder.respond(reporter, "Sorry, but you cannot report yourself!", ResponseType.ERROR);
                                     return Command.SINGLE_SUCCESS;
                                 }
-*/
+
                                 String reasoning = context.getArgument("reasoning", String.class);
 
                                 try {
@@ -95,14 +107,6 @@ public class ReportCommand {
 
                 .build();
         return new BrigadierCommand(reportNode);
-    }
-
-    private static boolean isValidPlayer(ProxyServer server, Player sender, String reported){
-        if(server.getPlayer(reported).isPresent()) return true;
-
-        Responder.respond(sender, "The player '" + reported + "' is currently not online.", ResponseType.ERROR);
-
-        return false;
     }
 
     private static void reportSuggestion(Player player, String reportedName){

@@ -14,16 +14,11 @@ import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.Notifier;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Punishment {
@@ -32,10 +27,10 @@ public class Punishment {
     private final long issuedAt; //Unix Timestamp
     private final String issuedTo;
     private final String issuedBy; //Minecraft Player UUID
-    private ArrayList<PunishmentType> types;
+    private final ArrayList<PunishmentType> types;
     private long endsAt; // Unix Timestamp; Value(-1) = Permanent Punishment;
-    private Reasoning reason;
-    private String note;
+    private final Reasoning reason;
+    private final String note;
 
     public static ArrayList<Punishment> punishments;
 
@@ -105,6 +100,7 @@ public class Punishment {
         }
 
         data.addPunishment(punishment.getId());
+        data.setPunishmentScore(data.getPunishmentScore() + weight);
 
         punishment.enforce();
 
@@ -224,8 +220,12 @@ public class Punishment {
 
     public void enforce(){
         ProxyServer server = HGLModeration.instance.getServer();
-        Player player = server.getPlayer(UUID.fromString(this.getPunishedUUID())).get();
-        if(!player.isActive()) return;
+        Player player;
+        try {
+            player = server.getPlayer(UUID.fromString(this.getPunishedUUID())).orElseThrow();
+        } catch(NoSuchElementException x){
+            return;
+        }
 
         if(this.getTypes().contains(PunishmentType.MUTE)){
             PlayerListener.playerMutes.put(this.getPunishedUUID(), this);
@@ -233,11 +233,8 @@ public class Punishment {
         }
 
         if(this.getTypes().contains(PunishmentType.BAN)){
-
             player.disconnect(getBanDisplay());
         }
-
-
     }
 
     public void enforce(Player player){

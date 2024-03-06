@@ -15,7 +15,11 @@ import me.aragot.hglmoderation.commands.*;
 import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
+import me.aragot.hglmoderation.tools.PlayerUtils;
 import org.slf4j.Logger;
+
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Plugin(
         id = "hglmoderation",
@@ -24,16 +28,15 @@ import org.slf4j.Logger;
         authors = {"Aragot"}
 )
 
-/**
- * To do:
- * Something like /report list to see all currently active reports -> Discord as well
- * /Punish command for minecraft ingame -> No Discord Integration
- * Discord Integration of using punishment preset
- * Discord Log change message?
+/*TODO:
+ * Discord Log change message? Channel.retrieveMessageById();
+ *  -> Push report AFTER report message was sent to Channel
  *  -> Maybe ignore and delete options on click if its already reviewed?
  * Permission checks
+ * Report Threshold -> No Spam
+ * Add IP_BANS
  * Message Reporters when finishing review?
- * How to handle
+ *  -> For Notifier -> Keep open Reports in RAM so less DB calls
  */
 
 public class HGLModeration {
@@ -84,13 +87,6 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
-
-        BrigadierCommand dcBotCommand = DiscordBotCommand.createBrigadierCommand(this.server, this.logger);
-        CommandMeta dcBotMeta = manager.metaBuilder("dcbot")
-                .aliases("dc")
-                .plugin(this)
-                .build();
-
         BrigadierCommand notifCommand = NotificationCommand.createBrigadierCommand();
         CommandMeta notifMeta = manager.metaBuilder("notification")
                 .aliases("notif")
@@ -102,12 +98,12 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
-        BrigadierCommand reviewCommand = ReviewCommand.createBrigadierCommand(this.server);
+        BrigadierCommand reviewCommand = ReviewCommand.createBrigadierCommand();
         CommandMeta reviewMeta = manager.metaBuilder("review")
                 .plugin(this)
                 .build();
 
-        BrigadierCommand presetCommand = PresetCommand.createBrigadierCommand(this.server);
+        BrigadierCommand presetCommand = PresetCommand.createBrigadierCommand();
         CommandMeta presetMeta = manager.metaBuilder("preset")
                 .plugin(this)
                 .build();
@@ -129,7 +125,6 @@ public class HGLModeration {
 
         //Actual register
         manager.register(reportMeta, reportCommand);
-        manager.register(dcBotMeta, dcBotCommand);
         manager.register(notifMeta, notifCommand);
         manager.register(linkMeta, linkCommand);
         manager.register(reviewMeta, reviewCommand);
@@ -151,4 +146,11 @@ public class HGLModeration {
         return this.database;
     }
 
+    public String getPlayerNameEfficiently(String uuid){
+        try{
+            return server.getPlayer(UUID.fromString(uuid)).orElseThrow().getUsername();
+        } catch(NoSuchElementException x){
+            return PlayerUtils.getUsernameFromUUID(uuid);
+        }
+    }
 }

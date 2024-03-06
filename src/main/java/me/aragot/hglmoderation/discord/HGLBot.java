@@ -1,8 +1,8 @@
 package me.aragot.hglmoderation.discord;
 
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
-import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Priority;
 import me.aragot.hglmoderation.data.Reasoning;
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class HGLBot {
 
@@ -161,8 +160,11 @@ public class HGLBot {
         eb.setColor(color);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
 
-        String description = "Reported Name: " + server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername() + "\n" +
-                "Reported by: " + server.getPlayer(UUID.fromString(report.getReporterUUID())).get().getUsername() + "\n" +
+        String reportedName = HGLModeration.instance.getPlayerNameEfficiently(report.getReportedUUID());
+        String reporterName = HGLModeration.instance.getPlayerNameEfficiently(report.getReporterUUID());
+
+        String description = "Reported Name: " + reportedName + "\n" +
+                "Reported by: " + reporterName + "\n" +
                 "Reasoning: " + report.getReasoning().name() + "\n" +
                 "Report ID: " + report.getId() + "\n" +
                 "Priority: " + report.getPriority() + "\n" +
@@ -182,7 +184,7 @@ public class HGLBot {
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
 
         StringBuilder description = new StringBuilder("```");
-        String username = server.getPlayer(UUID.fromString(report.getReportedUUID())).get().getUsername();
+        String username = HGLModeration.instance.getPlayerNameEfficiently(report.getReportedUUID());
 
         if(report.getReportedUserMessages().isEmpty()){
             eb.setDescription("No messages sent");

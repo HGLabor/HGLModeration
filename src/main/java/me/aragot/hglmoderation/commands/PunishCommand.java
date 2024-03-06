@@ -16,7 +16,6 @@ import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 

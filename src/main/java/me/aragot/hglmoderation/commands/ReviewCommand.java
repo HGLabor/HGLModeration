@@ -6,26 +6,24 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-
-import java.util.UUID;
+import me.aragot.hglmoderation.tools.PlayerUtils;
 
 public class ReviewCommand {
 
-    public static BrigadierCommand createBrigadierCommand(ProxyServer server){
+    public static BrigadierCommand createBrigadierCommand(){
         LiteralCommandNode<CommandSource> reviewNode = BrigadierCommand.literalArgumentBuilder("review")
                 .requires(source -> source.hasPermission("hglmoderation.review"))
                 //execute when /review
                 .executes(context -> {
                     CommandSource source = context.getSource();
                     if(source instanceof Player)
-                        Responder.respond((Player) source, "Invalid usage. Please try using <white>/review <reportID></white>", ResponseType.ERROR);
+                        Responder.respond(source, "Invalid usage. Please try using <white>/review <reportID></white>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
                 })
@@ -44,10 +42,14 @@ public class ReviewCommand {
                             }
 
                             if(report.getState() != ReportState.OPEN){
-                                Player reviewedBy = server.getPlayer(UUID.fromString(report.getReviewedBy())).get();
-                                Responder.respond(executedBy,
-                                        "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewedBy.getUsername() +"</red>.",
-                                        ResponseType.DEFAULT);
+                                if(report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString())){
+                                    executedBy.sendMessage(report.getMCReportActions());
+                                } else {
+                                    String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
+                                    Responder.respond(executedBy,
+                                            "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewer +"</red>.",
+                                            ResponseType.DEFAULT);
+                                }
                                 return Command.SINGLE_SUCCESS;
                             }
 
@@ -78,12 +80,12 @@ public class ReviewCommand {
                                         return Command.SINGLE_SUCCESS;
                                     }
 
-                                    if(report.getState() == ReportState.DONE ||
-                                            (report.getState() == ReportState.UNDER_REVIEW && !report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString()))){
+                                    if((report.getState() == ReportState.DONE) ||
+                                       (report.getState() == ReportState.UNDER_REVIEW && !report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString()))){
 
-                                        Player reviewedBy = server.getPlayer(UUID.fromString(report.getReviewedBy())).get();
+                                        String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
                                         Responder.respond(executedBy,
-                                                "Sorry but this is not within your scope. Please contact <red>" + reviewedBy.getUsername() +"</red> to talk about this case.",
+                                                "Sorry but this is not within your scope. Please contact <red>" + reviewer +"</red> to talk about this case.",
                                                 ResponseType.DEFAULT);
                                         return Command.SINGLE_SUCCESS;
                                     }

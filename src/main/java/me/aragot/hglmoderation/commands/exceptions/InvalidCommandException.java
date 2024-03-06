@@ -2,7 +2,7 @@ package me.aragot.hglmoderation.commands.exceptions;
 
 public class InvalidCommandException extends Exception {
 
-    private String response;
+    private final String response;
 
     public InvalidCommandException(String response){
         this.response = response;

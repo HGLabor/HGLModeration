@@ -1,6 +1,5 @@
 package me.aragot.hglmoderation.tools;
 
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.Notification;
@@ -20,8 +19,7 @@ public class Notifier {
             return;
 
         for(String playerId : notifGroup){
-            Player player = server.getPlayer(UUID.fromString(playerId)).get();
-            player.sendMessage(component);
+            server.getPlayer(UUID.fromString(playerId)).ifPresent(player -> player.sendMessage(component));
         }
     }
 

@@ -9,6 +9,7 @@ import me.aragot.hglmoderation.data.Notification;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.punishments.PunishmentType;
+import me.aragot.hglmoderation.tools.PlayerUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -35,7 +36,7 @@ public class PlayerListener {
 
         ArrayList<String> messages = userMessages.get(event.getPlayer().getUniqueId().toString());
         if(messages == null){
-            userMessages.put(event.getPlayer().getUniqueId().toString(), new ArrayList<>(Arrays.asList(event.getMessage())));
+            userMessages.put(event.getPlayer().getUniqueId().toString(), new ArrayList<>(Collections.singletonList(event.getMessage())));
             return;
         }
 
@@ -73,7 +74,7 @@ public class PlayerListener {
 
         String uuid = event.getPlayer().getUniqueId().toString();
         for(Notification notif : data.getNotifications()){
-            if(PlayerData.notificationGroups.get(notif) == null) PlayerData.notificationGroups.put(notif, new ArrayList<>());
+            PlayerData.notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
             PlayerData.notificationGroups.get(notif).add(uuid);
         }
 
@@ -91,6 +92,7 @@ public class PlayerListener {
         userMessages.remove(uuid);
         HGLModeration.instance.getDatabase().updatePlayerData(data);
         PlayerData.dataList.remove(data);
+        PlayerUtils.removePlayerFromCache(event.getPlayer().getUniqueId().toString());
     }
 
 }

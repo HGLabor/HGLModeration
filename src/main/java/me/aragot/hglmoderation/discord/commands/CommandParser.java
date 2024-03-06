@@ -5,11 +5,12 @@ import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandParser extends ListenerAdapter {
 
     @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event){
         CommandExecutor executor = new CommandExecutor(event);
 
         switch(event.getFullCommandName().split(" ")[0]){

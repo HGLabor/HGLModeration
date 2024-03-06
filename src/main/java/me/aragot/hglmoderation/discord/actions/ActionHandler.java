@@ -21,7 +21,7 @@ public class ActionHandler extends ListenerAdapter {
     @Override
     public void onStringSelectInteraction(@Nonnull StringSelectInteractionEvent event) {
         String menuId = event.getSelectMenu().getId();
-        // its the /preset menu
+        //it's the /preset menu
         if(menuId.equalsIgnoreCase("preset-picker")){
             Preset preset = PresetHandler.instance.getPresetByName(event.getSelectedOptions().get(0).getLabel());
 

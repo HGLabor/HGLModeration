@@ -79,15 +79,6 @@ public class ModerationDB {
 
     }
 
-    //Only used to Update to Update Reports to Under_Review see: ReviewCommand.java
-    public boolean updateReport(Report report){
-
-        return this.reportCollection.updateOne(
-                Filters.eq("_id", report.getId()),
-                Updates.combine(Updates.set("state", report.getState()), Updates.set("reviewedBy", report.getReviewedBy()))
-        ).wasAcknowledged();
-    }
-
     public boolean updateReports(String reportedUUID, Reasoning reason, ReportState state){
 
         return this.reportCollection.updateMany(

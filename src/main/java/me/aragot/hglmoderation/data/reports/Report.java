@@ -8,7 +8,6 @@ import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.data.Notification;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 import me.aragot.hglmoderation.response.ResponseType;
@@ -242,18 +241,24 @@ public class Report {
     }
 
     public Component getMCReportActions(){
-        //HoverText missing
         MiniMessage mm = MiniMessage.miniMessage();
         Preset preset = PresetHandler.instance.getPresetForScore(this.reasoning, PlayerData.getPlayerData(this.getReportedUUID()).getPunishmentScore());
         String presetName = preset == null ? "None" : preset.getName();
         PlayerData data = PlayerData.getPlayerData(this.reportedUUID);
-        return mm.deserialize("<click:suggest_command:'/preset apply " + presetName + " " + this.getId() + "'><white>[<green><b>Punish</b></green>]</white></click>" +
-                "   <click:suggest_command:'/review " + this.getId() + " decline'><white>[<red><b>Decline</b></red>]</white></click>" +
-                "   <click:suggest_command:'/review " + this.getId() + " malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click>\n" +
+
+        String serverName;
+        try {
+            serverName = HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).orElseThrow().getCurrentServer().orElseThrow().getServerInfo().getName();
+        } catch(NoSuchElementException x){
+            serverName = "None";
+        }
+
+        return mm.deserialize("<hover:show_text:'<green>Accept and Punish</green>'><click:suggest_command:'/preset apply " + presetName + " " + this.getId() + "'><white>[<green><b>Punish</b></green>]</white></click></hover>" +
+                "   <hover:show_text:'<red>Decline Report</red>'><click:suggest_command:'/review " + this.getId() + " decline'><white>[<red><b>Decline</b></red>]</white></click></hover>" +
+                "   <hover:show_text:'<red>Mark as malicious</red>'><click:suggest_command:'/review " + this.getId() + " malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click></hover>\n" +
                 "<hover:show_text:'" + data.getFormattedPunishments() + "'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>" +
                 "   <hover:show_text:'" + getOtherFormattedReports() + "'><white>[<blue><b>Other Reports</b></blue>]</white></hover>\n" +
-                "<click:run_command:'/server " + HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getCurrentServer().get().getServerInfo().getName() + "'>" +
-                "<white>[<blue><b>Follow Player</b></blue>]</white></click>");
+                "<hover:show_text:'<blue>Teleport to Server</blue>'><click:run_command:'/server " + serverName + "'><white>[<blue><b>Follow Player</b></blue>]</white></click></hover>");
     }
 
     public Component getMCReportComponent(boolean incoming){
@@ -271,7 +276,14 @@ public class Report {
             return "<gray>No Messages sent</gray>";
 
         StringBuilder messages = new StringBuilder();
-        String username = HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).get().getUsername();
+
+        String username;
+        try {
+            username = HGLModeration.instance.getServer().getPlayer(UUID.fromString(this.reportedUUID)).orElseThrow().getUsername();
+        } catch(NoSuchElementException x){
+            username = PlayerUtils.getUsernameFromUUID(this.reportedUUID);
+        }
+
         for(String message : this.getReportedUserMessages())
             messages.append("\n<red>").append(username).append("</red>: ").append(message);
 
@@ -295,6 +307,4 @@ public class Report {
 
         return formatted.toString();
     }
-
-
 }

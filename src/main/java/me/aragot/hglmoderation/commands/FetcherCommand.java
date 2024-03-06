@@ -12,7 +12,6 @@ import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.PlayerUtils;
@@ -22,7 +21,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.UUID;
 
 public class FetcherCommand {
 

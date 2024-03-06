@@ -2,6 +2,7 @@ package me.aragot.hglmoderation.admin.preset;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.Reasoning;
 
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 
 public class PresetHandler {
 
-    private ArrayList<Preset> presetList = new ArrayList<>();
+    private final ArrayList<Preset> presetList = new ArrayList<>();
 
     public static PresetHandler instance;
 
@@ -42,8 +43,8 @@ public class PresetHandler {
             JsonReader reader = new JsonReader(new FileReader(presetFile));
             instance = gson.fromJson(reader, PresetHandler.class);
             reader.close();
-        } catch (Exception x) {
-            x.printStackTrace();
+        } catch (IOException x) {
+            HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
         if(instance == null) instance = new PresetHandler();
@@ -57,8 +58,8 @@ public class PresetHandler {
         if(!presetFile.exists()){
             try {
                 presetFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException x) {
+                HGLModeration.instance.getLogger().error(x.getMessage());
             }
         }
 
@@ -67,8 +68,8 @@ public class PresetHandler {
             FileWriter fw = new FileWriter(presetFile);
             fw.write(gson.toJson(instance));
             fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException x) {
+            HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
     }

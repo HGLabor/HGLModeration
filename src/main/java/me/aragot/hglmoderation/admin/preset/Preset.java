@@ -1,13 +1,10 @@
 package me.aragot.hglmoderation.admin.preset;
 
-import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.punishments.PunishmentType;
 import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.database.ModerationDB;
-import me.aragot.hglmoderation.tools.StringUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -34,6 +31,7 @@ public class Preset {
         this.reasoningScope = new ArrayList<>();
         this.start = start;
         this.end = end;
+        this.weight = weight;
     }
 
     public void setName(String presetName){

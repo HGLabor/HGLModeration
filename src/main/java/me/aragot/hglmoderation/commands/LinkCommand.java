@@ -7,7 +7,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.commands.exceptions.InvalidCommandException;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.discord.commands.CommandExecutor;
 import me.aragot.hglmoderation.response.Responder;
@@ -26,7 +25,7 @@ public class LinkCommand {
 
                     CommandSource source = context.getSource();
                     if(source instanceof Player)
-                        Responder.respond((Player) source, "Invalid usage. Please try using <white>/link <key/reset>", ResponseType.ERROR);
+                        Responder.respond(source, "Invalid usage. Please try using <white>/link <key/reset>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
                 })

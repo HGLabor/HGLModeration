@@ -19,7 +19,7 @@ public class NotificationCommand {
                 .executes(context -> {
                     CommandSource source = context.getSource();
                     if(source instanceof Player)
-                        Responder.respond((Player) source, "Invalid usage. Please try using <white>/notification <add/remove/list> <type></white>", ResponseType.ERROR);
+                        Responder.respond(source, "Invalid usage. Please try using <white>/notification <add/remove/list> <type></white>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
                 })
@@ -34,7 +34,6 @@ public class NotificationCommand {
 
                         .executes(context -> {
 
-                            CommandSource source = context.getSource();
                             String action = context.getArgument("action", String.class);
                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
 

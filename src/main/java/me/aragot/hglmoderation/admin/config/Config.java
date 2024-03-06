@@ -2,6 +2,7 @@ package me.aragot.hglmoderation.admin.config;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import me.aragot.hglmoderation.HGLModeration;
 
 import java.io.File;
 import java.io.FileReader;
@@ -45,8 +46,8 @@ public class Config {
             JsonReader reader = new JsonReader(new FileReader(configFile));
             instance = gson.fromJson(reader, Config.class);
             reader.close();
-        } catch (Exception x) {
-            x.printStackTrace();
+        } catch (IOException x) {
+            HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
         if(instance == null) instance = new Config();
@@ -59,8 +60,8 @@ public class Config {
         if(!configFile.exists()){
             try {
                 configFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException x) {
+                HGLModeration.instance.getLogger().error(x.getMessage());
             }
         }
 
@@ -69,8 +70,8 @@ public class Config {
             FileWriter fw = new FileWriter(configFile);
             fw.write(gson.toJson(instance));
             fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException x) {
+            HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
     }
