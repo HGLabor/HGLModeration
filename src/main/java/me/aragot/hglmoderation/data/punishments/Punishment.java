@@ -64,13 +64,7 @@ public class Punishment {
             return;
         }
 
-        report.setPunishmentId(punishment.getId());
-        report.setState(ReportState.DONE);
-
-        if(!HGLModeration.instance.getDatabase().updateReportsBasedOn(report) && isBotActive){
-            HGLBot.logReportUpdateFailure(report);
-            return;
-        }
+        report.accept(punishment.getId());
 
         data.addPunishment(punishment.getId());
 
@@ -266,9 +260,7 @@ public class Punishment {
 
     public Component getMuteComponent(){
         String muteComponent = "<gold>=================================================</gold>\n\n" +
-                "        <red>You were muted for misbehaving.\n" +
-                "        <b>DO NOT SHARE YOUR PUNISHMENT ID!!!</b></red>\n\n" +
-                "        <gray>Punishment ID:</gray> <red>" + this.getId() + "</red>\n" +
+                "        <red>You were muted for misbehaving.\n\n" +
                 "        <gray>Reason:</gray> <red>" + Reasoning.getPrettyReasoning(this.getReasoning()) + "</red>\n" +
                 "        <gray>Duration:</gray> <red>" + this.getRemainingTime() + "</red>\n\n" +
                 "<gold>=================================================</gold>";

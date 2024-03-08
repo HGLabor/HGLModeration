@@ -14,10 +14,13 @@ import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.punishments.PunishmentType;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
+import me.aragot.hglmoderation.tools.permissions.PermCompare;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class PunishCommand {
 
@@ -116,7 +119,8 @@ public class PunishCommand {
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            //permission check here
+                                            if(!hasPermission(player, toPunish))
+                                                return Command.SINGLE_SUCCESS;
 
 
                                             //SubmitPunishment automatically responds to the Player.
@@ -188,7 +192,8 @@ public class PunishCommand {
                                                         return Command.SINGLE_SUCCESS;
                                                     }
 
-                                                    //permission check here
+                                                    if(!hasPermission(player, toPunish))
+                                                        return Command.SINGLE_SUCCESS;
 
                                                     Punishment.submitPunishment(toPunish,
                                                             player,
@@ -267,7 +272,8 @@ public class PunishCommand {
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
 
-                                                            //permission check here
+                                                            if(!hasPermission(player, toPunish))
+                                                                return Command.SINGLE_SUCCESS;
 
                                                             Punishment.submitPunishment(toPunish,
                                                                     player,
@@ -287,5 +293,18 @@ public class PunishCommand {
 
                 .build();
         return new BrigadierCommand(reviewNode);
+    }
+
+    private static boolean hasPermission(Player base, Player toCompare){
+        try {
+            int permission = PermCompare.comparePermissionOf(base.getUniqueId(), toCompare.getUniqueId()).get();
+            if(permission != PermCompare.GREATER_THAN){
+                Responder.respond(base, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
+                return false;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }

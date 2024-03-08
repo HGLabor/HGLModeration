@@ -116,15 +116,15 @@ public class HGLBot {
         switch(type){
             case ERROR:
                 eb.setTitle("Error!");
-                eb.setColor(Color.red);
+                eb.setColor(Color.RED);
                 break;
             case SUCCESS:
                 eb.setTitle("Success!");
-                eb.setColor(Color.green);
+                eb.setColor(Color.GREEN);
                 break;
             case DEFAULT:
                 eb.setTitle("Hey, listen!");
-                eb.setColor(Color.blue);
+                eb.setColor(Color.BLUE);
                 break;
         }
 

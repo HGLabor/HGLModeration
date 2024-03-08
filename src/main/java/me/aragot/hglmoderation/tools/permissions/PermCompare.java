@@ -1,9 +1,9 @@
 package me.aragot.hglmoderation.tools.permissions;
 
+import me.aragot.hglmoderation.HGLModeration;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.group.GroupManager;
 import net.luckperms.api.model.user.User;
 
 import java.util.UUID;
@@ -15,7 +15,7 @@ public class PermCompare {
     public static final int SMALLER_THAN = 1;
     public static final int GREATER_THAN = 2;
 
-    public CompletableFuture<Integer> comparePermissionOf(UUID base, UUID toCompare){
+    public static CompletableFuture<Integer> comparePermissionOf(UUID base, UUID toCompare){
         LuckPerms luckPerms = LuckPermsProvider.get();
         User baseUser;
         User toCompareUser;
@@ -26,19 +26,8 @@ public class PermCompare {
             return CompletableFuture.completedFuture(SMALLER_THAN);
         }
 
-        GroupManager groupManager = luckPerms.getGroupManager();
-
-        Group baseGroup = groupManager.getGroup(baseUser.getPrimaryGroup());
-        Group toCompareGroup = groupManager.getGroup(toCompareUser.getPrimaryGroup());
-
-        if(baseGroup == null)
-            return CompletableFuture.completedFuture(SMALLER_THAN);
-
-        if(toCompareGroup == null)
-            return CompletableFuture.completedFuture(GREATER_THAN);
-
-        int baseUserWeight = baseGroup.getWeight().orElse(Integer.MIN_VALUE);
-        int toCompareWeight = toCompareGroup.getWeight().orElse(Integer.MIN_VALUE);
+        int baseUserWeight = getHighestWeightOfUser(baseUser);
+        int toCompareWeight = getHighestWeightOfUser(toCompareUser);
 
         if(baseUserWeight > toCompareWeight)
             return CompletableFuture.completedFuture(GREATER_THAN);
@@ -46,5 +35,14 @@ public class PermCompare {
             return CompletableFuture.completedFuture(SMALLER_THAN);
 
         return CompletableFuture.completedFuture(EQUAL);
+    }
+
+    private static int getHighestWeightOfUser(User user) {
+        int highestWeight = Integer.MIN_VALUE;
+        for (Group group : user.getInheritedGroups(user.getQueryOptions())) {
+            int groupWeight = group.getWeight().orElse(0);
+            highestWeight = Math.max(highestWeight, groupWeight);
+        }
+        return highestWeight;
     }
 }

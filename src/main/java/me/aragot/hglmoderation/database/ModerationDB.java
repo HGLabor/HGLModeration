@@ -6,7 +6,6 @@ import com.mongodb.MongoException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import me.aragot.hglmoderation.data.PlayerData;
-import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.punishments.Punishment;
 import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.data.reports.ReportState;
@@ -51,11 +50,9 @@ public class ModerationDB {
         this.playerDataCollection = mongoDB.getCollection(dbPrefix + "playerdata", PlayerData.class);
     }
 
-    public ArrayList<Report> getReportsByState(ReportState state){
-
-
+    public ArrayList<Report> getUnfinishedReports(){
         MongoCursor<Report> cursor =  this.reportCollection.aggregate(
-                List.of(Aggregates.match(Filters.eq("state", state.name())))
+                List.of(Aggregates.match(Filters.or(Filters.eq("state", ReportState.OPEN), Filters.eq("state", ReportState.UNDER_REVIEW))))
         ).iterator();
 
         ArrayList<Report> reportList = new ArrayList<>();
@@ -69,25 +66,13 @@ public class ModerationDB {
     }
 
     public boolean pushReport(Report report){
-
         try {
             this.reportCollection.insertOne(report);
             return true;
+
         } catch (MongoException x) {
             return false;
         }
-
-    }
-
-    public boolean updateReports(String reportedUUID, Reasoning reason, ReportState state){
-
-        return this.reportCollection.updateMany(
-                Filters.and(Filters.eq("reportedUUID", reportedUUID),
-                        Filters.eq("reasoning", reason),
-                        Filters.or(Filters.eq("state", ReportState.UNDER_REVIEW), Filters.eq("state", ReportState.OPEN))
-                ),
-                Updates.set("state", state)
-        ).wasAcknowledged();
     }
 
     public boolean updateReportsBasedOn(Report report){

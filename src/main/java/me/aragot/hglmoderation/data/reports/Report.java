@@ -2,7 +2,6 @@ package me.aragot.hglmoderation.data.reports;
 
 import com.velocitypowered.api.proxy.Player;
 import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.data.Notification;
@@ -10,16 +9,15 @@ import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
-import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.Notifier;
 import me.aragot.hglmoderation.tools.PlayerUtils;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class Report {
@@ -39,6 +37,8 @@ public class Report {
     private String discordLog = "";
 
     private ArrayList<String> reportedUserMessages;
+
+    private static ArrayList<Report> unfinishedReports = new ArrayList<>();
 
     public Report(String reportId, String reportedUUID, String reporterUUID, long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
         this._id = reportId;
@@ -80,29 +80,32 @@ public class Report {
 
         HGLBot.logReport(report);
 
-        if(!HGLModeration.instance.getDatabase().pushReport(report)){
-            TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getReportChannelId());
+        HGLModeration.instance.getDatabase().pushReport(report);
 
-            if(channel == null) return;
-            channel.sendMessageEmbeds(
-                    HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push report to Database (ID:" + report.getId() + ")").build()
-            ).queue();
-
-        }
+        unfinishedReports.add(report);
 
         Notifier.notify(Notification.REPORT, report.getMCReportComponent(true));
     }
 
+    public static void findOpenReports(){
+        unfinishedReports = HGLModeration.instance.getDatabase().getUnfinishedReports();
+    }
+
     public static Report getReportById(String id){
+        for(Report report : unfinishedReports){
+            if(id.equalsIgnoreCase(report.getId()))
+                return report;
+        }
+
         return HGLModeration.instance.getDatabase().getReportById(id);
     }
 
-    public static ArrayList<Report> getReportsInProgress(){
-        return HGLModeration.instance.getDatabase().getReportsByState(ReportState.UNDER_REVIEW);
+    public static List<Report> getReportsInProgress(){
+        return unfinishedReports.stream().filter((report) -> report.getState() == ReportState.UNDER_REVIEW).collect(Collectors.toList());
     }
 
-    public static ArrayList<Report> getOpenReports(){
-        return HGLModeration.instance.getDatabase().getReportsByState(ReportState.OPEN);
+    public static List<Report> getOpenReports(){
+        return unfinishedReports.stream().filter((report -> report.getState() == ReportState.OPEN)).collect(Collectors.toList());
     }
 
     public static ArrayList<Report> getReportsForPlayer(String uuid){
@@ -306,5 +309,47 @@ public class Report {
         }
 
         return formatted.toString();
+    }
+
+    public void startReview(String reviewer){
+        unfinishedReports.forEach((report -> {
+            if(!report.getReportedUUID().equalsIgnoreCase(this.getReportedUUID()) || (report.getReasoning() != this.getReasoning()))
+                return;
+            report.setReviewedBy(reviewer);
+            report.setState(ReportState.UNDER_REVIEW);
+        }));
+
+        HGLModeration.instance.getDatabase().updateReportsBasedOn(this);
+    }
+
+    public void decline(){
+        List<Report> reviewableReports = unfinishedReports.stream().filter(
+                (report) -> report.getReportedUUID().equalsIgnoreCase(this.getReportedUUID()) && report.getReasoning() == this.getReasoning()
+        ).collect(Collectors.toList());
+
+        if(HGLModeration.instance.getDatabase().updateReportsBasedOn(this)){
+            unfinishedReports.removeAll(reviewableReports);
+        }
+    }
+
+    public void malicious(){
+        this.decline();
+
+        PlayerData data = PlayerData.getPlayerData(this.reporterUUID);
+        data.setReportScore(data.getPunishmentScore() - 2);
+    }
+
+    public void accept(String punishmentId){
+        List<Report> reviewableReports = unfinishedReports.stream().filter(
+                (report) -> report.getReportedUUID().equalsIgnoreCase(this.getReportedUUID()) && report.getReasoning() == this.getReasoning()
+        ).collect(Collectors.toList());
+
+        ArrayList<UUID> reporters = new ArrayList<>();
+        for(Report report : reviewableReports)
+            reporters.add(UUID.fromString(report.getReporterUUID()));
+
+        HGLModeration.instance.getDatabase().updateReportsBasedOn(this);
+
+        Notifier.notifyReporters(reporters);
     }
 }

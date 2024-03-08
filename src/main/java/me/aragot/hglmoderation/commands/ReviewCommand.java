@@ -13,6 +13,10 @@ import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.PlayerUtils;
+import me.aragot.hglmoderation.tools.permissions.PermCompare;
+
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class ReviewCommand {
 
@@ -34,11 +38,21 @@ public class ReviewCommand {
                             Player executedBy = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             if(executedBy == null) return BrigadierCommand.FORWARD;
 
-                            Report report = HGLModeration.instance.getDatabase().getReportById(reportId);
+                            Report report = Report.getReportById(reportId);
 
                             if(report == null){
                                 Responder.respond(executedBy, "Sorry, but I wasn't able to find this report.", ResponseType.ERROR);
                                 return Command.SINGLE_SUCCESS;
+                            }
+
+                            try {
+                                int permission = PermCompare.comparePermissionOf(executedBy.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
+                                if(permission != PermCompare.GREATER_THAN){
+                                    Responder.respond(executedBy, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            } catch (InterruptedException | ExecutionException e) {
+                                e.printStackTrace();
                             }
 
                             if(report.getState() != ReportState.OPEN){
@@ -53,10 +67,7 @@ public class ReviewCommand {
                                 return Command.SINGLE_SUCCESS;
                             }
 
-                            report.setReviewedBy(executedBy.getUniqueId().toString());
-                            report.setState(ReportState.UNDER_REVIEW);
-
-                            HGLModeration.instance.getDatabase().updateReportsBasedOn(report);
+                            report.startReview(executedBy.getUniqueId().toString());
 
                             executedBy.sendMessage(report.getMCReportActions());
 
@@ -73,7 +84,7 @@ public class ReviewCommand {
                                     Player executedBy = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                                     if(executedBy == null) return BrigadierCommand.FORWARD;
 
-                                    Report report = HGLModeration.instance.getDatabase().getReportById(reportId);
+                                    Report report = Report.getReportById(reportId);
 
                                     if(report == null){
                                         Responder.respond(executedBy, "Sorry, but I wasn't able to find this report.", ResponseType.ERROR);
@@ -82,10 +93,13 @@ public class ReviewCommand {
 
                                     if((report.getState() == ReportState.DONE) ||
                                        (report.getState() == ReportState.UNDER_REVIEW && !report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString()))){
-
+                                        if(report.getReviewedBy() == null || report.getReviewedBy().isEmpty()){
+                                            Responder.respond(executedBy, "Please start reviewing this report before handling it. Use /review " + report.getId() + " to start the review process", ResponseType.ERROR);
+                                            return Command.SINGLE_SUCCESS;
+                                        }
                                         String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
                                         Responder.respond(executedBy,
-                                                "Sorry but this is not within your scope. Please contact <red>" + reviewer +"</red> to talk about this case.",
+                                                "Sorry but this is not within your scope. Please contact <red>" + reviewer + "</red> to talk about this case.",
                                                 ResponseType.DEFAULT);
                                         return Command.SINGLE_SUCCESS;
                                     }
@@ -93,17 +107,13 @@ public class ReviewCommand {
                                     //Report is from myself and under_review or open
                                     String action = context.getArgument("action", String.class);
                                     if(action.equalsIgnoreCase("decline")){
-                                        HGLModeration.instance.getDatabase().updateReports(report.getReportedUUID(), report.getReasoning(), ReportState.DONE);
+                                        report.decline();
                                         Responder.respond(executedBy,
                                                 "<green>Thank you for reviewing this report! Keep up the good work :)</green>",
                                                 ResponseType.DEFAULT);
 
                                     } else if(action.equalsIgnoreCase("malicious")){
-                                        HGLModeration.instance.getDatabase().updateReports(report.getReportedUUID(), report.getReasoning(), ReportState.DONE);
-
-                                        PlayerData reporterData = PlayerData.getPlayerData(report.getReporterUUID());
-
-                                        reporterData.setReportScore(reporterData.getReportScore() - 2);
+                                        report.malicious();
 
                                         Responder.respond(executedBy,
                                                 "<green>Thank you for reviewing this report! The Reporter has been punished. Keep up the good work :)</green>",

@@ -4,7 +4,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.data.Notification;
 import me.aragot.hglmoderation.data.PlayerData;
-import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.response.Responder;
+import me.aragot.hglmoderation.response.ResponseType;
 import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
@@ -23,7 +24,9 @@ public class Notifier {
         }
     }
 
-    public void notifyReporters(Report report){
-
+    public static void notifyReporters(ArrayList<UUID> reporters){
+        ProxyServer server = HGLModeration.instance.getServer();
+        for(UUID reporter : reporters)
+            server.getPlayer(reporter).ifPresent((player) -> Responder.respond(player, "Your report has been reviewed and accepted. Thanks for keeping this community safe.", ResponseType.SUCCESS));
     }
 }

@@ -15,7 +15,11 @@ import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.tools.PlayerUtils;
+import me.aragot.hglmoderation.tools.permissions.PermCompare;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 
 public class PresetCommand {
@@ -115,7 +119,17 @@ public class PresetCommand {
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            Report report = HGLModeration.instance.getDatabase().getReportById(reportId);
+                                            Report report = Report.getReportById(reportId);
+
+                                            try {
+                                                int permission = PermCompare.comparePermissionOf(player.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
+                                                if(permission != PermCompare.GREATER_THAN){
+                                                    Responder.respond(player, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
+                                                    return Command.SINGLE_SUCCESS;
+                                                }
+                                            } catch (InterruptedException | ExecutionException e) {
+                                                e.printStackTrace();
+                                            }
 
                                             if(report == null){
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the report you were looking for.", ResponseType.ERROR);

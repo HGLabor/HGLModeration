@@ -21,6 +21,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class FetcherCommand {
 
@@ -60,7 +61,7 @@ public class FetcherCommand {
                                     context.getSource().sendMessage(getComponentForPlayerData(data));
                                     break;
                                 case "report":
-                                    ArrayList<Report> openReports = Report.getOpenReports();
+                                    List<Report> openReports = Report.getOpenReports();
                                     context.getSource().sendMessage(getComponentForReports(openReports));
                                     break;
                                 case "punishment":
@@ -120,7 +121,7 @@ public class FetcherCommand {
                                             break;
                                         case "report":
                                             if(id.equalsIgnoreCase("under_review")){
-                                                ArrayList<Report> reportsInProgress = Report.getReportsInProgress();
+                                                List<Report> reportsInProgress = Report.getReportsInProgress();
 
                                                 context.getSource().sendMessage(getComponentForReports(reportsInProgress));
                                                 break;
@@ -173,7 +174,7 @@ public class FetcherCommand {
         return new BrigadierCommand(fetcherNode);
     }
 
-    public static Component getComponentForReports(ArrayList<Report> reportList){
+    public static Component getComponentForReports(List<Report> reportList){
         StringBuilder reports = new StringBuilder(Responder.prefix + " <gold>Current Reports:</gold>");
         if(reportList.isEmpty()) return MiniMessage.miniMessage().deserialize(reports.append("<white> None</white>").toString());
 

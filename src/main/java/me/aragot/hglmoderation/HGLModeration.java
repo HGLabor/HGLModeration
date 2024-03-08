@@ -12,6 +12,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.commands.*;
+import me.aragot.hglmoderation.data.reports.Report;
 import me.aragot.hglmoderation.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
@@ -32,11 +33,9 @@ import java.util.UUID;
  * Discord Log change message? Channel.retrieveMessageById();
  *  -> Push report AFTER report message was sent to Channel
  *  -> Maybe ignore and delete options on click if its already reviewed?
- * Permission checks
  * Report Threshold -> No Spam
+ * Report add message id in DB
  * Add IP_BANS
- * Message Reporters when finishing review?
- *  -> For Notifier -> Keep open Reports in RAM so less DB calls
  */
 
 public class HGLModeration {
@@ -64,7 +63,7 @@ public class HGLModeration {
 
         HGLBot.init(this.server, this.logger);
         this.database =  new ModerationDB(Config.instance.getDbConnectionString());
-
+        Report.findOpenReports();
     }
 
    @Subscribe
