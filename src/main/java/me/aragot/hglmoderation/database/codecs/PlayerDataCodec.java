@@ -16,6 +16,7 @@ public class PlayerDataCodec implements Codec<PlayerData> {
     public void encode(final BsonWriter writer, final PlayerData playerData, final EncoderContext encoderContext) {
         writer.writeStartDocument();
         writer.writeString("_id", playerData.getPlayerId());
+        writer.writeString("latestIp", playerData.getLatestIp());
         writer.writeInt32("reportScore", playerData.getReportScore());
         writer.writeInt32("punishmentScore", playerData.getPunishmentScore());
         writer.writeString("discordId", playerData.getDiscordId());
@@ -36,6 +37,7 @@ public class PlayerDataCodec implements Codec<PlayerData> {
     public PlayerData decode(final BsonReader reader, final DecoderContext decoderContext) {
         reader.readStartDocument();
         String playerId = reader.readString("_id");
+        String latestIp = reader.readString("latestIp");
         int reportScore = reader.readInt32("reportScore");
         int punishmentScore = reader.readInt32("punishmentScore");
         String discordId = reader.readString("discordId");
@@ -53,7 +55,7 @@ public class PlayerDataCodec implements Codec<PlayerData> {
         reader.readEndArray();
         reader.readEndDocument();
 
-        return new PlayerData(playerId, reportScore, punishmentScore, discordId, notifications, punishments);
+        return new PlayerData(playerId, latestIp, reportScore, punishmentScore, discordId, notifications, punishments);
     }
 
     @Override

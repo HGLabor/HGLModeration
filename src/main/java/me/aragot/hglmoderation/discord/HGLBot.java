@@ -4,6 +4,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.punishments.Punishment;
+import me.aragot.hglmoderation.data.punishments.PunishmentType;
 import me.aragot.hglmoderation.data.reports.Priority;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.reports.Report;
@@ -209,9 +210,9 @@ public class HGLBot {
         eb.setTitle("Incoming " + punishment.getTypesAsString());
         eb.setColor(Color.red);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
-        eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
+        eb.setThumbnail(punishment.getTypes().contains(PunishmentType.IP_BAN) ? "https://as1.ftcdn.net/v2/jpg/00/54/65/16/1000_F_54651607_OJOGbrFBB3mDTpZDKmdjjR94lsbZMTVa.jpg" : "https://mc-heads.net/avatar/" + punishment.getIssuedTo());
 
-        String punishedName = PlayerUtils.getUsernameFromUUID(punishment.getPunishedUUID());
+        String punishedName = punishment.getTypes().contains(PunishmentType.IP_BAN) ? punishment.getIssuedTo() : PlayerUtils.getUsernameFromUUID(punishment.getIssuedTo());
         String punisherName = PlayerUtils.getUsernameFromUUID(punishment.getIssuerUUID());
 
         if(punishedName == null || punisherName == null)
@@ -233,7 +234,7 @@ public class HGLBot {
 
         eb.setTitle("Reviewers Note");
         eb.setColor(Color.BLUE);
-        eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getPunishedUUID());
+        eb.setThumbnail("https://mc-heads.net/avatar/" + punishment.getIssuedTo());
         eb.setDescription("```" + punishment.getNote() + "```");
 
         embeds.add(eb.build());

@@ -26,7 +26,12 @@ public class Notifier {
 
     public static void notifyReporters(ArrayList<UUID> reporters){
         ProxyServer server = HGLModeration.instance.getServer();
-        for(UUID reporter : reporters)
-            server.getPlayer(reporter).ifPresent((player) -> Responder.respond(player, "Your report has been reviewed and accepted. Thanks for keeping this community safe.", ResponseType.SUCCESS));
+        for(UUID reporter : reporters){
+            server.getPlayer(reporter).ifPresent((player) -> {
+                PlayerData data = PlayerData.getPlayerData(player);
+                if(data.getNotifications().contains(Notification.REPORT_STATE))
+                    Responder.respond(player, "Your report has been reviewed and accepted. Thanks for keeping this community safe.", ResponseType.SUCCESS);
+            });
+        }
     }
 }

@@ -72,7 +72,7 @@ public class FetcherCommand {
                                         break;
                                     }
 
-                                    Punishment punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(player.getUniqueId().toString()).get(0);
+                                    Punishment punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(player.getUniqueId().toString(), player.getRemoteAddress().getAddress().getHostAddress()).get(0);
 
                                     if(punishment == null){
                                         Responder.respond(context.getSource(), "You currently don't have any active reports.", ResponseType.DEFAULT);
@@ -93,6 +93,7 @@ public class FetcherCommand {
                         .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
                                 .suggests((context, builder) -> {
                                     builder.suggest("id");
+                                    builder.suggest("username");
                                     builder.suggest("under_review");
 
                                     return builder.buildFuture();
@@ -102,6 +103,7 @@ public class FetcherCommand {
                                     String type = context.getArgument("type", String.class);
 
                                     String playerUuid = PlayerUtils.getUuidFromUsername(id);
+                                    PlayerData data = PlayerData.getPlayerData(playerUuid);
 
                                     switch(type){
                                         case "player_data":
@@ -111,7 +113,6 @@ public class FetcherCommand {
                                                 break;
                                             }
 
-                                            PlayerData data = PlayerData.getPlayerData(playerUuid);
                                             if(data == null){
                                                 Responder.respond(context.getSource(), "Sorry but this player never joined the server.", ResponseType.ERROR);
                                                 break;
@@ -144,8 +145,8 @@ public class FetcherCommand {
                                             break;
                                         case "punishment":
                                             Punishment punishment;
-                                            if(playerUuid != null){
-                                                punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(playerUuid).get(0);
+                                            if(playerUuid != null){ //if punishment != null then data cannot be null either
+                                                punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(playerUuid, data.getLatestIp()).get(0);
                                                 context.getSource().sendMessage(getComponentForPunishment(punishment));
                                                 break;
                                             }
@@ -208,8 +209,11 @@ public class FetcherCommand {
 
     public static Component getComponentForPunishment(Punishment punishment){
 
-        String raw = "<white>Showing Details for ID:</white> <red>" + punishment.getId() + "</red>\n" +
-                "<white>Punished Player:</white> <red>" + PlayerUtils.getUsernameFromUUID(punishment.getPunishedUUID()) + "</red>\n" +
+        if(punishment == null)
+            return MiniMessage.miniMessage().deserialize(Responder.prefix + " <red>This player was never punished before</red>");
+
+        String raw = Responder.prefix + " <white>Showing Details for ID:</white> <red>" + punishment.getId() + "</red>\n" +
+                "<white>Punished Player:</white> <red>" + PlayerUtils.getUsernameFromUUID(punishment.getIssuedTo()) + "</red>\n" +
                 "<white>Issued By:</white> <red>" + PlayerUtils.getUsernameFromUUID(punishment.getIssuerUUID()) + "</red>\n" +
                 "<white>Duration:</white> <red>" + punishment.getDuration() + "</red>\n" +
                 "<white>Types:</white> <red>" + punishment.getTypesAsString() + "</red>\n" +
@@ -221,7 +225,8 @@ public class FetcherCommand {
 
     public static Component getComponentForPlayerData(PlayerData data){
 
-        String raw = "<white>Data for Player</white> <red>" + PlayerUtils.getUsernameFromUUID(data.getPlayerId()) + "</red>\n" +
+        String raw = Responder.prefix + " <white>Data for Player</white> <red>" + PlayerUtils.getUsernameFromUUID(data.getPlayerId()) + "</red>\n" +
+                "<white>Latest Ip:</white> <red>" + data.getLatestIp() + "</red>\n" +
                 "<white>Report Score:</white> <red>" + data.getReportScore() + "</red>\n" +
                 "<white>Punishment score:</white> <red>" + data.getPunishmentScore() + "</red>\n" +
                 "<white>Active Notifications:</white> " +

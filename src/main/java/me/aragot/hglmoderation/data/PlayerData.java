@@ -13,6 +13,7 @@ public class PlayerData {
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
     private final String _id;
+    private String latestIp;
     private String discordId = "";
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
@@ -22,15 +23,17 @@ public class PlayerData {
 
     public PlayerData(Player player){
         this._id = player.getUniqueId().toString();
+        this.latestIp = player.getRemoteAddress().getAddress().getHostAddress();
         this.notifications.add(Notification.GENERAL);
         this.notifications.add(Notification.REPORT_STATE);
     }
 
     //Used only for Codec
-    public PlayerData(String _id, int reportScore, int punishmentScore, String discordId, ArrayList<Notification> notifications, ArrayList<String> punishments) {
+    public PlayerData(String _id,String latestIp, int reportScore, int punishmentScore, String discordId, ArrayList<Notification> notifications, ArrayList<String> punishments) {
         this.reportScore = reportScore;
         this.punishmentScore = punishmentScore;
         this._id = _id;
+        this.latestIp = latestIp;
         this.discordId = discordId;
         this.notifications = notifications;
         this.punishments = punishments;
@@ -64,7 +67,7 @@ public class PlayerData {
 
     public String getFormattedPunishments(){
         if(this.getPunishments().isEmpty()) return "No Punishments found";
-        ArrayList<Punishment> punishments = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(this.getPlayerId());
+        ArrayList<Punishment> punishments = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(this.getPlayerId(), this.getLatestIp());
         StringBuilder formatted = new StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>");
         for(Punishment punishment : punishments) {
             formatted.append("\n<gray>").append(punishment.getId()).append(" |</gray> <yellow>")
@@ -120,6 +123,14 @@ public class PlayerData {
 
     public void addPunishment(String id){
         this.punishments.add(id);
+    }
+
+    public String getLatestIp(){
+        return this.latestIp;
+    }
+
+    public void setLatestIp(String ip){
+        this.latestIp = ip;
     }
 
     public ArrayList<Notification> getNotifications(){

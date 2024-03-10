@@ -54,23 +54,27 @@ public class PlayerListener {
     public void onPlayerJoin(LoginEvent event){
         PlayerData data = PlayerData.getPlayerData(event.getPlayer());
         String hostAddress = event.getPlayer().getRemoteAddress().getAddress().getHostAddress();
+        data.setLatestIp(hostAddress);
+        ArrayList<Punishment> activePunishments = Punishment.getActivePunishmentsFor(data.getPlayerId(), hostAddress);
 
-        if(!data.getPunishments().isEmpty()){
-            Punishment punishment = Punishment.getPunishmentById(data.getPunishments().get(data.getPunishments().size() - 1));
-            if(punishment.isActive()){
-                if(punishment.getTypes().contains(PunishmentType.BAN)){
+        if(!activePunishments.isEmpty()){
+            for(Punishment punishment : activePunishments) {
+                if(!data.getPunishments().contains(punishment.getId()))
+                    data.addPunishment(punishment.getId());
+                if(punishment.getTypes().contains(PunishmentType.BAN) || punishment.getTypes().contains(PunishmentType.IP_BAN)){
                     punishment.enforce(event);
                     return;
                 } else if(punishment.getTypes().contains(PunishmentType.MUTE)){
                     punishment.enforce(event.getPlayer());
                 }
             }
-
-            if(punishment.getEndsAtTimestamp() + (60 * 60 * 24 * 365) <= Instant.now().getEpochSecond()){
+        } else if(!data.getPunishments().isEmpty() && data.getPunishmentScore() > 0){
+            Punishment latest = Punishment.getPunishmentById(data.getPunishments().get(data.getPunishments().size() - 1));
+            //Reset score after one year since last punishment
+            if(latest.getEndsAtTimestamp() + (60 * 60 * 24 * 365) <= Instant.now().getEpochSecond()){
                 data.setPunishmentScore(0);
             }
         }
-
 
         String uuid = event.getPlayer().getUniqueId().toString();
         for(Notification notif : data.getNotifications()){

@@ -343,6 +343,8 @@ public class Report {
         List<Report> reviewableReports = unfinishedReports.stream().filter(
                 (report) -> report.getReportedUUID().equalsIgnoreCase(this.getReportedUUID()) && report.getReasoning() == this.getReasoning()
         ).collect(Collectors.toList());
+        this.setPunishmentId(punishmentId);
+        this.setState(ReportState.DONE);
 
         ArrayList<UUID> reporters = new ArrayList<>();
         for(Report report : reviewableReports)

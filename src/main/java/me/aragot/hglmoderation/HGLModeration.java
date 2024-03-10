@@ -34,8 +34,8 @@ import java.util.UUID;
  *  -> Push report AFTER report message was sent to Channel
  *  -> Maybe ignore and delete options on click if its already reviewed?
  * Report Threshold -> No Spam
- * Report add message id in DB
- * Add IP_BANS
+ * Keep Active Reports in RAM
+ * Report add message id from discord in DB
  */
 
 public class HGLModeration {

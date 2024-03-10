@@ -47,9 +47,9 @@ public class UnpunishCommand {
                                 return Command.SINGLE_SUCCESS;
                             }
 
-                            Punishment mute = PlayerListener.playerMutes.get(punishment.getPunishedUUID());
+                            Punishment mute = PlayerListener.playerMutes.get(punishment.getIssuedTo());
                             if(mute != null && punishment.getId().equalsIgnoreCase(mute.getId())){
-                                PlayerListener.playerMutes.remove(punishment.getPunishedUUID());
+                                PlayerListener.playerMutes.remove(punishment.getIssuedTo());
                             }
 
                             Responder.respond(context.getSource(), "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);

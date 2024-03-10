@@ -154,8 +154,10 @@ public class Preset {
     }
 
     public void apply(Report report){
-        PlayerData data = PlayerData.getPlayerData(report.getReportedUUID());
-        data.setPunishmentScore(data.getPunishmentScore() + this.getWeight());
-        Punishment.submitPunishmentFromReport(data, report, this.getPunishmentsTypes(), Instant.now().getEpochSecond() + this.getDuration(), "Preset Used: " + this.getName());
+        PlayerData reported = PlayerData.getPlayerData(report.getReportedUUID());
+        reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
+        PlayerData reporter = PlayerData.getPlayerData(report.getReporterUUID());
+        reporter.setReportScore(reporter.getReportScore() + 1);
+        Punishment.submitPunishmentFromReport(reported, report, this.getPunishmentsTypes(), Instant.now().getEpochSecond() + this.getDuration(), "Preset Used: " + this.getName());
     }
 }

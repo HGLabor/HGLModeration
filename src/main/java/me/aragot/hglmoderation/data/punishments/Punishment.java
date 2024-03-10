@@ -9,7 +9,6 @@ import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.data.PlayerData;
 import me.aragot.hglmoderation.data.Reasoning;
 import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
 import me.aragot.hglmoderation.response.Responder;
@@ -46,16 +45,30 @@ public class Punishment {
     }
 
     public static void submitPunishmentFromReport(PlayerData data, Report report, ArrayList<PunishmentType> types, long endsAt, String note){
-        Punishment punishment = new Punishment(
-                getNextPunishmentId(),
-                Instant.now().getEpochSecond(),
-                report.getReportedUUID(),
-                report.getReviewedBy(),
-                types,
-                endsAt,
-                report.getReasoning(),
-                note
-        );
+        Punishment punishment;
+        if(types.contains(PunishmentType.IP_BAN)){
+            punishment = new Punishment(
+                    getNextPunishmentId(),
+                    Instant.now().getEpochSecond(),
+                    data.getLatestIp(),
+                    report.getReviewedBy(),
+                    new ArrayList<>(types),
+                    endsAt,
+                    report.getReasoning(),
+                    note
+            );
+        } else {
+            punishment = new Punishment(
+                    getNextPunishmentId(),
+                    Instant.now().getEpochSecond(),
+                    report.getReportedUUID(),
+                    report.getReviewedBy(),
+                    types,
+                    endsAt,
+                    report.getReasoning(),
+                    note
+            );
+        }
 
         boolean isBotActive = HGLBot.instance != null;
 
@@ -74,16 +87,31 @@ public class Punishment {
     }
 
     public static void submitPunishment(Player toPunish, Player punisher, List<PunishmentType> types, Reasoning reason, long endsAt, int weight){
-        Punishment punishment = new Punishment(
-                getNextPunishmentId(),
-                Instant.now().getEpochSecond(),
-                toPunish.getUniqueId().toString(),
-                punisher.getUniqueId().toString(),
-                new ArrayList<>(types),
-                endsAt,
-                reason,
-                ""
-        );
+        Punishment punishment;
+        if(types.contains(PunishmentType.IP_BAN)){
+            punishment = new Punishment(
+                    getNextPunishmentId(),
+                    Instant.now().getEpochSecond(),
+                    toPunish.getRemoteAddress().getAddress().getHostAddress(),
+                    punisher.getUniqueId().toString(),
+                    new ArrayList<>(types),
+                    endsAt,
+                    reason,
+                    ""
+            );
+        } else {
+            punishment = new Punishment(
+                    getNextPunishmentId(),
+                    Instant.now().getEpochSecond(),
+                    toPunish.getUniqueId().toString(),
+                    punisher.getUniqueId().toString(),
+                    new ArrayList<>(types),
+                    endsAt,
+                    reason,
+                    ""
+            );
+        }
+
 
         boolean isBotActive = HGLBot.instance != null;
         PlayerData data = PlayerData.getPlayerData(toPunish);
@@ -105,6 +133,10 @@ public class Punishment {
 
     public static Punishment getPunishmentById(String id){
         return HGLModeration.instance.getDatabase().getPunishmentById(id);
+    }
+
+    public static ArrayList<Punishment> getActivePunishmentsFor(String uuid, String host){
+        return HGLModeration.instance.getDatabase().getActivePunishments(uuid, host);
     }
 
     public static String getNextPunishmentId(){
@@ -130,7 +162,7 @@ public class Punishment {
         return id;
     }
 
-    public String getPunishedUUID(){
+    public String getIssuedTo(){
         return this.issuedTo;
     }
 
@@ -212,17 +244,30 @@ public class Punishment {
         return builder.toString();
     }
 
+    //Triggered when first submitting a punishment
     public void enforce(){
         ProxyServer server = HGLModeration.instance.getServer();
+
+        if(this.getTypes().contains(PunishmentType.IP_BAN)){
+            server.getAllPlayers().forEach((connected -> {
+                if(connected.getRemoteAddress().getAddress().getHostAddress().equalsIgnoreCase(this.issuedTo)){
+                    PlayerData data = PlayerData.getPlayerData(connected);
+                    if(!data.getPunishments().contains(this.getId())) data.addPunishment(this.getId());
+                    connected.disconnect(getBanDisplay());
+                }
+            }));
+            return;
+        }
+
         Player player;
         try {
-            player = server.getPlayer(UUID.fromString(this.getPunishedUUID())).orElseThrow();
+            player = server.getPlayer(UUID.fromString(this.getIssuedTo())).orElseThrow();
         } catch(NoSuchElementException x){
             return;
         }
 
         if(this.getTypes().contains(PunishmentType.MUTE)){
-            PlayerListener.playerMutes.put(this.getPunishedUUID(), this);
+            PlayerListener.playerMutes.put(this.getIssuedTo(), this);
             player.sendMessage(getMuteComponent());
         }
 
@@ -231,9 +276,10 @@ public class Punishment {
         }
     }
 
+    //Triggered when Player joins on mute only I think
     public void enforce(Player player){
         if(this.getTypes().contains(PunishmentType.MUTE)){
-            PlayerListener.playerMutes.put(this.getPunishedUUID(), this);
+            PlayerListener.playerMutes.put(this.getIssuedTo(), this);
         }
 
         if(this.getTypes().contains(PunishmentType.BAN)){
@@ -242,6 +288,7 @@ public class Punishment {
             player.disconnect(getBanDisplay());
         }
     }
+
     public void enforce(LoginEvent event){
         event.setResult(ResultedEvent.ComponentResult.denied(getBanDisplay()));
     }

@@ -15,6 +15,7 @@ import me.aragot.hglmoderation.database.codecs.ReportCodec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
+import java.time.Instant;
 import java.util.*;
 
 public class ModerationDB {
@@ -133,8 +134,8 @@ public class ModerationDB {
 
     }
 
-    public ArrayList<Punishment> getPunishmentsForPlayer(String uuid){
-        return this.punishmentCollection.find(Filters.eq("issuedTo", uuid)).sort(Sorts.descending("issuedAt")).into(new ArrayList<>());
+    public ArrayList<Punishment> getPunishmentsForPlayer(String uuid, String host){
+        return this.punishmentCollection.find(Filters.or(Filters.eq("issuedTo", uuid), Filters.eq("issuedTo", host))).sort(Sorts.descending("issuedAt")).into(new ArrayList<>());
     }
 
     public ArrayList<Report> getReportsForPlayerExcept(String playerId, String reportId){
@@ -150,5 +151,9 @@ public class ModerationDB {
                         Filters.eq("_id", punishment.getId()),
                         punishment)
                 .wasAcknowledged();
+    }
+
+    public ArrayList<Punishment> getActivePunishments(String uuid, String host){
+        return this.punishmentCollection.find(Filters.and(Filters.gt("endsAt", Instant.now().getEpochSecond()), Filters.or(Filters.eq("issuedTo", uuid), Filters.eq("issuedTo", host)))).into(new ArrayList<>());
     }
 }

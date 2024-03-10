@@ -18,7 +18,7 @@ public class PunishmentCodec implements Codec<Punishment> {
         writer.writeStartDocument();
         writer.writeString("_id", punishment.getId());
         writer.writeInt64("issuedAt", punishment.getIssuedAtTimestamp());
-        writer.writeString("issuedTo", punishment.getPunishedUUID());
+        writer.writeString("issuedTo", punishment.getIssuedTo());
         writer.writeString("issuedBy", punishment.getIssuerUUID());
         writer.writeInt64("endsAt", punishment.getEndsAtTimestamp());
         writer.writeString("reason", punishment.getReasoning().name());
