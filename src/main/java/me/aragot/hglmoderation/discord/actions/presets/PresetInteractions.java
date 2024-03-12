@@ -138,7 +138,7 @@ public class PresetInteractions {
         reasonScope.setPlaceholder("Select this presets scope");
         reasonScope.setMaxValues(Reasoning.values().length);
         for(Reasoning reason : Reasoning.values()){
-            reasonScope.addOption(StringUtils.capitalize(reason.name().toLowerCase()),
+            reasonScope.addOption(StringUtils.prettyEnum(reason),
                     preset.getName().toLowerCase() + "-" + reason.name().toLowerCase(),
                     Emoji.fromUnicode("\uD83E\uDEAC"));
         }
@@ -156,7 +156,7 @@ public class PresetInteractions {
         typeMenu.setPlaceholder("Select this presets punishments");
         typeMenu.setMaxValues(PunishmentType.values().length);
         for(PunishmentType type : PunishmentType.values()){
-            typeMenu.addOption(StringUtils.capitalize(type.name().toLowerCase()),
+            typeMenu.addOption(StringUtils.prettyEnum(type),
                     preset.getName().toLowerCase() + "-" + type.name().toLowerCase(),
                     Emoji.fromUnicode("\uD83D\uDEAB"));
         }

@@ -45,7 +45,7 @@ public class NotificationCommand {
                                 StringBuilder notificationGroups = new StringBuilder(data.getNotifications().isEmpty() ? "<br><gray>-</gray> <white>None</white>" : "");
 
                                 for(Notification notif : data.getNotifications())
-                                    notificationGroups.append("<br><gray>-</gray> <white>").append(StringUtils.capitalize(notif.name().toLowerCase())).append("</white>");
+                                    notificationGroups.append("<br><gray>-</gray> <white>").append(StringUtils.prettyEnum(notif)).append("</white>");
 
                                 Responder.respond(player, "You're currently in the following notification groups:<br>" + notificationGroups, ResponseType.SUCCESS);
                                 return Command.SINGLE_SUCCESS;
@@ -62,7 +62,7 @@ public class NotificationCommand {
                                     for(Notification notif : Notification.values()){
                                         if(notif.requiresPermission() && !hasPerms)
                                             continue;
-                                        builder.suggest(StringUtils.capitalize(notif.name().toLowerCase()));
+                                        builder.suggest(notif.name());
                                     }
 
                                     return builder.buildFuture();
@@ -95,11 +95,11 @@ public class NotificationCommand {
                                     if(action.equalsIgnoreCase("add")){
                                         PlayerData data = PlayerData.getPlayerData(player);
                                         data.addNotification(notif);
-                                        Responder.respond(player, "Successfully added you to the " + StringUtils.capitalize(notif.name().toLowerCase()) + " notification group!", ResponseType.SUCCESS);
+                                        Responder.respond(player, "Successfully added you to the " + StringUtils.prettyEnum(notif) + " notification group!", ResponseType.SUCCESS);
                                     } else if(action.equalsIgnoreCase("remove")){
                                         PlayerData data = PlayerData.getPlayerData(player);
                                         data.removeNotification(notif);
-                                        Responder.respond(player, "Successfully removed you to the " + StringUtils.capitalize(notif.name().toLowerCase()) + " notification group!", ResponseType.SUCCESS);
+                                        Responder.respond(player, "Successfully removed you to the " + StringUtils.prettyEnum(notif) + " notification group!", ResponseType.SUCCESS);
                                     } else {
                                         Responder.respond(player, "Sorry, but this is not a valid action. Maybe try using: <white>/notification list", ResponseType.ERROR);
                                     }

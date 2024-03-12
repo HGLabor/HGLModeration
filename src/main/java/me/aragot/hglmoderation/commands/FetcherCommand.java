@@ -240,7 +240,7 @@ public class FetcherCommand {
     public static String getNotificationList(ArrayList<Notification> notifications){
         StringBuilder notifList = new StringBuilder();
         for(Notification notif : notifications)
-            notifList.append("<br><gray>-</gray> <white>").append(StringUtils.capitalize(notif.name().toLowerCase())).append("</white>");
+            notifList.append("<br><gray>-</gray> <white>").append(StringUtils.prettyEnum(notif)).append("</white>");
 
         return notifList.toString();
     }

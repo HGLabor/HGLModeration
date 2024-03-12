@@ -17,9 +17,12 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import java.util.NoSuchElementException;
+import java.time.Instant;
+import java.util.*;
 
 public class ReportCommand {
+
+    private static final ArrayList<Map.Entry<UUID, Long>> latestReports = new ArrayList<>();
 
     public static BrigadierCommand createBrigadierCommand(ProxyServer server){
         LiteralCommandNode<CommandSource> reportNode = BrigadierCommand.literalArgumentBuilder("report")
@@ -68,7 +71,7 @@ public class ReportCommand {
                         .then(BrigadierCommand.requiredArgumentBuilder("reasoning", StringArgumentType.word())
                             .suggests((context, builder) -> {
                                 for(Reasoning reason : Reasoning.values())
-                                    builder.suggest(StringUtils.capitalize(reason.toString().toLowerCase()));
+                                    builder.suggest(reason.name());
                                 return builder.buildFuture();
                             })
 
@@ -92,11 +95,17 @@ public class ReportCommand {
                                     return Command.SINGLE_SUCCESS;
                                 }
 
+                                if(!canReport(reporter)){
+                                    Responder.respond(reporter, "Sorry but you can only report every 2 minutes.", ResponseType.ERROR);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+
                                 String reasoning = context.getArgument("reasoning", String.class);
 
                                 try {
                                     Reasoning reason = Reasoning.valueOf(reasoning.toUpperCase());
                                     Report.submitReport(reportedPlayer.getUniqueId().toString(), reporter.getUniqueId().toString(), reason, Report.getPriorityForReporter(reporter));
+                                    latestReports.add(new AbstractMap.SimpleEntry<>(reporter.getUniqueId(), Instant.now().getEpochSecond() + 120));
                                     Responder.respond(reporter, "Your report has been submitted. Our team will review your report as soon as possible. Thank you for your patience!", ResponseType.SUCCESS);
                                 } catch (IllegalArgumentException x) {
                                     reportSuggestion(reporter, reported);
@@ -114,14 +123,30 @@ public class ReportCommand {
         Component reportText = mm.deserialize(Responder.prefix + " You are about to report <b><red>" + reportedName + "</red></b>.<br>" + "Please pick a reasoning for the report:<br><br>");
 
         for(Reasoning reason : Reasoning.values()){
-            String name = StringUtils.capitalize(reason.name().toLowerCase());
+            String name = StringUtils.prettyEnum(reason);
             reportText = reportText.append(
                     mm.deserialize("   <gray>☉</gray><red> " + name + "</red>")
-                            .clickEvent(ClickEvent.runCommand("/report " + reportedName + " " + name))
-                            .hoverEvent(HoverEvent.showText(mm.deserialize("<red>Report </red>" + reportedName + " <red>for " + name)))
+                            .clickEvent(ClickEvent.runCommand("/report " + reportedName + " " + reason.name()))
+                            .hoverEvent(HoverEvent.showText(mm.deserialize("<red>Report </red>" + reportedName + " <red>for <white>" + name + "</white>")))
             ).appendNewline();
         }
 
         player.sendMessage(reportText);
+    }
+
+    private static boolean canReport(Player reporter){
+        ArrayList<Map.Entry<UUID, Long>> toRemove = new ArrayList<>();
+        Map.Entry<UUID, Long> target = null;
+        for(Map.Entry<UUID, Long> entry : latestReports){
+            if(entry.getValue() <= Instant.now().getEpochSecond()){
+                toRemove.add(entry);
+            }
+
+            if(entry.getKey().equals(reporter.getUniqueId())){
+                target = entry;
+            }
+        }
+        latestReports.removeAll(toRemove);
+        return target == null || target.getValue() <= Instant.now().getEpochSecond();
     }
 }
