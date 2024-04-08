@@ -33,7 +33,6 @@ public class PlayerListener {
             playerMutes.remove(event.getPlayer().getUniqueId().toString());
         }
 
-
         ArrayList<String> messages = userMessages.get(event.getPlayer().getUniqueId().toString());
         if(messages == null){
             userMessages.put(event.getPlayer().getUniqueId().toString(), new ArrayList<>(Collections.singletonList(event.getMessage())));
@@ -47,7 +46,6 @@ public class PlayerListener {
 
         messages.remove(0);
         messages.add(event.getMessage());
-
     }
 
     @Subscribe

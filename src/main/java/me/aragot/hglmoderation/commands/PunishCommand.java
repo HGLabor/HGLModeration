@@ -19,7 +19,6 @@ import me.aragot.hglmoderation.tools.permissions.PermCompare;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class PunishCommand {
@@ -177,19 +176,24 @@ public class PunishCommand {
                                                         duration = 24 * 60 * 60;
                                                     } else if(durationFormat.contains("h")){
                                                         duration = 60 * 60;
-                                                    } else if(durationFormat.contains("m")){
+                                                    } else if(durationFormat.contains("m")) {
                                                         duration = 60;
+                                                    } else if(durationFormat.equalsIgnoreCase("p")){
+                                                        duration = -1L;
                                                     } else {
                                                         Responder.respond(player, "Sorry but I couldn't read the time format you have entered.", ResponseType.ERROR);
                                                         return Command.SINGLE_SUCCESS;
                                                     }
 
-                                                    try {
-                                                        durationFormat = durationFormat.replaceAll("[dhm]", "");
-                                                        duration *= Long.parseLong(durationFormat);
-                                                    } catch (NumberFormatException x) {
-                                                        Responder.respond(player, "Sorry but I couldn't read the number passed for the duration.", ResponseType.ERROR);
-                                                        return Command.SINGLE_SUCCESS;
+
+                                                    if(duration != -1L){
+                                                        try {
+                                                            durationFormat = durationFormat.replaceAll("[dhm]", "");
+                                                            duration *= Long.parseLong(durationFormat);
+                                                        } catch (NumberFormatException x) {
+                                                            Responder.respond(player, "Sorry but I couldn't read the number passed for the duration.", ResponseType.ERROR);
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }
                                                     }
 
                                                     if(!hasPermission(player, toPunish))
@@ -199,7 +203,7 @@ public class PunishCommand {
                                                             player,
                                                             List.of(punishmentType),
                                                             reasoning,
-                                                            Instant.now().getEpochSecond() + duration,
+                                                            duration == -1 ? duration : Instant.now().getEpochSecond() + duration,
                                                             0);
 
                                                     return Command.SINGLE_SUCCESS;
@@ -249,19 +253,23 @@ public class PunishCommand {
                                                                 duration = 24 * 60 * 60;
                                                             } else if(durationFormat.contains("h")){
                                                                 duration = 60 * 60;
-                                                            } else if(durationFormat.contains("m")){
+                                                            } else if(durationFormat.contains("m")) {
                                                                 duration = 60;
+                                                            } else if(durationFormat.equalsIgnoreCase("p")){
+                                                                duration = -1L;
                                                             } else {
                                                                 Responder.respond(player, "Sorry but I couldn't read the time format you have entered.", ResponseType.ERROR);
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
 
-                                                            try {
-                                                                durationFormat = durationFormat.replaceAll("[dhm]", "");
-                                                                duration *= Long.parseLong(durationFormat);
-                                                            } catch (NumberFormatException x) {
-                                                                Responder.respond(player, "Sorry but I couldn't read the number passed for the duration.", ResponseType.ERROR);
-                                                                return Command.SINGLE_SUCCESS;
+                                                            if(duration != -1L){
+                                                                try {
+                                                                    durationFormat = durationFormat.replaceAll("[dhm]", "");
+                                                                    duration *= Long.parseLong(durationFormat);
+                                                                } catch (NumberFormatException x) {
+                                                                    Responder.respond(player, "Sorry but I couldn't read the number passed for the duration.", ResponseType.ERROR);
+                                                                    return Command.SINGLE_SUCCESS;
+                                                                }
                                                             }
 
                                                             int weight;
@@ -279,7 +287,7 @@ public class PunishCommand {
                                                                     player,
                                                                     List.of(punishmentType),
                                                                     reasoning,
-                                                                    Instant.now().getEpochSecond() + duration,
+                                                                    duration == -1 ? duration : Instant.now().getEpochSecond() + duration,
                                                                     weight);
 
                                                             return Command.SINGLE_SUCCESS;

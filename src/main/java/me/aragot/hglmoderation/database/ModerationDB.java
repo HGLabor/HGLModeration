@@ -154,6 +154,12 @@ public class ModerationDB {
     }
 
     public ArrayList<Punishment> getActivePunishments(String uuid, String host){
-        return this.punishmentCollection.find(Filters.and(Filters.gt("endsAt", Instant.now().getEpochSecond()), Filters.or(Filters.eq("issuedTo", uuid), Filters.eq("issuedTo", host)))).into(new ArrayList<>());
+        return this.punishmentCollection.find(Filters.and(
+                Filters.or(
+                        Filters.eq("endsAt", -1),
+                        Filters.gt("endsAt", Instant.now().getEpochSecond())),
+                Filters.or(
+                        Filters.eq("issuedTo", uuid),
+                        Filters.eq("issuedTo", host)))).into(new ArrayList<>());
     }
 }

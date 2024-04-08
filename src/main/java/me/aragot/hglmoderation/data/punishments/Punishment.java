@@ -172,11 +172,12 @@ public class Punishment {
 
     public boolean isActive(){
         if(this.endsAt < 0) return true;
-        return endsAt > Instant.now().getEpochSecond();
+        return this.endsAt > Instant.now().getEpochSecond();
     }
 
     public String getRemainingTime(){
         if(!isActive()) return "It's over";
+        if(this.endsAt == -1) return "Permanent";
         long differenceSeconds = endsAt - Instant.now().getEpochSecond();
         long days = TimeUnit.SECONDS.toDays(differenceSeconds);
         long hours = TimeUnit.SECONDS.toHours(differenceSeconds) % 24;
