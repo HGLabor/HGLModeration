@@ -6,16 +6,16 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 
-import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
+import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.entity.reports.ReportState;
+import me.aragot.hglmoderation.repository.ReportRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.PlayerUtils;
-import me.aragot.hglmoderation.tools.permissions.PermCompare;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.permissions.PermCompare;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.UUID;
@@ -118,8 +118,8 @@ public class PresetCommand {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the preset you were looking for.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
-
-                                            Report report = Report.getReportById(reportId);
+                                            ReportRepository reportRepository = new ReportRepository();
+                                            Report report = reportRepository.getReportById(reportId);
 
                                             try {
                                                 int permission = PermCompare.comparePermissionOf(player.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
@@ -143,7 +143,7 @@ public class PresetCommand {
 
 
                                             if(!report.getReviewedBy().equalsIgnoreCase(player.getUniqueId().toString())){
-                                                String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
+                                                String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
                                                 Responder.respond(player,
                                                         "Sorry but this is not within your scope. Please contact <red>" + reviewer +"</red> to talk about this case.",
                                                         ResponseType.DEFAULT);

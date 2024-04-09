@@ -1,7 +1,7 @@
-package me.aragot.hglmoderation.database.codecs;
+package me.aragot.hglmoderation.service.database.codecs;
 
-import me.aragot.hglmoderation.data.Notification;
-import me.aragot.hglmoderation.data.PlayerData;
+import me.aragot.hglmoderation.entity.Notification;
+import me.aragot.hglmoderation.entity.PlayerData;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;

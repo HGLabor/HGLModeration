@@ -1,4 +1,4 @@
-package me.aragot.hglmoderation.data.punishments;
+package me.aragot.hglmoderation.entity.punishments;
 
 public enum PunishmentType {
     BAN,

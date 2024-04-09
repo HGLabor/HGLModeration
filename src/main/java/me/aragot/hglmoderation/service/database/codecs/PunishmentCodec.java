@@ -1,8 +1,8 @@
-package me.aragot.hglmoderation.database.codecs;
+package me.aragot.hglmoderation.service.database.codecs;
 
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.punishments.Punishment;
-import me.aragot.hglmoderation.data.punishments.PunishmentType;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
+import me.aragot.hglmoderation.entity.punishments.PunishmentType;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;

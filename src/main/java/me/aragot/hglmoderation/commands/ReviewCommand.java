@@ -6,14 +6,15 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.data.PlayerData;
-import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
+import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.entity.reports.ReportState;
+import me.aragot.hglmoderation.repository.ReportRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.PlayerUtils;
-import me.aragot.hglmoderation.tools.permissions.PermCompare;
+import me.aragot.hglmoderation.service.report.ReportConverter;
+import me.aragot.hglmoderation.service.report.ReportManager;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.permissions.PermCompare;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -37,8 +38,8 @@ public class ReviewCommand {
                             String reportId = context.getArgument("reportID", String.class);
                             Player executedBy = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             if(executedBy == null) return BrigadierCommand.FORWARD;
-
-                            Report report = Report.getReportById(reportId);
+                            ReportRepository reportRepository = new ReportRepository();
+                            Report report = reportRepository.getReportById(reportId);
 
                             if(report == null){
                                 Responder.respond(executedBy, "Sorry, but I wasn't able to find this report.", ResponseType.ERROR);
@@ -57,9 +58,9 @@ public class ReviewCommand {
 
                             if(report.getState() != ReportState.OPEN){
                                 if(report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString())){
-                                    executedBy.sendMessage(report.getMCReportActions());
+                                    executedBy.sendMessage(ReportConverter.Companion.getMCReportActions(report));
                                 } else {
-                                    String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
+                                    String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
                                     Responder.respond(executedBy,
                                             "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewer +"</red>.",
                                             ResponseType.DEFAULT);
@@ -67,9 +68,9 @@ public class ReviewCommand {
                                 return Command.SINGLE_SUCCESS;
                             }
 
-                            report.startReview(executedBy.getUniqueId().toString());
+                            new ReportManager().startReview(report, executedBy.getUniqueId().toString());
 
-                            executedBy.sendMessage(report.getMCReportActions());
+                            executedBy.sendMessage(ReportConverter.Companion.getMCReportActions(report));
 
                             return Command.SINGLE_SUCCESS;
                         })
@@ -83,8 +84,8 @@ public class ReviewCommand {
                                     String reportId = context.getArgument("reportID", String.class);
                                     Player executedBy = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                                     if(executedBy == null) return BrigadierCommand.FORWARD;
-
-                                    Report report = Report.getReportById(reportId);
+                                    ReportRepository reportRepository = new ReportRepository();
+                                    Report report = reportRepository.getReportById(reportId);
 
                                     if(report == null){
                                         Responder.respond(executedBy, "Sorry, but I wasn't able to find this report.", ResponseType.ERROR);
@@ -97,7 +98,7 @@ public class ReviewCommand {
                                             Responder.respond(executedBy, "Please start reviewing this report before handling it. Use /review " + report.getId() + " to start the review process", ResponseType.ERROR);
                                             return Command.SINGLE_SUCCESS;
                                         }
-                                        String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
+                                        String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
                                         Responder.respond(executedBy,
                                                 "Sorry but this is not within your scope. Please contact <red>" + reviewer + "</red> to talk about this case.",
                                                 ResponseType.DEFAULT);
@@ -105,15 +106,16 @@ public class ReviewCommand {
                                     }
 
                                     //Report is from myself and under_review or open
+                                    ReportManager manager = new ReportManager();
                                     String action = context.getArgument("action", String.class);
                                     if(action.equalsIgnoreCase("decline")){
-                                        report.decline();
+                                        manager.decline(report);
                                         Responder.respond(executedBy,
                                                 "<green>Thank you for reviewing this report! Keep up the good work :)</green>",
                                                 ResponseType.DEFAULT);
 
                                     } else if(action.equalsIgnoreCase("malicious")){
-                                        report.malicious();
+                                        manager.malicious(report);
 
                                         Responder.respond(executedBy,
                                                 "<green>Thank you for reviewing this report! The Reporter has been punished. Keep up the good work :)</green>",

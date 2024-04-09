@@ -6,16 +6,19 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.data.Notification;
-import me.aragot.hglmoderation.data.PlayerData;
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.punishments.Punishment;
-import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.entity.Notification;
+import me.aragot.hglmoderation.entity.PlayerData;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
+import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.repository.PlayerDataRepository;
+import me.aragot.hglmoderation.repository.PunishmentRepository;
+import me.aragot.hglmoderation.repository.ReportRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.PlayerUtils;
-import me.aragot.hglmoderation.tools.StringUtils;
+import me.aragot.hglmoderation.service.report.ReportConverter;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.StringUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -56,12 +59,12 @@ public class FetcherCommand {
                                         Responder.respond(context.getSource(), "Sorry but you cannot use this command in that way with the console. Please try adding a username.", ResponseType.ERROR);
                                         break;
                                     }
-
-                                    PlayerData data = PlayerData.getPlayerData(player);
+                                    PlayerDataRepository repository = new PlayerDataRepository();
+                                    PlayerData data = repository.getPlayerData(player);
                                     context.getSource().sendMessage(getComponentForPlayerData(data));
                                     break;
                                 case "report":
-                                    List<Report> openReports = Report.getOpenReports();
+                                    List<Report> openReports = ReportRepository.Companion.getOpenReports();
                                     context.getSource().sendMessage(getComponentForReports(openReports));
                                     break;
                                 case "punishment":
@@ -71,8 +74,8 @@ public class FetcherCommand {
                                         Responder.respond(context.getSource(), "Sorry but you cannot use this command in that way with the console. Please try adding a username.", ResponseType.ERROR);
                                         break;
                                     }
-
-                                    Punishment punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(player.getUniqueId().toString(), player.getRemoteAddress().getAddress().getHostAddress()).get(0);
+                                    PunishmentRepository punishmentRepository = new PunishmentRepository();
+                                    Punishment punishment = punishmentRepository.getPunishmentsFor(player.getUniqueId().toString(), player.getRemoteAddress().getAddress().getHostAddress()).get(0);
 
                                     if(punishment == null){
                                         Responder.respond(context.getSource(), "You currently don't have any active reports.", ResponseType.DEFAULT);
@@ -102,8 +105,16 @@ public class FetcherCommand {
                                     String id = context.getArgument("id", String.class);
                                     String type = context.getArgument("type", String.class);
 
-                                    String playerUuid = PlayerUtils.getUuidFromUsername(id);
-                                    PlayerData data = PlayerData.getPlayerData(playerUuid);
+                                    PlayerData data = null;
+                                    String playerUuid = null;
+                                    if (!id.equalsIgnoreCase("under_review")) {
+                                        playerUuid =  PlayerUtils.Companion.getUuidFromUsername(id);
+                                    }
+
+                                    if (playerUuid != null) {
+                                        PlayerDataRepository playerDataRepository = new PlayerDataRepository();
+                                        data = playerDataRepository.getPlayerData(playerUuid);
+                                    }
 
                                     switch(type){
                                         case "player_data":
@@ -122,36 +133,37 @@ public class FetcherCommand {
                                             break;
                                         case "report":
                                             if(id.equalsIgnoreCase("under_review")){
-                                                List<Report> reportsInProgress = Report.getReportsInProgress();
+                                                List<Report> reportsInProgress = ReportRepository.Companion.getReportsInProgress();
 
                                                 context.getSource().sendMessage(getComponentForReports(reportsInProgress));
                                                 break;
                                             }
 
                                             if(playerUuid != null){
-                                                ArrayList<Report> reportsForPlayer = Report.getReportsForPlayer(playerUuid);
+                                                ReportRepository reportRepository = new ReportRepository();
+                                                ArrayList<Report> reportsForPlayer = reportRepository.getReportsForPlayer(playerUuid);
 
                                                 context.getSource().sendMessage(getComponentForReports(reportsForPlayer));
                                                 break;
                                             }
-
-                                            Report report = Report.getReportById(id);
+                                            ReportRepository reportRepository = new ReportRepository();
+                                            Report report = reportRepository.getReportById(id);
                                             if(report == null){
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find this report in the database", ResponseType.ERROR);
                                                 break;
                                             }
 
-                                            context.getSource().sendMessage(report.getMCReportComponent(false));
+                                            context.getSource().sendMessage(ReportConverter.Companion.getMcReportComponent(report, false));
                                             break;
                                         case "punishment":
                                             Punishment punishment;
+                                            PunishmentRepository punishmentRepository = new PunishmentRepository();
                                             if(playerUuid != null){ //if punishment != null then data cannot be null either
-                                                punishment = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(playerUuid, data.getLatestIp()).get(0);
+                                                punishment = punishmentRepository.getPunishmentsFor(playerUuid, data.getLatestIp()).get(0);
                                                 context.getSource().sendMessage(getComponentForPunishment(punishment));
                                                 break;
                                             }
-
-                                            punishment = Punishment.getPunishmentById(id);
+                                            punishment = punishmentRepository.getPunishmentById(id);
 
                                             if(punishment == null){
                                                 Responder.respond(context.getSource(), "You currently don't have any active reports.", ResponseType.DEFAULT);
@@ -175,6 +187,7 @@ public class FetcherCommand {
         return new BrigadierCommand(fetcherNode);
     }
 
+    //Move Following Code into Converters?
     public static Component getComponentForReports(List<Report> reportList){
         StringBuilder reports = new StringBuilder(Responder.prefix + " <gold>Current Reports:</gold>");
         if(reportList.isEmpty()) return MiniMessage.miniMessage().deserialize(reports.append("<white> None</white>").toString());
@@ -186,7 +199,7 @@ public class FetcherCommand {
         for(Report report : reportList){
             if(count == displayMax) break;
             if(userNameCache.get(report.getReportedUUID()) == null){
-                userNameCache.put(report.getReportedUUID(), PlayerUtils.getUsernameFromUUID(report.getReportedUUID()));
+                userNameCache.put(report.getReportedUUID(), PlayerUtils.Companion.getUsernameFromUUID(report.getReportedUUID()));
             }
             String fetchReport = "<click:run_command:'/fetcher report " + report.getId() + "'><white>[<yellow><b>Check out</b></yellow>]</white></click>";
 
@@ -198,7 +211,7 @@ public class FetcherCommand {
                     .append(report.getReasoning().name())
                     .append("</red><gray> ➡ </gray><red>")
                     .append(userNameCache.get(report.getReportedUUID()))
-                    .append("</red>").append("\n").append(report.getViewDetailsRaw())
+                    .append("</red>").append("\n").append(ReportConverter.Companion.getViewDetailsRaw(report))
                     .append("   ").append(fetchReport);
 
             count++;
@@ -213,8 +226,8 @@ public class FetcherCommand {
             return MiniMessage.miniMessage().deserialize(Responder.prefix + " <red>This player was never punished before</red>");
 
         String raw = Responder.prefix + " <white>Showing Details for ID:</white> <red>" + punishment.getId() + "</red>\n" +
-                "<white>Punished Player:</white> <red>" + PlayerUtils.getUsernameFromUUID(punishment.getIssuedTo()) + "</red>\n" +
-                "<white>Issued By:</white> <red>" + PlayerUtils.getUsernameFromUUID(punishment.getIssuerUUID()) + "</red>\n" +
+                "<white>Punished Player:</white> <red>" + (punishment.getIssuedTo().contains(".") ? punishment.getIssuedTo() : PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuedTo())) + "</red>\n" +
+                "<white>Issued By:</white> <red>" + PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuerUUID()) + "</red>\n" +
                 "<white>Duration:</white> <red>" + punishment.getDuration() + "</red>\n" +
                 "<white>Types:</white> <red>" + punishment.getTypesAsString() + "</red>\n" +
                 "<white>Reasoning:</white> <red>" + Reasoning.getPrettyReasoning(punishment.getReasoning()) + "</red>\n" +
@@ -225,7 +238,7 @@ public class FetcherCommand {
 
     public static Component getComponentForPlayerData(PlayerData data){
 
-        String raw = Responder.prefix + " <white>Data for Player</white> <red>" + PlayerUtils.getUsernameFromUUID(data.getPlayerId()) + "</red>\n" +
+        String raw = Responder.prefix + " <white>Data for Player</white> <red>" + PlayerUtils.Companion.getUsernameFromUUID(data.getPlayerId()) + "</red>\n" +
                 "<white>Latest Ip:</white> <red>" + data.getLatestIp() + "</red>\n" +
                 "<white>Report Score:</white> <red>" + data.getReportScore() + "</red>\n" +
                 "<white>Punishment score:</white> <red>" + data.getPunishmentScore() + "</red>\n" +
@@ -240,7 +253,7 @@ public class FetcherCommand {
     public static String getNotificationList(ArrayList<Notification> notifications){
         StringBuilder notifList = new StringBuilder();
         for(Notification notif : notifications)
-            notifList.append("<br><gray>-</gray> <white>").append(StringUtils.prettyEnum(notif)).append("</white>");
+            notifList.append("<br><gray>-</gray> <white>").append(StringUtils.Companion.prettyEnum(notif)).append("</white>");
 
         return notifList.toString();
     }
