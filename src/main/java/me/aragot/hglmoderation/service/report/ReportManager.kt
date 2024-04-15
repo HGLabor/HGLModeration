@@ -13,7 +13,6 @@ import me.aragot.hglmoderation.repository.ReportRepository
 import me.aragot.hglmoderation.service.player.Notifier
 import java.time.Instant
 import java.util.*
-import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class ReportManager(repo: ReportRepository = ReportRepository()) {
@@ -53,14 +52,13 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
 
     fun startReview(report: Report, reviewer: String)
     {
-        ReportRepository.unfinishedReports.forEach((Consumer { other: Report ->
-            if (!report.reportedUUID.equals(other.reportedUUID, ignoreCase = true) || (report.reasoning != other.reasoning)) {
-                return@Consumer
+        for(other: Report in ReportRepository.unfinishedReports) {
+            if (!report.reportedUUID.equals(other.reportedUUID, ignoreCase = true) || report.reasoning !== other.reasoning) {
+                continue
             }
             other.reviewedBy = reviewer
             other.state = ReportState.UNDER_REVIEW
-        }))
-       repository.updateReportsBasedOn(report)
+        }
     }
 
     fun decline(report: Report)

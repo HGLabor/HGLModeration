@@ -47,9 +47,9 @@ class PunishmentRepository: Repository() {
     {
         return this.database.punishmentCollection.find(
             Filters.or(
-                Filters.eq<String>("issuedTo", uuid),
-                Filters.eq<String>("issuedTo", hostAddress)
+                Filters.eq("issuedTo", uuid),
+                Filters.eq("issuedTo", hostAddress)
             )
-        ).sort(Sorts.descending("issuedAt")).into<java.util.ArrayList<Punishment>>(java.util.ArrayList<Punishment>())
+        ).sort(Sorts.descending("issuedAt")).into(java.util.ArrayList<Punishment>())
     }
 }

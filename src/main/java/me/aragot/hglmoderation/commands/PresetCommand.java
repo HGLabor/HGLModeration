@@ -121,6 +121,11 @@ public class PresetCommand {
                                             ReportRepository reportRepository = new ReportRepository();
                                             Report report = reportRepository.getReportById(reportId);
 
+                                            if(report == null){
+                                                Responder.respond(context.getSource(), "Sorry but I couldn't find the report you were looking for.", ResponseType.ERROR);
+                                                return Command.SINGLE_SUCCESS;
+                                            }
+
                                             try {
                                                 int permission = PermCompare.comparePermissionOf(player.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
                                                 if(permission != PermCompare.GREATER_THAN){
@@ -131,16 +136,11 @@ public class PresetCommand {
                                                 e.printStackTrace();
                                             }
 
-                                            if(report == null){
-                                                Responder.respond(context.getSource(), "Sorry but I couldn't find the report you were looking for.", ResponseType.ERROR);
-                                                return Command.SINGLE_SUCCESS;
-                                            }
 
                                             if(report.getState() == ReportState.DONE){
                                                 Responder.respond(context.getSource(), "Sorry but this report was already reviewed. Please check the ReportID for errors.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
-
 
                                             if(!report.getReviewedBy().equalsIgnoreCase(player.getUniqueId().toString())){
                                                 String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());

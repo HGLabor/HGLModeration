@@ -5,7 +5,6 @@ import com.mongodb.client.MongoCursor
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
-import me.aragot.hglmoderation.entity.Reasoning
 import me.aragot.hglmoderation.entity.reports.Report
 import me.aragot.hglmoderation.entity.reports.ReportState
 import org.bson.conversions.Bson
@@ -35,11 +34,11 @@ class ReportRepository: Repository() {
 
     fun flushData(report: Report): Boolean
     {
-        try {
+        return try {
             this.database.reportCollection.insertOne(report)
-            return true
+            true
         } catch (x: MongoException) {
-            return false
+            false
         }
     }
 
@@ -67,17 +66,17 @@ class ReportRepository: Repository() {
     fun updateReportsBasedOn(report: Report): Boolean {
         return this.database.reportCollection.updateMany(
             Filters.and(
-                Filters.eq<String>("reportedUUID", report.reportedUUID),
-                Filters.eq<Reasoning>("reasoning", report.reasoning),
+                Filters.eq("reportedUUID", report.reportedUUID),
+                Filters.eq("reasoning", report.reasoning),
                 Filters.or(
-                    Filters.eq<ReportState>("state", ReportState.UNDER_REVIEW),
-                    Filters.eq<ReportState>("state", ReportState.OPEN)
+                    Filters.eq("state", ReportState.UNDER_REVIEW.name),
+                    Filters.eq("state", ReportState.OPEN.name)
                 )
             ),
             Updates.combine(
-                Updates.set<ReportState>("state", report.state),
-                Updates.set<String>("reviewedBy", report.reviewedBy),
-                Updates.set<String>("punishmentId", report.punishmentId)
+                Updates.set("state", report.state),
+                Updates.set("reviewedBy", report.reviewedBy),
+                Updates.set("punishmentId", report.punishmentId)
             )
         ).wasAcknowledged()
     }
@@ -88,8 +87,8 @@ class ReportRepository: Repository() {
             listOf<Bson>(
                 Aggregates.match(
                     Filters.or(
-                        Filters.eq<ReportState>("state", ReportState.OPEN),
-                        Filters.eq<ReportState>("state", ReportState.UNDER_REVIEW)
+                        Filters.eq("state", ReportState.OPEN),
+                        Filters.eq("state", ReportState.UNDER_REVIEW)
                     )
                 )
             )

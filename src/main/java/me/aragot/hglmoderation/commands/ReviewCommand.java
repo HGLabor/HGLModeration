@@ -56,19 +56,18 @@ public class ReviewCommand {
                                 e.printStackTrace();
                             }
 
-                            if(report.getState() != ReportState.OPEN){
-                                if(report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString())){
-                                    executedBy.sendMessage(ReportConverter.Companion.getMCReportActions(report));
-                                } else {
-                                    String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
-                                    Responder.respond(executedBy,
-                                            "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewer +"</red>.",
-                                            ResponseType.DEFAULT);
-                                }
+                            if (report.getState() == ReportState.OPEN) {
+                                new ReportManager().startReview(report, executedBy.getUniqueId().toString());
+                            } else if(!report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString())){
+                                String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
+
+                                Responder.respond(
+                                        executedBy,
+                                        "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewer +"</red>.",
+                                        ResponseType.DEFAULT
+                                );
                                 return Command.SINGLE_SUCCESS;
                             }
-
-                            new ReportManager().startReview(report, executedBy.getUniqueId().toString());
 
                             executedBy.sendMessage(ReportConverter.Companion.getMCReportActions(report));
 

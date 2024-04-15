@@ -7,7 +7,9 @@ import me.aragot.hglmoderation.entity.Reasoning
 import me.aragot.hglmoderation.entity.reports.Report
 import me.aragot.hglmoderation.repository.PlayerDataRepository
 import me.aragot.hglmoderation.repository.ReportRepository
+import me.aragot.hglmoderation.response.Responder
 import me.aragot.hglmoderation.service.player.PlayerUtils
+import me.aragot.hglmoderation.service.player.PlayerUtils.Companion.getUsernameFromUUID
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.text.SimpleDateFormat
@@ -64,20 +66,18 @@ class ReportConverter {
                 <gray>Submitted at:</gray> <red>${
                 SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(
                     Date(report.submittedAt * 1000)
-                )
-            }</red>
+                )}</red>
                 <gray>State:</gray> <red>${report.state.name}</red>
+                
                 """.trimIndent()
 
             if (Reasoning.getChatReasons().contains(report.reasoning)){
-                reportDetails += """
-             
-                                 <gray>User Messages:</gray>
-                                 ${this.getFormattedUserMessages(report)}
-                                 """.trimIndent()
+                reportDetails += """<gray>User Messages:</gray>
+                    ${this.getFormattedUserMessages(report)}
+                    """.trimIndent()
             }
 
-                    return "<hover:show_text:'$reportDetails'><white>[<blue><b>View Details</b></blue>]</white></hover>"
+            return "<hover:show_text:'$reportDetails'><white>[<blue><b>View Details</b></blue>]</white></hover>"
         }
 
         fun getMCReportActions(report: Report): Component {
@@ -140,6 +140,35 @@ class ReportConverter {
                 .append("</red>: ").append(message)
 
             return messages.toString()
+        }
+
+        fun getComponentForReports(reportList: List<Report>): Component {
+            val reports = StringBuilder(Responder.prefix + " <gold>Current Reports:</gold>")
+            if (reportList.isEmpty()) return MiniMessage.miniMessage()
+                .deserialize(reports.append("<white> None</white>").toString())
+            val userNameCache = HashMap<String, String?>()
+            val displayMax = 10
+            var count = 0
+            for (report in reportList) {
+                if (count == displayMax) break
+                if (userNameCache[report.reportedUUID] == null) {
+                    userNameCache[report.reportedUUID] = getUsernameFromUUID(report.reportedUUID)
+                }
+                val fetchReport =
+                    "<click:run_command:'/fetcher report " + report.id + "'><white>[<yellow><b>Check out</b></yellow>]</white></click>"
+                reports.append("\n<gray>")
+                    .append(report.id)
+                    .append(" ➡ </gray><red>")
+                    .append(report.priority.name)
+                    .append("</red><gray> ➡ </gray><red>")
+                    .append(report.reasoning.name)
+                    .append("</red><gray> ➡ </gray><red>")
+                    .append(userNameCache[report.reportedUUID])
+                    .append("</red>").append("\n").append(getViewDetailsRaw(report))
+                    .append("   ").append(fetchReport)
+                count++
+            }
+            return MiniMessage.miniMessage().deserialize(reports.toString())
         }
     }
 }
