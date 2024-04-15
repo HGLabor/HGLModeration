@@ -29,7 +29,7 @@ class ReportRepository: Repository() {
 
     fun getReportById(id: String): Report?
     {
-        return this.database.reportCollection.find(Filters.eq("_id", id)).first();
+        return this.database.reportCollection.find(Filters.eq("_id", id)).first()
     }
 
     fun flushData(report: Report): Boolean
@@ -64,21 +64,21 @@ class ReportRepository: Repository() {
     }
 
     fun updateReportsBasedOn(report: Report): Boolean {
-        return this.database.reportCollection.updateMany(
-            Filters.and(
-                Filters.eq("reportedUUID", report.reportedUUID),
-                Filters.eq("reasoning", report.reasoning),
-                Filters.or(
-                    Filters.eq("state", ReportState.UNDER_REVIEW.name),
-                    Filters.eq("state", ReportState.OPEN.name)
-                )
-            ),
-            Updates.combine(
-                Updates.set("state", report.state),
-                Updates.set("reviewedBy", report.reviewedBy),
-                Updates.set("punishmentId", report.punishmentId)
+        val filter = Filters.and(
+            Filters.eq("reportedUUID", report.reportedUUID),
+            Filters.eq("reasoning", report.reasoning),
+            Filters.or(
+                Filters.eq("state", ReportState.UNDER_REVIEW.name),
+                Filters.eq("state", ReportState.OPEN.name)
             )
-        ).wasAcknowledged()
+        )
+
+        val updates = Updates.combine(
+            Updates.set("state", report.state),
+            Updates.set("reviewedBy", report.reviewedBy),
+            Updates.set("punishmentId", report.punishmentId)
+        )
+        return this.database.reportCollection.updateMany(filter, updates).wasAcknowledged()
     }
 
     fun fetchUnfinishedReports()

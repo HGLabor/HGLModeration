@@ -1,6 +1,7 @@
 package me.aragot.hglmoderation.service.report
 
 import com.velocitypowered.api.proxy.Player
+import me.aragot.hglmoderation.HGLModeration
 import me.aragot.hglmoderation.discord.HGLBot
 import me.aragot.hglmoderation.entity.Notification
 import me.aragot.hglmoderation.entity.PlayerData
