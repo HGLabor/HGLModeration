@@ -1,6 +1,7 @@
 package me.aragot.hglmoderation.service.report
 
 import com.velocitypowered.api.proxy.Player
+import me.aragot.hglmoderation.HGLModeration
 import me.aragot.hglmoderation.discord.HGLBot
 import me.aragot.hglmoderation.entity.Notification
 import me.aragot.hglmoderation.entity.PlayerData
@@ -96,8 +97,9 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
 
         val reporters = ArrayList<UUID>()
         for (other in reviewableReports) reporters.add(UUID.fromString(other.reporterUUID))
-
+        HGLModeration.instance.logger.info(punishmentId)
         repository.updateReportsBasedOn(report)
+        ReportRepository.unfinishedReports.removeAll(reviewableReports)
 
         Notifier.notifyReporters(reporters)
     }

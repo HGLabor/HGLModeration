@@ -169,6 +169,6 @@ public class Preset {
         PunishmentManager manager = new PunishmentManager();
         Punishment punishment = manager.createPunishment(reported, reviewer, this.getPunishmentsTypes(), report.getReasoning(), Instant.now().getEpochSecond() + this.duration, "Preset used:" + this.presetName);
 
-        manager.submitPunishment(reported, punishment, this.weight, null);
+        manager.submitPunishment(reported, punishment, this.weight, report);
     }
 }

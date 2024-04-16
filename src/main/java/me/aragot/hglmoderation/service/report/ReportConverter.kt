@@ -8,7 +8,6 @@ import me.aragot.hglmoderation.entity.reports.Report
 import me.aragot.hglmoderation.repository.PlayerDataRepository
 import me.aragot.hglmoderation.repository.ReportRepository
 import me.aragot.hglmoderation.response.Responder
-import me.aragot.hglmoderation.service.player.PlayerUtils
 import me.aragot.hglmoderation.service.player.PlayerUtils.Companion.getUsernameFromUUID
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -30,7 +29,7 @@ class ReportConverter {
         private fun getMcReportOverview(report: Report): Component
         {
             val mm = MiniMessage.miniMessage()
-            val reportedUserName = PlayerUtils.getUsernameFromUUID(report.reportedUUID)
+            val reportedUserName = getUsernameFromUUID(report.reportedUUID)
             val prio = "<white>Priority:</white> <red>" + report.priority.name + "</red>"
             val reason = "<white>Reasoning:</white> <red>" + report.reasoning.name + "</red>"
             val reportState = "<white>State:</white> <red>" + report.state.name + "</red>"
@@ -51,10 +50,10 @@ class ReportConverter {
             return mm.deserialize(deserialize)
         }
 
-        fun getViewDetailsRaw(report: Report): String
+        private fun getViewDetailsRaw(report: Report): String
         {
-            val reportedUserName = PlayerUtils.getUsernameFromUUID(report.reportedUUID)
-            val reporterUserName = PlayerUtils.getUsernameFromUUID(report.reporterUUID)
+            val reportedUserName = getUsernameFromUUID(report.reportedUUID)
+            val reporterUserName = getUsernameFromUUID(report.reporterUUID)
 
             var reportDetails = """
                 <yellow><b>Report #${report.id}</b></yellow>
@@ -71,7 +70,7 @@ class ReportConverter {
                 
                 """.trimIndent()
 
-            if (Reasoning.getChatReasons().contains(report.reasoning)){
+            if (Reasoning.getChatReasons().contains(report.reasoning)) {
                 reportDetails += """<gray>User Messages:</gray>
                     ${this.getFormattedUserMessages(report)}
                     """.trimIndent()
@@ -126,14 +125,14 @@ class ReportConverter {
         }
 
         private fun getFormattedUserMessages(report: Report): String {
-            if (report.reportedUserMessages == null || report.reportedUserMessages.isEmpty()) return "<gray>No Messages sent</gray>"
+            if (report.reportedUserMessages == null || report.reportedUserMessages.isEmpty()) return "\n<gray>No Messages sent</gray>"
 
             val messages = StringBuilder()
 
             val username = try {
                 HGLModeration.instance.server.getPlayer(UUID.fromString(report.reportedUUID)).orElseThrow().username
             } catch (x: NoSuchElementException) {
-                PlayerUtils.getUsernameFromUUID(report.reportedUUID)
+                getUsernameFromUUID(report.reportedUUID)
             }
 
             for (message in report.reportedUserMessages) messages.append("\n<red>").append(username)
