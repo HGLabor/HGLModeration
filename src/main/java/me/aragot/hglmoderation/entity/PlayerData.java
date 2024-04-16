@@ -43,21 +43,6 @@ public class PlayerData {
         return punishmentScore;
     }
 
-    public String getFormattedPunishments() {
-        if (this.getPunishments().isEmpty()) return "No Punishments found";
-        PunishmentRepository repository = new PunishmentRepository();
-        ArrayList<Punishment> punishments = repository.getPunishmentsFor(this.getPlayerId(), this.getLatestIp());
-        StringBuilder formatted = new StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>");
-        for (Punishment punishment : punishments) {
-            formatted.append("\n<gray>").append(punishment.getId()).append(" |</gray> <yellow>")
-                    .append(punishment.getTypesAsString()).append("</yellow> <gray>|</gray> <red>")
-                    .append(punishment.getReasoning()).append("</red> <gray>|</gray> ")
-                    .append(punishment.isActive() ? "<green>⊙</green>" : "<red>⊙</red>");
-        }
-
-        return formatted.toString();
-    }
-
     public void setPunishmentScore(int punishmentScore) {
         this.punishmentScore = punishmentScore;
     }

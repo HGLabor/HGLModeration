@@ -63,7 +63,7 @@ public class ReviewCommand {
 
                                 Responder.respond(
                                         executedBy,
-                                        "Thank you for the engagement, but this report " + report.getFormattedState() + " by <red>" + reviewer +"</red>.",
+                                        "Thank you for the engagement, but this report " + (report.getState() == ReportState.DONE ? "was already <blue>reviewed</blue>" : "is already <yellow>under review</yellow>") + " by <red>" + reviewer +"</red>.",
                                         ResponseType.DEFAULT
                                 );
                                 return Command.SINGLE_SUCCESS;

@@ -151,7 +151,7 @@ public class FetcherCommand {
                                                 break;
                                             }
 
-                                            context.getSource().sendMessage(ReportConverter.Companion.getMcReportComponent(report, false));
+                                            context.getSource().sendMessage(ReportConverter.Companion.getMcReportOverview(report, false));
                                             break;
                                         case "punishment":
                                             Punishment punishment;

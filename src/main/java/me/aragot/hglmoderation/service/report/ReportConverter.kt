@@ -9,6 +9,7 @@ import me.aragot.hglmoderation.repository.PlayerDataRepository
 import me.aragot.hglmoderation.repository.ReportRepository
 import me.aragot.hglmoderation.response.Responder
 import me.aragot.hglmoderation.service.player.PlayerUtils.Companion.getUsernameFromUUID
+import me.aragot.hglmoderation.service.punishment.PunishmentConverter
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.text.SimpleDateFormat
@@ -16,38 +17,36 @@ import java.util.*
 
 class ReportConverter {
     companion object {
-        fun getMcReportComponent(report: Report, incoming: Boolean = false): Component
-        {
-            val mm = MiniMessage.miniMessage()
-            if (incoming) return mm.deserialize("<gold>============= <white>Incoming</white> <red>Report: #" + report.id + "</red> =============</gold>\n")
-                .append(this.getMcReportOverview(report))
+        //necessary?
+        private const val baseWhiteSpaces = "                    "
 
-            return mm.deserialize("<gold>================= <red>Report: #" + report.id + "</red> =================</gold>\n")
-                .append(this.getMcReportOverview(report))
-        }
-
-        private fun getMcReportOverview(report: Report): Component
+        fun getMcReportOverview(report: Report, incoming: Boolean = false): Component
         {
             val mm = MiniMessage.miniMessage()
             val reportedUserName = getUsernameFromUUID(report.reportedUUID)
-            val prio = "<white>Priority:</white> <red>" + report.priority.name + "</red>"
+            val priority = "<white>Priority:</white> <red>" + report.priority.name + "</red>"
             val reason = "<white>Reasoning:</white> <red>" + report.reasoning.name + "</red>"
             val reportState = "<white>State:</white> <red>" + report.state.name + "</red>"
             val reported = "<white>Reported:</white> <red>$reportedUserName</red>"
 
             val viewDetails: String = this.getViewDetailsRaw(report)
 
-            val reviewReport =
-                "<click:run_command:'/review " + report.id + "'><white>[<yellow><b>Review</b></yellow>]</white></click>"
+            val reviewReport = "<click:run_command:'/review " + report.id + "'><white>[<yellow><b>Review</b></yellow>]</white></click>"
 
-            val deserialize = """                    $prio
-                    $reason
-                    $reported
-                    $reportState
-
-                    $viewDetails   $reviewReport
-                    <gold>===================================================</gold>"""
-            return mm.deserialize(deserialize)
+            return mm.deserialize(
+                if (incoming)
+                    "<gold>============= <white>Incoming</white> <red>Report: #" + report.id + "</red> =============</gold>"
+                else
+                    "<gold>================= <red>Report: #" + report.id + "</red> =================</gold>")
+                .appendNewline()
+                .appendNewline().append(mm.deserialize(baseWhiteSpaces + priority))
+                .appendNewline().append(mm.deserialize(baseWhiteSpaces + reason))
+                .appendNewline().append(mm.deserialize(baseWhiteSpaces + reported))
+                .appendNewline().append(mm.deserialize(baseWhiteSpaces + reportState))
+                .appendNewline()
+                .appendNewline().append(mm.deserialize("$baseWhiteSpaces$viewDetails   $reviewReport"))
+                .appendNewline()
+                .appendNewline().append(mm.deserialize("<gold>===================================================</gold>"))
         }
 
         private fun getViewDetailsRaw(report: Report): String
@@ -62,19 +61,16 @@ class ReportConverter {
                 <gray>Reported By:</gray> <red>$reporterUserName</red>
                 <gray>Reasoning:</gray> <red>${report.reasoning.name}</red>
                 <gray>Priority:</gray> <red>${report.priority.name}</red>
-                <gray>Submitted at:</gray> <red>${
-                SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(
-                    Date(report.submittedAt * 1000)
-                )}</red>
+                <gray>Submitted at:</gray> <red>${SimpleDateFormat("HH:mm:ss dd/MM/yyyy").format(Date(report.submittedAt * 1000))}</red>
                 <gray>State:</gray> <red>${report.state.name}</red>
                 
                 """.trimIndent()
 
-            if (Reasoning.getChatReasons().contains(report.reasoning)) {
-                reportDetails += """<gray>User Messages:</gray>
-                    ${this.getFormattedUserMessages(report)}
-                    """.trimIndent()
+
+            if (Reasoning.getChatReasons().contains(report.reasoning)){
+                reportDetails += "<gray>User Messages:</gray><br>" + this.getFormattedUserMessages(report)
             }
+
 
             return "<hover:show_text:'$reportDetails'><white>[<blue><b>View Details</b></blue>]</white></hover>"
         }
@@ -101,10 +97,12 @@ class ReportConverter {
                 "None"
             }
             val firstLine = "<hover:show_text:'<green>Accept and Punish</green>'><click:suggest_command:'/preset apply $presetName ${report.id}'><white>[<green><b>Punish</b></green>]</white></click></hover>   <hover:show_text:'<red>Decline Report</red>'><click:suggest_command:'/review ${report.id} decline'><white>[<red><b>Decline</b></red>]</white></click></hover>   <hover:show_text:'<red>Mark as malicious</red>'><click:suggest_command:'/review ${report.id} malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click></hover>"
-            val secondLine = "<hover:show_text:'${data.formattedPunishments}'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>   <hover:show_text:'${getRawOtherReports(report)}'><white>[<blue><b>Other Reports</b></blue>]</white></hover>"
+            val secondLine = "<hover:show_text:'${PunishmentConverter.getFormattedPunishments(data)}'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>   <hover:show_text:'${getRawOtherReports(report)}'><white>[<blue><b>Other Reports</b></blue>]</white></hover>"
             val thirdLine = "<hover:show_text:'<blue>Teleport to Server</blue>'><click:run_command:'/server $serverName'><white>[<blue><b>Follow Player</b></blue>]</white></click></hover>"
 
-            return mm.deserialize(firstLine).appendNewline().append(mm.deserialize(secondLine)).appendNewline().append(mm.deserialize(thirdLine))
+            return mm.deserialize(firstLine)
+                .appendNewline().append(mm.deserialize(secondLine))
+                .appendNewline().append(mm.deserialize(thirdLine))
         }
 
         private fun getRawOtherReports(report: Report): String
