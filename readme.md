@@ -2,7 +2,7 @@
 - [Requirements](#requirements)
 - [Permissions](#permissions)
 - [Config](#config)
-- [Presets & Weight](#weight-&-presets)
+- [Weight & Presets](#weight-&-presets)
 - [Fetcher](#fetcher)
 
 ## Requirements
