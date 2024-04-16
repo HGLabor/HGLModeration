@@ -5,6 +5,7 @@ import me.aragot.hglmoderation.entity.Reasoning;
 import me.aragot.hglmoderation.entity.punishments.Punishment;
 import me.aragot.hglmoderation.entity.punishments.PunishmentType;
 import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.exceptions.DatabaseException;
 import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.service.punishment.PunishmentManager;
 
@@ -16,9 +17,9 @@ public class Preset {
 
     private String presetName;
     private String presetDescription;
-    private ArrayList<Reasoning> reasoningScope;
 
-    private ArrayList<PunishmentType> punishmentsTypes;
+    private ArrayList<Reasoning> reasoningScope = new ArrayList<>();
+    private ArrayList<PunishmentType> punishmentsTypes = new ArrayList<>();
 
     private int weight;
     private int start;
@@ -29,8 +30,6 @@ public class Preset {
     public Preset(String presetName, String presetDescription, int start, int end, int weight) {
         this.presetName = presetName;
         this.presetDescription = presetDescription;
-        this.punishmentsTypes = new ArrayList<>();
-        this.reasoningScope = new ArrayList<>();
         this.start = start;
         this.end = end;
         this.weight = weight;
@@ -155,19 +154,22 @@ public class Preset {
         return builder.toString();
     }
 
-    public void apply(Report report) {
+    public void apply(Report report) throws DatabaseException {
         PlayerDataRepository repository = new PlayerDataRepository();
 
         PlayerData reported = repository.getPlayerData(report.getReportedUUID());
-        reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
-
         PlayerData reporter = repository.getPlayerData(report.getReporterUUID());
-        reporter.setReportScore(reporter.getReportScore() + 1);
-
         PlayerData reviewer = repository.getPlayerData(report.getReviewedBy());
+
+        if (reported == null || reporter == null || reviewer == null) {
+            throw new DatabaseException("Couldn't find all necessary player data from database.");
+        }
+
+        reporter.setReportScore(reporter.getReportScore() + 1);
+        reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
         PunishmentManager manager = new PunishmentManager();
         Punishment punishment = manager.createPunishment(reported, reviewer, this.getPunishmentsTypes(), report.getReasoning(), Instant.now().getEpochSecond() + this.duration, "Preset used:" + this.presetName);
 
-        manager.submitPunishment(reported, punishment, this.weight, null);
+        manager.submitPunishment(reported, punishment, this.weight, report);
     }
 }

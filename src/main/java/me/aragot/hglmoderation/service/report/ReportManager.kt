@@ -1,7 +1,6 @@
 package me.aragot.hglmoderation.service.report
 
 import com.velocitypowered.api.proxy.Player
-import me.aragot.hglmoderation.HGLModeration
 import me.aragot.hglmoderation.discord.HGLBot
 import me.aragot.hglmoderation.entity.Notification
 import me.aragot.hglmoderation.entity.PlayerData
@@ -53,6 +52,8 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
 
     fun startReview(report: Report, reviewer: String)
     {
+        report.reviewedBy = reviewer
+        report.state = ReportState.UNDER_REVIEW
         for(other: Report in ReportRepository.unfinishedReports) {
             if (!report.reportedUUID.equals(other.reportedUUID, ignoreCase = true) || report.reasoning !== other.reasoning) {
                 continue
@@ -60,10 +61,13 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
             other.reviewedBy = reviewer
             other.state = ReportState.UNDER_REVIEW
         }
+
+        this.repository.updateReportsBasedOn(report)
     }
 
     fun decline(report: Report)
     {
+        report.state = ReportState.DONE
         val reviewableReports = ReportRepository.unfinishedReports.stream().filter { other: Report ->
             other.reportedUUID.equals(report.reportedUUID, ignoreCase = true) && other.reasoning == report.reasoning
         }.collect(Collectors.toList())
@@ -94,6 +98,7 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
         for (other in reviewableReports) reporters.add(UUID.fromString(other.reporterUUID))
 
         repository.updateReportsBasedOn(report)
+        ReportRepository.unfinishedReports.removeAll(reviewableReports)
 
         Notifier.notifyReporters(reporters)
     }

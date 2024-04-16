@@ -8,7 +8,7 @@ import me.aragot.hglmoderation.service.player.PlayerUtils.Companion.getUsernameF
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 
-class PunishmentConverter() {
+class PunishmentConverter {
     companion object {
         fun getBanComponent(punishment: Punishment): Component
         {
@@ -36,7 +36,7 @@ class PunishmentConverter() {
             <gray>Reason:</gray> <red>${Reasoning.getPrettyReasoning(punishment.reasoning)}</red>
             <gray>Duration:</gray> <red>${punishment.remainingTime}</red>
     
-            <gold>=================================================</gold>"""
+          <gold>=================================================</gold>"""
             return MiniMessage.miniMessage().deserialize(muteComponent)
         }
 
