@@ -1,9 +1,9 @@
 # Table of Contents
-- ###[Requirements](#requirements)
-- ###[Permissions](#permissions)
-- ###[Config](#config)
-- ###[Presets & Weight](#weight-&-presets)
-- ###[Fetcher](#fetcher)
+- [Requirements](#requirements)
+- [Permissions](#permissions)
+- [Config](#config)
+- [Presets & Weight](#weight-&-presets)
+- [Fetcher](#fetcher)
 
 ## Requirements
 
