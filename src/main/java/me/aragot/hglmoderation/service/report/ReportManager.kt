@@ -37,7 +37,7 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
 
         ReportRepository.unfinishedReports.add(report)
 
-        Notifier.notify(Notification.REPORT, ReportConverter.getMcReportComponent(report, incoming = true))
+        Notifier.notify(Notification.REPORT, ReportConverter.getMcReportOverview(report, incoming = true))
     }
 
     fun getPriorityForPlayer(player: Player): Priority

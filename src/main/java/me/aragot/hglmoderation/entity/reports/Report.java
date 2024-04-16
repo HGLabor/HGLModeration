@@ -107,9 +107,4 @@ public class Report {
     public void setDiscordLog(String messageId) {
         this.discordLog = messageId;
     }
-
-    //Maybe separate as well?
-    public String getFormattedState() {
-        return this.getState() == ReportState.DONE ? "was already <blue>reviewed</blue>" : "is already <yellow>under review</yellow>";
-    }
 }

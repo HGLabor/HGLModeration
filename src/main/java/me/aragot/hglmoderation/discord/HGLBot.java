@@ -12,6 +12,7 @@ import me.aragot.hglmoderation.discord.actions.ActionHandler;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.punishment.PunishmentConverter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -206,7 +207,7 @@ public class HGLBot {
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("Incoming " + punishment.getTypesAsString());
+        eb.setTitle("Incoming " + PunishmentConverter.Companion.getTypesAsString(punishment));
         eb.setColor(Color.red);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         eb.setThumbnail(punishment.getTypes().contains(PunishmentType.IP_BAN) ? "https://as1.ftcdn.net/v2/jpg/00/54/65/16/1000_F_54651607_OJOGbrFBB3mDTpZDKmdjjR94lsbZMTVa.jpg" : "https://mc-heads.net/avatar/" + punishment.getIssuedTo());
@@ -221,7 +222,7 @@ public class HGLBot {
                 "Punished by: " + punisherName + "\n" +
                 "Reasoning: " + punishment.getReasoning().name() + "\n" +
                 "Punishment ID: " + punishment.getId() + "\n" +
-                "Duration: " + punishment.getDuration() + "\n" +
+                "Duration: " + PunishmentConverter.Companion.getDuration(punishment) + "\n" +
                 "Submitted at: <t:" + punishment.getIssuedAtTimestamp() + ":f>\n" +
                 "Ends at: <t:" + punishment.getEndsAtTimestamp() + ":f>";
 
