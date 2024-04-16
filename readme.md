@@ -2,7 +2,7 @@
 - [Requirements](#requirements)
 - [Permissions](#permissions)
 - [Config](#config)
-- [Weight & Presets](#weight-&-presets)
+- [Weight and Presets](#weight-and-presets)
 - [Fetcher](#fetcher)
 
 ## Requirements
@@ -69,7 +69,7 @@ You can simply use the following commands to set the channel ids:
 
 By setting these log channels, you will be notified when a new report or punishment has been submitted.
 
-## Weight & Presets
+## Weight and Presets
 
 ---
 
