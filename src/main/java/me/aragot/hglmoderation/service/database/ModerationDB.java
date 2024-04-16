@@ -34,7 +34,7 @@ public class ModerationDB {
                 .build();
 
         this.mongoClient = MongoClients.create(clientSettings);
-        MongoDatabase mongoDB = this.mongoClient.getDatabase("Moderation");
+        MongoDatabase mongoDB = this.mongoClient.getDatabase("hglabor");
         ArrayList<String> collectionNames = mongoDB.listCollectionNames().into(new ArrayList<>());
 
         if (!collectionNames.contains(dbPrefix + "reports")) mongoDB.createCollection(dbPrefix + "reports");

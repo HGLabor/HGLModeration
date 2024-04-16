@@ -16,9 +16,9 @@ public class Preset {
 
     private String presetName;
     private String presetDescription;
-    private ArrayList<Reasoning> reasoningScope;
 
-    private ArrayList<PunishmentType> punishmentsTypes;
+    private ArrayList<Reasoning> reasoningScope = new ArrayList<>();
+    private ArrayList<PunishmentType> punishmentsTypes = new ArrayList<>();
 
     private int weight;
     private int start;
@@ -29,8 +29,6 @@ public class Preset {
     public Preset(String presetName, String presetDescription, int start, int end, int weight) {
         this.presetName = presetName;
         this.presetDescription = presetDescription;
-        this.punishmentsTypes = new ArrayList<>();
-        this.reasoningScope = new ArrayList<>();
         this.start = start;
         this.end = end;
         this.weight = weight;
@@ -159,12 +157,15 @@ public class Preset {
         PlayerDataRepository repository = new PlayerDataRepository();
 
         PlayerData reported = repository.getPlayerData(report.getReportedUUID());
-        reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
-
         PlayerData reporter = repository.getPlayerData(report.getReporterUUID());
-        reporter.setReportScore(reporter.getReportScore() + 1);
-
         PlayerData reviewer = repository.getPlayerData(report.getReviewedBy());
+
+        if (reported == null || reporter == null || reviewer == null) {
+            return;
+        }
+
+        reporter.setReportScore(reporter.getReportScore() + 1);
+        reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
         PunishmentManager manager = new PunishmentManager();
         Punishment punishment = manager.createPunishment(reported, reviewer, this.getPunishmentsTypes(), report.getReasoning(), Instant.now().getEpochSecond() + this.duration, "Preset used:" + this.presetName);
 

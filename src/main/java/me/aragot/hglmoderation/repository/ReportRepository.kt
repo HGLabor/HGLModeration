@@ -66,19 +66,21 @@ class ReportRepository: Repository() {
     fun updateReportsBasedOn(report: Report): Boolean {
         val filter = Filters.and(
             Filters.eq("reportedUUID", report.reportedUUID),
-            Filters.eq("reasoning", report.reasoning),
+            Filters.eq("reasoning", report.reasoning.name),
             Filters.or(
                 Filters.eq("state", ReportState.UNDER_REVIEW.name),
                 Filters.eq("state", ReportState.OPEN.name)
             )
         )
-
         val updates = Updates.combine(
             Updates.set("state", report.state),
             Updates.set("reviewedBy", report.reviewedBy),
             Updates.set("punishmentId", report.punishmentId)
         )
-        return this.database.reportCollection.updateMany(filter, updates).wasAcknowledged()
+
+        val result = this.database.reportCollection.updateMany(filter, updates.toBsonDocument())
+
+        return result.wasAcknowledged()
     }
 
     fun fetchUnfinishedReports()
