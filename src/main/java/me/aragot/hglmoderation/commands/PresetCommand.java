@@ -11,6 +11,7 @@ import me.aragot.hglmoderation.admin.preset.PresetHandler;
 
 import me.aragot.hglmoderation.entity.reports.Report;
 import me.aragot.hglmoderation.entity.reports.ReportState;
+import me.aragot.hglmoderation.exceptions.DatabaseException;
 import me.aragot.hglmoderation.repository.ReportRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
@@ -150,10 +151,14 @@ public class PresetCommand {
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            preset.apply(report);
-                                            Responder.respond(context.getSource(),
-                                                    "<green>Thank you for reviewing this report. The reported player was successfully. Keep up the good work :)</green>",
-                                                    ResponseType.DEFAULT);
+                                            try {
+                                                preset.apply(report);
+                                                Responder.respond(context.getSource(),
+                                                        "<green>Thank you for reviewing this report. The reported player was successfully. Keep up the good work :)</green>",
+                                                        ResponseType.DEFAULT);
+                                            } catch (DatabaseException x) {
+                                                Responder.respond(context.getSource(), x.getMessage(), ResponseType.DEFAULT);
+                                            }
 
                                             return Command.SINGLE_SUCCESS;
                                         })

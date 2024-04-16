@@ -78,9 +78,7 @@ class ReportRepository: Repository() {
             Updates.set("punishmentId", report.punishmentId)
         )
 
-        val result = this.database.reportCollection.updateMany(filter, updates)
-
-        return result.wasAcknowledged()
+        return this.database.reportCollection.updateMany(filter, updates).wasAcknowledged()
     }
 
     fun fetchUnfinishedReports()

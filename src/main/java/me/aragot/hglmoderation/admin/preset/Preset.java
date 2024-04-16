@@ -5,6 +5,7 @@ import me.aragot.hglmoderation.entity.Reasoning;
 import me.aragot.hglmoderation.entity.punishments.Punishment;
 import me.aragot.hglmoderation.entity.punishments.PunishmentType;
 import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.exceptions.DatabaseException;
 import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.service.punishment.PunishmentManager;
 
@@ -153,7 +154,7 @@ public class Preset {
         return builder.toString();
     }
 
-    public void apply(Report report) {
+    public void apply(Report report) throws DatabaseException {
         PlayerDataRepository repository = new PlayerDataRepository();
 
         PlayerData reported = repository.getPlayerData(report.getReportedUUID());
@@ -161,7 +162,7 @@ public class Preset {
         PlayerData reviewer = repository.getPlayerData(report.getReviewedBy());
 
         if (reported == null || reporter == null || reviewer == null) {
-            return;
+            throw new DatabaseException("Couldn't find all necessary player data from database.");
         }
 
         reporter.setReportScore(reporter.getReportScore() + 1);
