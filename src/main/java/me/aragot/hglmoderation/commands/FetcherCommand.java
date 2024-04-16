@@ -106,7 +106,7 @@ public class FetcherCommand {
                                     PlayerData data = null;
                                     String playerUuid = null;
                                     if (!id.equalsIgnoreCase("under_review")) {
-                                        playerUuid =  PlayerUtils.Companion.getUuidFromUsername(id);
+                                        playerUuid = PlayerUtils.Companion.getUuidFromUsername(id);
                                     }
 
                                     if (playerUuid != null) {
