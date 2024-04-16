@@ -7,11 +7,11 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.entity.Reasoning;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.StringUtils;
+import me.aragot.hglmoderation.service.report.ReportManager;
+import me.aragot.hglmoderation.service.StringUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -104,7 +104,8 @@ public class ReportCommand {
 
                                 try {
                                     Reasoning reason = Reasoning.valueOf(reasoning.toUpperCase());
-                                    Report.submitReport(reportedPlayer.getUniqueId().toString(), reporter.getUniqueId().toString(), reason, Report.getPriorityForReporter(reporter));
+                                    ReportManager manager = new ReportManager();
+                                    manager.submitReport(reportedPlayer.getUniqueId().toString(), reporter.getUniqueId().toString(), reason, manager.getPriorityForPlayer(reporter));
                                     latestReports.add(new AbstractMap.SimpleEntry<>(reporter.getUniqueId(), Instant.now().getEpochSecond() + 120));
                                     Responder.respond(reporter, "Your report has been submitted. Our team will review your report as soon as possible. Thank you for your patience!", ResponseType.SUCCESS);
                                 } catch (IllegalArgumentException x) {
@@ -123,7 +124,7 @@ public class ReportCommand {
         Component reportText = mm.deserialize(Responder.prefix + " You are about to report <b><red>" + reportedName + "</red></b>.<br>" + "Please pick a reasoning for the report:<br><br>");
 
         for(Reasoning reason : Reasoning.values()){
-            String name = StringUtils.prettyEnum(reason);
+            String name = StringUtils.Companion.prettyEnum(reason);
             reportText = reportText.append(
                     mm.deserialize("   <gray>☉</gray><red> " + name + "</red>")
                             .clickEvent(ClickEvent.runCommand("/report " + reportedName + " " + reason.name()))

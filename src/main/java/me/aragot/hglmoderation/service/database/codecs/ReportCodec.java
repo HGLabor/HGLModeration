@@ -1,9 +1,9 @@
-package me.aragot.hglmoderation.database.codecs;
+package me.aragot.hglmoderation.service.database.codecs;
 
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.reports.Priority;
-import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.reports.Priority;
+import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.entity.reports.ReportState;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;

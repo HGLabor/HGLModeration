@@ -22,11 +22,11 @@ public class ActionHandler extends ListenerAdapter {
     public void onStringSelectInteraction(@Nonnull StringSelectInteractionEvent event) {
         String menuId = event.getSelectMenu().getId();
         //it's the /preset menu
-        if(menuId.equalsIgnoreCase("preset-picker")){
+        if (menuId.equalsIgnoreCase("preset-picker")) {
             Preset preset = PresetHandler.instance.getPresetByName(event.getSelectedOptions().get(0).getLabel());
 
-            if(preset == null){
-                if(!event.getInteraction().getValues().get(0).equalsIgnoreCase("preset-add")){
+            if (preset == null) {
+                if (!event.getInteraction().getValues().get(0).equalsIgnoreCase("preset-add")) {
                     event.replyEmbeds(
                             HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't find this preset, please try reopening your PresetGUI. Picked Label: " + event.getSelectedOptions().get(0).getLabel()).build()
                     ).setEphemeral(true).queue();
@@ -47,10 +47,10 @@ public class ActionHandler extends ListenerAdapter {
         }
 
         //This handles the preset scopes
-        if(menuId.endsWith("-scopes")){
+        if (menuId.endsWith("-scopes")) {
             String presetName = menuId.substring(0, menuId.length() - 7);
             Preset preset = PresetHandler.instance.getPresetByName(presetName);
-            if(preset == null){
+            if (preset == null) {
                 event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find a preset with the name: " + presetName).build()).queue();
                 return;
             }
@@ -59,10 +59,10 @@ public class ActionHandler extends ListenerAdapter {
             PresetHandler.savePresets();
 
             event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully changed reasoning scope for " + presetName).build()).queue();
-        } else if(menuId.endsWith("-type")){
+        } else if (menuId.endsWith("-type")) {
             String presetName = menuId.substring(0, menuId.length() - 5);
             Preset preset = PresetHandler.instance.getPresetByName(presetName);
-            if(preset == null){
+            if (preset == null) {
                 event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find a preset with the name: " + presetName).build()).queue();
                 return;
             }
@@ -75,12 +75,12 @@ public class ActionHandler extends ListenerAdapter {
     }
 
     @Override
-    public void onModalInteraction(ModalInteractionEvent event){
+    public void onModalInteraction(ModalInteractionEvent event) {
         MessageEmbed eb = HGLBot.getEmbedTemplate(ResponseType.ERROR, "This is not supposed to be displayed. Please report this bug. EndPoint: ModalInteraction").build();
-        switch(event.getModalId()){
+        switch (event.getModalId()) {
             case "preset-create":
                 eb = createPresetFromModal(event).build();
-                if(eb.getTitle().equalsIgnoreCase("Success!")){
+                if (eb.getTitle().equalsIgnoreCase("Success!")) {
                     String presetName = event.getValue("preset-name").getAsString();
                     event.getChannel().sendMessageEmbeds(eb).queue();
                     Preset preset = PresetHandler.instance.getPresetByName(presetName);
@@ -94,7 +94,7 @@ public class ActionHandler extends ListenerAdapter {
 
             case "preset-edit":
                 eb = editPresetFromModal(event).build();
-                if(eb.getTitle().equalsIgnoreCase("Success!")){
+                if (eb.getTitle().equalsIgnoreCase("Success!")) {
                     String presetName = event.getValue("preset-name").getAsString();
                     event.getChannel().sendMessageEmbeds(eb).queue();
                     Preset preset = PresetHandler.instance.getPresetByName(presetName);
@@ -108,7 +108,7 @@ public class ActionHandler extends ListenerAdapter {
 
             case "preset-duration":
                 eb = setDurationFromModal(event).build();
-                if(eb.getTitle().equalsIgnoreCase("Success!")){
+                if (eb.getTitle().equalsIgnoreCase("Success!")) {
                     String presetName = event.getValue("preset-name").getAsString();
                     event.getChannel().sendMessageEmbeds(eb).queue();
                     Preset preset = PresetHandler.instance.getPresetByName(presetName);
@@ -129,18 +129,17 @@ public class ActionHandler extends ListenerAdapter {
         }
 
         event.replyEmbeds(eb).queue();
-
     }
 
     @Override
-    public void onButtonInteraction(ButtonInteractionEvent event){
+    public void onButtonInteraction(ButtonInteractionEvent event) {
         Preset preset;
         Modal modal;
-        switch(event.getButton().getId()){
+        switch (event.getButton().getId()) {
             case "preset-duration":
                 preset = PresetHandler.instance.getPresetByName(event.getMessage().getEmbeds().get(0).getTitle());
 
-                if(preset == null){
+                if (preset == null) {
                     event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Please refresh the PresetGUI").build())
                             .setEphemeral(true).queue();
                     return;
@@ -154,7 +153,7 @@ public class ActionHandler extends ListenerAdapter {
             case "preset-edit":
                 preset = PresetHandler.instance.getPresetByName(event.getMessage().getEmbeds().get(0).getTitle());
 
-                if(preset == null){
+                if (preset == null) {
                     event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Please refresh the PresetGUI").build())
                             .setEphemeral(true).queue();
                     return;
@@ -167,7 +166,7 @@ public class ActionHandler extends ListenerAdapter {
 
             case "preset-delete":
                 preset = PresetHandler.instance.getPresetByName(event.getMessage().getEmbeds().get(0).getTitle());
-                if(preset == null){
+                if (preset == null) {
                     event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Please refresh the PresetGUI").build())
                             .setEphemeral(true).queue();
                     return;
@@ -186,7 +185,7 @@ public class ActionHandler extends ListenerAdapter {
             case "preset-delete-final":
                 String presetName = event.getMessage().getEmbeds().get(0).getDescription().split("'")[1];
                 preset = PresetHandler.instance.getPresetByName(presetName);
-                if(preset == null){
+                if (preset == null) {
                     event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Please refresh the PresetGUI").build())
                             .setEphemeral(true).queue();
                     return;
@@ -204,5 +203,4 @@ public class ActionHandler extends ListenerAdapter {
                 break;
         }
     }
-
 }

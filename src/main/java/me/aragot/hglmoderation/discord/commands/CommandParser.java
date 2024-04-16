@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 public class CommandParser extends ListenerAdapter {
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event){
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         CommandExecutor executor = new CommandExecutor(event);
 
-        switch(event.getFullCommandName().split(" ")[0]){
+        switch (event.getFullCommandName().split(" ")[0]) {
             case "logs":
                 executor.onLogs();
                 break;

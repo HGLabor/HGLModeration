@@ -2,11 +2,11 @@ package me.aragot.hglmoderation.discord.actions.presets;
 
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.punishments.PunishmentType;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.punishments.PunishmentType;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.StringUtils;
+import me.aragot.hglmoderation.service.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -21,17 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PresetInteractions {
-    public static EmbedBuilder editPresetFromModal(ModalInteractionEvent event){
+    public static EmbedBuilder editPresetFromModal(ModalInteractionEvent event) {
         String presetName = event.getValue("preset-name").getAsString();
         Preset preset = PresetHandler.instance.getPresetByName(presetName);
-        if(preset == null)
+        if (preset == null)
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Try refreshing your PresetGUI");
 
         String presetDescription = event.getValue("preset-description").getAsString();
         int start;
         int end;
         int weight;
-
 
         try {
             start = Integer.parseInt(event.getValue("preset-start").getAsString());
@@ -41,8 +40,7 @@ public class PresetInteractions {
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your Preset Start, End and Weight must be whole integers.");
         }
 
-
-        if(start > end && end != -1)
+        if (start > end && end != -1)
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Preset Range start value cannot be greater than the end value.");
 
         preset.setDescription(presetDescription);
@@ -55,7 +53,7 @@ public class PresetInteractions {
         return HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully edited Preset.");
     }
 
-    public static EmbedBuilder setDurationFromModal(ModalInteractionEvent event){
+    public static EmbedBuilder setDurationFromModal(ModalInteractionEvent event) {
         String presetName = event.getValue("preset-name").getAsString();
         Preset preset = PresetHandler.instance.getPresetByName(presetName);
         if(preset == null)
@@ -65,7 +63,6 @@ public class PresetInteractions {
         int hours;
         int minutes;
 
-
         try {
             days = Integer.parseInt(event.getValue("preset-days").getAsString());
             hours = Integer.parseInt(event.getValue("preset-hours").getAsString());
@@ -74,8 +71,7 @@ public class PresetInteractions {
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your duration's days, hours and minutes must be whole integers.");
         }
 
-
-        if(days < 0 || hours < 0 || minutes < 0){
+        if (days < 0 || hours < 0 || minutes < 0) {
             preset.setDuration(-1);
         } else {
             preset.setDuration(convertDurationToSeconds(days, hours, minutes));
@@ -86,19 +82,18 @@ public class PresetInteractions {
         return HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully set the duration for the Preset.");
     }
 
-    public static EmbedBuilder createPresetFromModal(ModalInteractionEvent event){
+    public static EmbedBuilder createPresetFromModal(ModalInteractionEvent event) {
         String presetName = event.getValue("preset-name").getAsString();
-        if(presetName.contains(" "))
+        if (presetName.contains(" "))
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your Preset Name cannot contain spaces!");
 
-        if(PresetHandler.instance.containsPreset(presetName))
+        if (PresetHandler.instance.containsPreset(presetName))
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "There is already a preset named like that. Please choose a unique name.");
 
         String presetDescription = event.getValue("preset-description").getAsString();
         int start;
         int end;
         int weight;
-
 
         try {
             start = Integer.parseInt(event.getValue("preset-start").getAsString());
@@ -108,8 +103,7 @@ public class PresetInteractions {
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Your Preset Start, End and Weight must be whole integers.");
         }
 
-
-        if(start > end && end != -1)
+        if (start > end && end != -1)
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Preset Range start value cannot be greater than the end value.");
 
         Preset preset = new Preset(presetName, presetDescription, start, end, weight);
@@ -119,7 +113,7 @@ public class PresetInteractions {
         return HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully created new Preset.");
     }
 
-    public static EmbedBuilder getPresetEmbed(Preset preset){
+    public static EmbedBuilder getPresetEmbed(Preset preset) {
         EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
         String endsAt = preset.getEnd() == -1 ? "Infinity" : String.valueOf(preset.getEnd());
         eb.setTitle(preset.getName());
@@ -133,61 +127,65 @@ public class PresetInteractions {
         return eb;
     }
 
-    public static StringSelectMenu.Builder getScopeMenuForPreset(Preset preset){
+    public static StringSelectMenu.Builder getScopeMenuForPreset(Preset preset) {
         StringSelectMenu.Builder reasonScope = StringSelectMenu.create(preset.getName().toLowerCase() + "-scopes");
         reasonScope.setPlaceholder("Select this presets scope");
         reasonScope.setMaxValues(Reasoning.values().length);
-        for(Reasoning reason : Reasoning.values()){
-            reasonScope.addOption(StringUtils.prettyEnum(reason),
+        for (Reasoning reason : Reasoning.values()) {
+            reasonScope.addOption(
+                    StringUtils.Companion.prettyEnum(reason),
                     preset.getName().toLowerCase() + "-" + reason.name().toLowerCase(),
-                    Emoji.fromUnicode("\uD83E\uDEAC"));
+                    Emoji.fromUnicode("\uD83E\uDEAC")
+            );
         }
 
         ArrayList<String> reasoningIds = new ArrayList<>();
-        for(Reasoning reason : preset.getReasoningScope())
+        for (Reasoning reason : preset.getReasoningScope())
             reasoningIds.add(preset.getName().toLowerCase() + "-" + reason.name().toLowerCase());
 
         reasonScope.setDefaultValues(reasoningIds);
         return reasonScope;
     }
 
-    public static StringSelectMenu.Builder getPunishmentTypeMenuForPreset(Preset preset){
+    public static StringSelectMenu.Builder getPunishmentTypeMenuForPreset(Preset preset) {
         StringSelectMenu.Builder typeMenu = StringSelectMenu.create(preset.getName().toLowerCase() + "-type");
         typeMenu.setPlaceholder("Select this presets punishments");
         typeMenu.setMaxValues(PunishmentType.values().length);
-        for(PunishmentType type : PunishmentType.values()){
-            typeMenu.addOption(StringUtils.prettyEnum(type),
+        for (PunishmentType type : PunishmentType.values()) {
+            typeMenu.addOption(
+                    StringUtils.Companion.prettyEnum(type),
                     preset.getName().toLowerCase() + "-" + type.name().toLowerCase(),
-                    Emoji.fromUnicode("\uD83D\uDEAB"));
+                    Emoji.fromUnicode("\uD83D\uDEAB")
+            );
         }
 
         ArrayList<String> typeIds = new ArrayList<>();
-        for(PunishmentType type : preset.getPunishmentsTypes())
+        for (PunishmentType type : preset.getPunishmentsTypes())
             typeIds.add(preset.getName().toLowerCase() + "-" + type.name().toLowerCase());
 
         typeMenu.setDefaultValues(typeIds);
         return typeMenu;
     }
 
-    public static ArrayList<Reasoning> getReasoningScopeForValues(String presetName, List<String> values){
+    public static ArrayList<Reasoning> getReasoningScopeForValues(String presetName, List<String> values) {
         ArrayList<Reasoning> reasoningScope = new ArrayList<>();
-        for(String value : values){
+        for (String value : values) {
             String reasoning = value.replace(presetName + "-", "").toUpperCase();
             reasoningScope.add(Reasoning.valueOf(reasoning));
         }
         return reasoningScope;
     }
 
-    public static ArrayList<PunishmentType> getPunishmentTypesForValues(String presetName, List<String> values){
+    public static ArrayList<PunishmentType> getPunishmentTypesForValues(String presetName, List<String> values) {
         ArrayList<PunishmentType> types = new ArrayList<>();
-        for(String value : values){
+        for (String value : values) {
             String type = value.replace(presetName + "-", "").toUpperCase();
             types.add(PunishmentType.valueOf(type));
         }
         return types;
     }
 
-    public static Modal getModal(){
+    public static Modal getModal() {
         TextInput presetNameInput = TextInput.create("preset-name", "Preset Name", TextInputStyle.SHORT)
                 .setPlaceholder("Name of Preset (No Spaces allowed!)")
                 .setMinLength(1)
@@ -223,7 +221,7 @@ public class PresetInteractions {
                 .build();
     }
 
-    public static Modal getModalForPreset(Preset preset){
+    public static Modal getModalForPreset(Preset preset) {
         TextInput presetNameInput = TextInput.create("preset-name", "Preset Name", TextInputStyle.SHORT)
                 .setPlaceholder("Name of Preset (No Spaces allowed!)")
                 .setValue(preset.getName())
@@ -264,7 +262,7 @@ public class PresetInteractions {
                 .build();
     }
 
-    public static Modal getDurationModal(Preset preset){
+    public static Modal getDurationModal(Preset preset) {
         TextInput presetNameInput = TextInput.create("preset-name", "Preset Name (DO NOT EDIT!)", TextInputStyle.SHORT)
                 .setPlaceholder("Name of Preset (No Spaces allowed!)")
                 .setValue(preset.getName())
@@ -302,7 +300,7 @@ public class PresetInteractions {
                 .build();
     }
 
-    public static ArrayList<ActionRow> getPresetActionRows(Preset preset){
+    public static ArrayList<ActionRow> getPresetActionRows(Preset preset) {
         ArrayList<ActionRow> actionRows = new ArrayList<>();
         actionRows.add(ActionRow.of(getScopeMenuForPreset(preset).build()));
         actionRows.add(ActionRow.of(getPunishmentTypeMenuForPreset(preset).build()));
@@ -314,7 +312,7 @@ public class PresetInteractions {
         return actionRows;
     }
 
-    public static long convertDurationToSeconds(int days, int hours, int minutes){
+    public static long convertDurationToSeconds(int days, int hours, int minutes) {
         long totalSeconds = 0;
 
         totalSeconds += ((long) days * 24 * 60 * 60);

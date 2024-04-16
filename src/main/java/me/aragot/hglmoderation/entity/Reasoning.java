@@ -1,4 +1,4 @@
-package me.aragot.hglmoderation.data;
+package me.aragot.hglmoderation.entity;
 
 import java.util.ArrayList;
 
@@ -9,14 +9,14 @@ public enum Reasoning {
     BUG_ABUSE,
     TEAMING;
 
-    public static ArrayList<Reasoning> getChatReasons(){
+    public static ArrayList<Reasoning> getChatReasons() {
         ArrayList<Reasoning> chatReasons = new ArrayList<>();
         chatReasons.add(Reasoning.INSULTING);
         //Maybe add spam?
         return chatReasons;
     }
 
-    public static String getPrettyReasoning(Reasoning reasoning){
+    public static String getPrettyReasoning(Reasoning reasoning) {
         switch(reasoning){
             case HACKING:
                 return "Unallowed Modifications (Hacking/Cheating)";

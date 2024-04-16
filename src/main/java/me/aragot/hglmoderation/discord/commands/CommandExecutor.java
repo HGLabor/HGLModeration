@@ -3,8 +3,9 @@ package me.aragot.hglmoderation.discord.commands;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
-import me.aragot.hglmoderation.data.PlayerData;
+import me.aragot.hglmoderation.entity.PlayerData;
 import me.aragot.hglmoderation.discord.HGLBot;
+import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Role;
@@ -25,10 +26,10 @@ public class CommandExecutor {
         this.event = event;
     }
 
-    public void onReport(){
+    public void onReport() {
     }
 
-    public void onPreset(){
+    public void onPreset() {
 
         EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
         eb.setTitle("Presets");
@@ -37,32 +38,33 @@ public class CommandExecutor {
         StringSelectMenu.Builder presetPicker = StringSelectMenu.create("preset-picker");
         presetPicker.setPlaceholder("Choose an Option");
 
-        for(Preset preset : PresetHandler.instance.getPresetList()){
+        for (Preset preset : PresetHandler.instance.getPresetList()) {
             presetPicker.addOption(preset.getName(), preset.getName().toLowerCase(), preset.getDescription(), Emoji.fromUnicode("\uD83D\uDD27"));
         }
 
         presetPicker.addOption("Add new Preset", "preset-add", "Creates a new Preset to the list", Emoji.fromUnicode("\u2795"));
 
-        event.replyEmbeds(eb.build()).setEphemeral(true)
+        event.replyEmbeds(eb.build())
+                .setEphemeral(true)
                 .addActionRow(presetPicker.build())
                 .queue();
 
     }
 
-    public void onLogs(){
-        switch(event.getSubcommandName()){ //Cannot be null
+    public void onLogs() {
+        switch (event.getSubcommandName()) { //Cannot be null
             case "set":
                 Channel ch = event.getOption("logchannel").getAsChannel(); //Cannot be null
                 String channelType = event.getOption("type").getAsString();
 
-                if(ch.getType() != ChannelType.TEXT)
+                if (ch.getType() != ChannelType.TEXT)
                     event.replyEmbeds(
                        HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
                     ).queue();
 
-                if(channelType.equalsIgnoreCase("report"))
+                if (channelType.equalsIgnoreCase("report"))
                     Config.instance.setReportChannelId(ch.getId());
-                else if(channelType.equalsIgnoreCase("punishment"))
+                else if (channelType.equalsIgnoreCase("punishment"))
                     Config.instance.setPunishmentChannelId(ch.getId());
                 else {
                     event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.ERROR, "The type " + channelType + " is not valid.").build()).queue();
@@ -73,10 +75,9 @@ public class CommandExecutor {
                         HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully set the log channel to: <#" + Config.instance.getReportChannelId() + ">").build()
                 ).queue();
                break;
-
             case "pingrole":
 
-                if(event.getOption("role") == null){
+                if (event.getOption("role") == null) {
                     Config.instance.setReportPingroleId("");
                     event.replyEmbeds(
                             HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully unset the pingrole!").build()
@@ -93,8 +94,8 @@ public class CommandExecutor {
                 break;
         }
     }
-    public void onLink(){
-        if(event.getSubcommandName().equalsIgnoreCase("generate")){ //cannot be null
+    public void onLink() {
+        if (event.getSubcommandName().equalsIgnoreCase("generate")) { //cannot be null
             UUID key = UUID.randomUUID();
             discordLinkKeys.put(key, Map.entry(Instant.now(), event.getUser().getId()));
             EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
@@ -105,9 +106,9 @@ public class CommandExecutor {
                     "```";
             eb.setDescription(desc);
             event.replyEmbeds(eb.build()).setEphemeral(true).queue();
-        } else if(event.getSubcommandName().equalsIgnoreCase("reset")){
+        } else if (event.getSubcommandName().equalsIgnoreCase("reset")) {
             PlayerData data = getDataByDiscordId(event.getUser().getId());
-            if(data != null){
+            if (data != null) {
                 data.setDiscordId("");
                 event.replyEmbeds(HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully unbound your discord account!").build()).queue();
             } else {
@@ -119,11 +120,10 @@ public class CommandExecutor {
         }
     }
 
-    private PlayerData getDataByDiscordId(String discordId){
-       for(PlayerData data : PlayerData.dataList){
+    private PlayerData getDataByDiscordId(String discordId) {
+       for (PlayerData data : PlayerDataRepository.Companion.getDataList()) {
            if(discordId.equalsIgnoreCase(data.getDiscordId())) return data;
        }
        return null;
     }
-
 }

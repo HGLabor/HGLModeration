@@ -1,4 +1,4 @@
-package me.aragot.hglmoderation.data.reports;
+package me.aragot.hglmoderation.entity.reports;
 
 public enum ReportState {
     OPEN,

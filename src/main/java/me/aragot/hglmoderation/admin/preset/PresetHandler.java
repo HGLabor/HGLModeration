@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
-import me.aragot.hglmoderation.data.Reasoning;
+import me.aragot.hglmoderation.entity.Reasoning;
 
 import java.io.File;
 import java.io.FileReader;
@@ -18,14 +18,14 @@ public class PresetHandler {
 
     public static PresetHandler instance;
 
-    public static void loadPresets(){
+    public static void loadPresets() {
         File dir = Config.dir;
-        if(!dir.exists()){
+        if (!dir.exists()) {
             dir.mkdir();
         }
 
         File presetFile = new File(dir.getPath(), "presets.json");
-        if(!presetFile.exists()){
+        if (!presetFile.exists()) {
 
             try {
                 presetFile.createNewFile();
@@ -47,15 +47,15 @@ public class PresetHandler {
             HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
-        if(instance == null) instance = new PresetHandler();
+        if (instance == null) instance = new PresetHandler();
     }
 
-    public static void savePresets(){
+    public static void savePresets() {
         File dir = Config.dir;
         Gson gson = new Gson();
 
         File presetFile = new File(dir.getPath(), "presets.json");
-        if(!presetFile.exists()){
+        if (!presetFile.exists()) {
             try {
                 presetFile.createNewFile();
             } catch (IOException x) {
@@ -64,47 +64,46 @@ public class PresetHandler {
         }
 
         try {
-
             FileWriter fw = new FileWriter(presetFile);
             fw.write(gson.toJson(instance));
             fw.close();
         } catch (IOException x) {
             HGLModeration.instance.getLogger().error(x.getMessage());
         }
-
     }
 
-    public ArrayList<Preset> getPresetList(){
+    public ArrayList<Preset> getPresetList() {
         return this.presetList;
     }
 
-    public void addPreset(Preset preset){
+    public void addPreset(Preset preset) {
         this.presetList.add(preset);
     }
 
-    public void removePreset(Preset preset){
+    public void removePreset(Preset preset) {
         this.presetList.remove(preset);
     }
 
-    public boolean containsPreset(String presetName){
-        for(Preset preset : presetList){
-            if(preset.getName().equalsIgnoreCase(presetName))
+    public boolean containsPreset(String presetName) {
+        for (Preset preset : presetList) {
+            if (preset.getName().equalsIgnoreCase(presetName))
                 return true;
         }
         return false;
     }
 
-    public Preset getPresetByName(String presetName){
-        for(Preset preset : presetList){
-            if(preset.getName().equalsIgnoreCase(presetName))
+    public Preset getPresetByName(String presetName) {
+        for (Preset preset : presetList) {
+            if (preset.getName().equalsIgnoreCase(presetName))
                 return preset;
         }
         return null;
     }
 
-    public Preset getPresetForScore(Reasoning scope, int score){
-        for(Preset preset : this.presetList)
-            if(preset.isInScope(scope) && preset.isInRange(score)) return preset;
+    public Preset getPresetForScore(Reasoning scope, int score) {
+        for (Preset preset : this.presetList)
+            if (preset.isInScope(scope) && preset.isInRange(score))
+                return preset;
 
         return null;
     }

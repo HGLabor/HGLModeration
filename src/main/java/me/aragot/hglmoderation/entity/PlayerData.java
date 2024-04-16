@@ -1,9 +1,10 @@
-package me.aragot.hglmoderation.data;
+package me.aragot.hglmoderation.entity;
 
 
 import com.velocitypowered.api.proxy.Player;
 import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.data.punishments.Punishment;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
+import me.aragot.hglmoderation.repository.PunishmentRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,10 +19,9 @@ public class PlayerData {
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
 
-    public static ArrayList<PlayerData> dataList = new ArrayList<>();
     public static HashMap<Notification, ArrayList<String>> notificationGroups = new HashMap<>();
 
-    public PlayerData(Player player){
+    public PlayerData(Player player) {
         this._id = player.getUniqueId().toString();
         this.latestIp = player.getRemoteAddress().getAddress().getHostAddress();
         this.notifications.add(Notification.GENERAL);
@@ -39,37 +39,16 @@ public class PlayerData {
         this.punishments = punishments;
     }
 
-    public static PlayerData getPlayerData(Player player){
-        for(PlayerData data : dataList)
-            if(data.getPlayerId().equalsIgnoreCase(player.getUniqueId().toString())) return data;
-
-
-        PlayerData data = HGLModeration.instance.getDatabase().getPlayerDataById(player.getUniqueId().toString());
-        if(data == null){
-            data = new PlayerData(player);
-            HGLModeration.instance.getDatabase().pushPlayerData(data);
-        }
-
-        dataList.add(data);
-        return data;
-    }
-
-    public static PlayerData getPlayerData(String uuid){
-        for(PlayerData data : dataList)
-            if(data.getPlayerId().equalsIgnoreCase(uuid)) return data;
-
-        return HGLModeration.instance.getDatabase().getPlayerDataById(uuid);
-    }
-
     public int getPunishmentScore() {
         return punishmentScore;
     }
 
-    public String getFormattedPunishments(){
-        if(this.getPunishments().isEmpty()) return "No Punishments found";
-        ArrayList<Punishment> punishments = HGLModeration.instance.getDatabase().getPunishmentsForPlayer(this.getPlayerId(), this.getLatestIp());
+    public String getFormattedPunishments() {
+        if (this.getPunishments().isEmpty()) return "No Punishments found";
+        PunishmentRepository repository = new PunishmentRepository();
+        ArrayList<Punishment> punishments = repository.getPunishmentsFor(this.getPlayerId(), this.getLatestIp());
         StringBuilder formatted = new StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>");
-        for(Punishment punishment : punishments) {
+        for (Punishment punishment : punishments) {
             formatted.append("\n<gray>").append(punishment.getId()).append(" |</gray> <yellow>")
                     .append(punishment.getTypesAsString()).append("</yellow> <gray>|</gray> <red>")
                     .append(punishment.getReasoning()).append("</red> <gray>|</gray> ")
@@ -95,45 +74,45 @@ public class PlayerData {
         this.reportScore = reportScore;
     }
 
-    public String getDiscordId(){
+    public String getDiscordId() {
         return this.discordId;
     }
 
-    public void setDiscordId(String discordId){
+    public void setDiscordId(String discordId) {
         this.discordId = discordId;
     }
 
-    public void addNotification(Notification notif){
+    public void addNotification(Notification notif) {
         if(!this.notifications.contains(notif)) this.notifications.add(notif);
         notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
 
         notificationGroups.get(notif).add(this._id);
     }
 
-    public void removeNotification(Notification notif){
+    public void removeNotification(Notification notif) {
         this.notifications.remove(notif);
         notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
 
         notificationGroups.get(notif).remove(this._id);
     }
 
-    public ArrayList<String> getPunishments(){
+    public ArrayList<String> getPunishments() {
         return this.punishments;
     }
 
-    public void addPunishment(String id){
+    public void addPunishment(String id) {
         this.punishments.add(id);
     }
 
-    public String getLatestIp(){
+    public String getLatestIp() {
         return this.latestIp;
     }
 
-    public void setLatestIp(String ip){
+    public void setLatestIp(String ip) {
         this.latestIp = ip;
     }
 
-    public ArrayList<Notification> getNotifications(){
+    public ArrayList<Notification> getNotifications() {
         if(this.notifications == null) this.notifications = new ArrayList<>();
         return this.notifications;
     }

@@ -1,12 +1,12 @@
-package me.aragot.hglmoderation.data;
+package me.aragot.hglmoderation.entity;
 
 public enum Notification {
     GENERAL,
     REPORT_STATE,
     REPORT;
 
-     public boolean requiresPermission(){
-         switch(this){
+     public boolean requiresPermission() {
+         switch (this) {
              case REPORT:
                  return true;
              default: return false;

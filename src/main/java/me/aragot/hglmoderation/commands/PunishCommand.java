@@ -9,14 +9,18 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.punishments.Punishment;
-import me.aragot.hglmoderation.data.punishments.PunishmentType;
+import me.aragot.hglmoderation.entity.PlayerData;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
+import me.aragot.hglmoderation.entity.punishments.PunishmentType;
+import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.permissions.PermCompare;
+import me.aragot.hglmoderation.service.punishment.PunishmentManager;
+import me.aragot.hglmoderation.service.permissions.PermCompare;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
@@ -121,14 +125,19 @@ public class PunishCommand {
                                             if(!hasPermission(player, toPunish))
                                                 return Command.SINGLE_SUCCESS;
 
+                                            PlayerDataRepository playerDataRepository = new PlayerDataRepository();
+                                            PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                            PlayerData punisher = playerDataRepository.getPlayerData(player);
 
-                                            //SubmitPunishment automatically responds to the Player.
-                                            Punishment.submitPunishment(toPunish,
-                                                    player,
-                                                    preset.getPunishmentsTypes(),
-                                                    reasoning,
-                                                    Instant.now().getEpochSecond() + preset.getDuration(),
-                                                    0);
+                                            PunishmentManager manager = new PunishmentManager();
+                                            Punishment punishment = manager.createPunishment(victim, punisher, preset.getPunishmentsTypes(), reasoning, Instant.now().getEpochSecond() + preset.getDuration(), "");
+                                            boolean punished = manager.submitPunishment(victim, punishment, preset.getWeight(), null);
+
+                                            if (punished) {
+                                                Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                            } else {
+                                                Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
+                                            }
 
                                             return Command.SINGLE_SUCCESS;
                                         })
@@ -199,12 +208,19 @@ public class PunishCommand {
                                                     if(!hasPermission(player, toPunish))
                                                         return Command.SINGLE_SUCCESS;
 
-                                                    Punishment.submitPunishment(toPunish,
-                                                            player,
-                                                            List.of(punishmentType),
-                                                            reasoning,
-                                                            duration == -1 ? duration : Instant.now().getEpochSecond() + duration,
-                                                            0);
+                                                    PlayerDataRepository playerDataRepository = new PlayerDataRepository();
+                                                    PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                                    PlayerData punisher = playerDataRepository.getPlayerData(player);
+
+                                                    PunishmentManager manager = new PunishmentManager();
+                                                    Punishment punishment = manager.createPunishment(victim, punisher, new ArrayList<>(List.of(punishmentType)), reasoning, duration == -1 ? duration : Instant.now().getEpochSecond() + duration, "");
+                                                    boolean punished = manager.submitPunishment(victim, punishment, 0, null);
+
+                                                    if (punished) {
+                                                        Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                                    } else {
+                                                        Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
+                                                    }
 
                                                     return Command.SINGLE_SUCCESS;
                                                 })
@@ -283,12 +299,19 @@ public class PunishCommand {
                                                             if(!hasPermission(player, toPunish))
                                                                 return Command.SINGLE_SUCCESS;
 
-                                                            Punishment.submitPunishment(toPunish,
-                                                                    player,
-                                                                    List.of(punishmentType),
-                                                                    reasoning,
-                                                                    duration == -1 ? duration : Instant.now().getEpochSecond() + duration,
-                                                                    weight);
+                                                            PlayerDataRepository playerDataRepository = new PlayerDataRepository();
+                                                            PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                                            PlayerData punisher = playerDataRepository.getPlayerData(player);
+
+                                                            PunishmentManager manager = new PunishmentManager();
+                                                            Punishment punishment = manager.createPunishment(victim, punisher, new ArrayList<>(List.of(punishmentType)), reasoning, duration == -1 ? duration : Instant.now().getEpochSecond() + duration, "");
+                                                            boolean punished = manager.submitPunishment(victim, punishment, weight, null);
+
+                                                            if (punished) {
+                                                                Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                                            } else {
+                                                                Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
+                                                            }
 
                                                             return Command.SINGLE_SUCCESS;
                                                         })

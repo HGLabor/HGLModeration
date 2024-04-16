@@ -1,6 +1,5 @@
-package me.aragot.hglmoderation.tools.permissions;
+package me.aragot.hglmoderation.service.permissions;
 
-import me.aragot.hglmoderation.HGLModeration;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.group.Group;
@@ -15,7 +14,7 @@ public class PermCompare {
     public static final int SMALLER_THAN = 1;
     public static final int GREATER_THAN = 2;
 
-    public static CompletableFuture<Integer> comparePermissionOf(UUID base, UUID toCompare){
+    public static CompletableFuture<Integer> comparePermissionOf(UUID base, UUID toCompare) {
         LuckPerms luckPerms = LuckPermsProvider.get();
         User baseUser;
         User toCompareUser;
@@ -29,9 +28,9 @@ public class PermCompare {
         int baseUserWeight = getHighestWeightOfUser(baseUser);
         int toCompareWeight = getHighestWeightOfUser(toCompareUser);
 
-        if(baseUserWeight > toCompareWeight)
+        if (baseUserWeight > toCompareWeight)
             return CompletableFuture.completedFuture(GREATER_THAN);
-        else if(baseUserWeight < toCompareWeight)
+        else if (baseUserWeight < toCompareWeight)
             return CompletableFuture.completedFuture(SMALLER_THAN);
 
         return CompletableFuture.completedFuture(EQUAL);
