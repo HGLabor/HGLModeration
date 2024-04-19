@@ -81,6 +81,7 @@ class PunishmentConverter {
         }
 
         fun getDuration(punishment: Punishment): String {
+            if (punishment.endsAtTimestamp == -1L) return "Permanent"
             val differenceSeconds: Long = punishment.endsAtTimestamp - punishment.issuedAtTimestamp
             val days = TimeUnit.SECONDS.toDays(differenceSeconds)
             val hours = TimeUnit.SECONDS.toHours(differenceSeconds) % 24
