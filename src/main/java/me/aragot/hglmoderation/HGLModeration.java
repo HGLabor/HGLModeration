@@ -104,7 +104,7 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
-        BrigadierCommand punishCommand = PunishCommand.createBrigadierCommand(this.server);
+        BrigadierCommand punishCommand = PunishCommand.createBrigadierCommand();
         CommandMeta punishMeta = manager.metaBuilder("punish")
                 .plugin(this)
                 .build();

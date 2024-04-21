@@ -6,7 +6,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.discord.HGLBot;
@@ -17,6 +16,7 @@ import me.aragot.hglmoderation.entity.punishments.PunishmentType;
 import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
 import me.aragot.hglmoderation.service.punishment.PunishmentManager;
 import me.aragot.hglmoderation.service.permissions.PermCompare;
 
@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class PunishCommand {
@@ -33,7 +34,7 @@ public class PunishCommand {
                 /punish player type reason duration
      */
     private static final String invalidUsage = "Invalid usage. Please try using <white>/punish <player> <presetName> <reason></white> or <white>/punish <player> <type> <reason> <duration> <weight></white>";
-    public static BrigadierCommand createBrigadierCommand(ProxyServer server){
+    public static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> reviewNode = BrigadierCommand.literalArgumentBuilder("punish")
                 .requires(source -> source.hasPermission("hglmoderation.punish"))
                 //execute when /review
@@ -97,16 +98,16 @@ public class PunishCommand {
                                             String reason = context.getArgument("reason", String.class);
 
                                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                            Player toPunish;
-
                                             if(player == null) return Command.SINGLE_SUCCESS;
 
-                                            try {
-                                                 toPunish = server.getPlayer(punishedPlayer).orElseThrow();
-                                            } catch (NoSuchElementException x) {
+                                            String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                            if (rawUuid == null) {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
+
+                                            UUID toPunishUuid = UUID.fromString(rawUuid);
+
 
                                             Preset preset = PresetHandler.instance.getPresetByName(presetName);
 
@@ -123,19 +124,24 @@ public class PunishCommand {
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            if(!hasPermission(player, toPunish))
+                                            if(!hasPermission(player, toPunishUuid))
                                                 return Command.SINGLE_SUCCESS;
 
                                             PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                            PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
                                             PlayerData punisher = playerDataRepository.getPlayerData(player);
+
+                                            if (victim == null) {
+                                                Responder.respond(player, "Sorry but I don't think this player joined this server before.", ResponseType.ERROR);
+                                                return Command.SINGLE_SUCCESS;
+                                            }
 
                                             PunishmentManager manager = new PunishmentManager();
                                             Punishment punishment = manager.createPunishment(victim, punisher, preset.getPunishmentsTypes(), reasoning, Instant.now().getEpochSecond() + preset.getDuration(), "");
                                             boolean punished = manager.submitPunishment(victim, punishment, preset.getWeight(), null);
 
                                             if (punished) {
-                                                Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                                Responder.respond(player, "<red>" + punishedPlayer + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
                                             } else {
                                                 Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
                                             }
@@ -151,16 +157,15 @@ public class PunishCommand {
                                                     String durationFormat = context.getArgument("duration", String.class);
 
                                                     Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                                    Player toPunish;
-
                                                     if(player == null) return Command.SINGLE_SUCCESS;
 
-                                                    try {
-                                                        toPunish = server.getPlayer(punishedPlayer).orElseThrow();
-                                                    } catch (NoSuchElementException x) {
+                                                    String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                                    if (rawUuid == null) {
                                                         Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                         return Command.SINGLE_SUCCESS;
                                                     }
+
+                                                    UUID toPunishUuid = UUID.fromString(rawUuid);
 
                                                     PunishmentType punishmentType;
 
@@ -206,19 +211,24 @@ public class PunishCommand {
                                                         }
                                                     }
 
-                                                    if(!hasPermission(player, toPunish))
+                                                    if(!hasPermission(player, toPunishUuid))
                                                         return Command.SINGLE_SUCCESS;
 
                                                     PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                                    PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                                    PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
                                                     PlayerData punisher = playerDataRepository.getPlayerData(player);
+
+                                                    if (victim == null) {
+                                                        Responder.respond(player, "Sorry but I don't think this player joined this server before.", ResponseType.ERROR);
+                                                        return Command.SINGLE_SUCCESS;
+                                                    }
 
                                                     PunishmentManager manager = new PunishmentManager();
                                                     Punishment punishment = manager.createPunishment(victim, punisher, new ArrayList<>(List.of(punishmentType)), reasoning, duration == -1 ? duration : Instant.now().getEpochSecond() + duration, "");
                                                     boolean punished = manager.submitPunishment(victim, punishment, 0, null);
 
                                                     if (punished) {
-                                                        Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                                        Responder.respond(player, "<red>" + punishedPlayer + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
                                                     } else {
                                                         Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
                                                     }
@@ -235,16 +245,15 @@ public class PunishCommand {
                                                             String weightString = context.getArgument("weight", String.class);
 
                                                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                                            Player toPunish;
-
                                                             if(player == null) return Command.SINGLE_SUCCESS;
 
-                                                            try {
-                                                                toPunish = server.getPlayer(punishedPlayer).orElseThrow();
-                                                            } catch (NoSuchElementException x) {
+                                                            String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                                            if (rawUuid == null) {
                                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
+
+                                                            UUID toPunishUuid = UUID.fromString(rawUuid);
 
                                                             PunishmentType punishmentType;
 
@@ -297,19 +306,24 @@ public class PunishCommand {
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
 
-                                                            if(!hasPermission(player, toPunish))
+                                                            if(!hasPermission(player, toPunishUuid))
                                                                 return Command.SINGLE_SUCCESS;
 
                                                             PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                                            PlayerData victim = playerDataRepository.getPlayerData(toPunish);
+                                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
                                                             PlayerData punisher = playerDataRepository.getPlayerData(player);
+
+                                                            if (victim == null) {
+                                                                Responder.respond(player, "Sorry but I don't think this player joined this server before.", ResponseType.ERROR);
+                                                                return Command.SINGLE_SUCCESS;
+                                                            }
 
                                                             PunishmentManager manager = new PunishmentManager();
                                                             Punishment punishment = manager.createPunishment(victim, punisher, new ArrayList<>(List.of(punishmentType)), reasoning, duration == -1 ? duration : Instant.now().getEpochSecond() + duration, "");
                                                             boolean punished = manager.submitPunishment(victim, punishment, weight, null);
 
                                                             if (punished) {
-                                                                Responder.respond(player, "<red>" + toPunish.getUsername() + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
+                                                                Responder.respond(player, "<red>" + punishedPlayer + "</red> was successfully punished. Punishment can be found under ID: " + punishment.getId(), ResponseType.SUCCESS);
                                                             } else {
                                                                 Responder.respond(player, "Couldn't punish the player, database error...", ResponseType.ERROR);
                                                             }
@@ -327,16 +341,15 @@ public class PunishCommand {
         return new BrigadierCommand(reviewNode);
     }
 
-    private static boolean hasPermission(Player base, Player toCompare){
+    private static boolean hasPermission(Player base, UUID toCompare){
         try {
-            int permission = PermCompare.comparePermissionOf(base.getUniqueId(), toCompare.getUniqueId()).get();
+            int permission = PermCompare.comparePermissionOf(base.getUniqueId(), toCompare).get();
             if(permission != PermCompare.GREATER_THAN){
                 Responder.respond(base, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
                 HGLBot.logPunishmentWarning(base, toCompare);
                 return false;
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException ignored) {
         }
         return true;
     }
