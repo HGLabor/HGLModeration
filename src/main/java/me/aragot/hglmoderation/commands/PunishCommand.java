@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
+import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.entity.PlayerData;
 import me.aragot.hglmoderation.entity.Reasoning;
 import me.aragot.hglmoderation.entity.punishments.Punishment;
@@ -331,6 +332,7 @@ public class PunishCommand {
             int permission = PermCompare.comparePermissionOf(base.getUniqueId(), toCompare.getUniqueId()).get();
             if(permission != PermCompare.GREATER_THAN){
                 Responder.respond(base, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
+                HGLBot.logPunishmentWarning(base, toCompare);
                 return false;
             }
         } catch (InterruptedException | ExecutionException e) {

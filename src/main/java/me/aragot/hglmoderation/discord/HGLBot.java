@@ -1,5 +1,6 @@
 package me.aragot.hglmoderation.discord;
 
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
@@ -24,10 +25,14 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
 import org.slf4j.Logger;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class HGLBot {
 
@@ -257,6 +262,35 @@ public class HGLBot {
         channel.sendMessageEmbeds(
                 HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push Punishment to Database (ID:" + punishment.getId() + ")").build()
         ).queue();
+    }
+
+    public static void logPunishmentWarning(Player player, Player target) {
+        TextChannel channel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+        if (channel == null) return;
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("Someone tried to ban a greater Role");
+        eb.setColor(Color.RED);
+        eb.setThumbnail("https://mc-heads.net/avatar/" + player.getUniqueId().toString());
+
+        LuckPerms luckPerms = LuckPermsProvider.get();
+        String executorGroup = "Couldn't fetch";
+        String targetGroup = "Couldn't fetch";
+        try {
+            executorGroup = luckPerms.getUserManager().loadUser(player.getUniqueId()).get().getPrimaryGroup();
+            targetGroup = luckPerms.getUserManager().loadUser(target.getUniqueId()).get().getPrimaryGroup();
+        } catch (InterruptedException | ExecutionException ignored) {
+        }
+
+        String desc = "Watch out! A user tried to ban another user with a greater role.\n" +
+                "\n" +
+                "Executor: " + player.getUsername() + "\n" +
+                "Executor's Primary Role: " + executorGroup + "\n" +
+                "Target: " + target.getUsername() + "\n" +
+                "Target's Primary Role: " + targetGroup + "\n" +
+                "Attempted at: <t:" + Instant.now().getEpochSecond() + ":f>";
+        eb.setDescription(desc);
+
+        channel.sendMessageEmbeds(eb.build()).queue();
     }
 
     public static void logReportUpdateFailure(Report report) {
