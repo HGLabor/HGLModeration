@@ -22,13 +22,13 @@ public class Config {
 
     public static final String discordLink = "discord.hglabor.de";
 
-    public static void loadConfig(){
-        if(!dir.exists()){
+    public static void loadConfig() {
+        if (!dir.exists()) {
             dir.mkdir();
         }
 
         File configFile = new File(dir.getPath(), "config.json");
-        if(!configFile.exists()){
+        if (!configFile.exists()) {
 
             try {
                 configFile.createNewFile();
@@ -50,14 +50,14 @@ public class Config {
             HGLModeration.instance.getLogger().error(x.getMessage());
         }
 
-        if(instance == null) instance = new Config();
+        if (instance == null) instance = new Config();
     }
 
-    public static void saveConfig(){
+    public static void saveConfig() {
         Gson gson = new Gson();
 
         File configFile = new File(dir.getPath(), "config.json");
-        if(!configFile.exists()){
+        if (!configFile.exists()) {
             try {
                 configFile.createNewFile();
             } catch (IOException x) {
@@ -73,7 +73,6 @@ public class Config {
         } catch (IOException x) {
             HGLModeration.instance.getLogger().error(x.getMessage());
         }
-
     }
 
     public String getDiscordBotToken() {

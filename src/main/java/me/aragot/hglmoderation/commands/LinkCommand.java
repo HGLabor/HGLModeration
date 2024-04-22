@@ -7,8 +7,9 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.data.PlayerData;
+import me.aragot.hglmoderation.entity.PlayerData;
 import me.aragot.hglmoderation.discord.commands.CommandExecutor;
+import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 
@@ -45,12 +46,13 @@ public class LinkCommand {
     public static int getCommandStatus(CommandContext<CommandSource> context){
         String action = context.getArgument("action", String.class);
         Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
+        PlayerDataRepository repository = new PlayerDataRepository();
 
         if(player == null) return BrigadierCommand.FORWARD;
 
 
         if(action.equalsIgnoreCase("reset")){
-            PlayerData data = PlayerData.getPlayerData(player);
+            PlayerData data = repository.getPlayerData(player);
             data.setDiscordId("");
 
             Responder.respond(player, "Successfully unbound your account!", ResponseType.SUCCESS);
@@ -78,7 +80,7 @@ public class LinkCommand {
         }
 
         //If here then it exists and is less than 15 minutes ago
-        PlayerData data = PlayerData.getPlayerData(player);
+        PlayerData data = repository.getPlayerData(player);
         data.setDiscordId(keyData.getValue());
 
         Responder.respond(player, "Successfully linked your account to your discord account!", ResponseType.SUCCESS);

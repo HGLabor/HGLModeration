@@ -1,17 +1,19 @@
 package me.aragot.hglmoderation.discord;
 
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.config.Config;
-import me.aragot.hglmoderation.data.punishments.Punishment;
-import me.aragot.hglmoderation.data.punishments.PunishmentType;
-import me.aragot.hglmoderation.data.reports.Priority;
-import me.aragot.hglmoderation.data.Reasoning;
-import me.aragot.hglmoderation.data.reports.Report;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
+import me.aragot.hglmoderation.entity.punishments.PunishmentType;
+import me.aragot.hglmoderation.entity.reports.Priority;
+import me.aragot.hglmoderation.entity.Reasoning;
+import me.aragot.hglmoderation.entity.reports.Report;
 import me.aragot.hglmoderation.discord.actions.ActionHandler;
 import me.aragot.hglmoderation.discord.commands.CommandParser;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.PlayerUtils;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.punishment.PunishmentConverter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,10 +25,15 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
 import org.slf4j.Logger;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class HGLBot {
 
@@ -35,8 +42,8 @@ public class HGLBot {
     public static final String authorId = "974206098364071977";
     private static User author;
 
-    public static void init(ProxyServer server, Logger logger){
-        if(Config.instance.getDiscordBotToken().isEmpty()){
+    public static void init(ProxyServer server, Logger logger) {
+        if (Config.instance.getDiscordBotToken().isEmpty()) {
             logger.info("No valid Discord Bot Token found, please edit the config.json file and run this command: /dcbot init");
             return;
         }
@@ -93,9 +100,9 @@ public class HGLBot {
         logger.info("Discord Bot has been initialized started!");
     }
 
-    public static EmbedBuilder getEmbedTemplate(ResponseType type){
+    public static EmbedBuilder getEmbedTemplate(ResponseType type) {
         EmbedBuilder eb = new EmbedBuilder();
-        switch(type){
+        switch (type) {
             case ERROR:
                 eb.setTitle("Error!");
                 eb.setColor(Color.RED);
@@ -111,10 +118,10 @@ public class HGLBot {
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         return eb;
     }
-    public static EmbedBuilder getEmbedTemplate(ResponseType type, String description){
+    public static EmbedBuilder getEmbedTemplate(ResponseType type, String description) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(description);
-        switch(type){
+        switch (type) {
             case ERROR:
                 eb.setTitle("Error!");
                 eb.setColor(Color.RED);
@@ -133,12 +140,12 @@ public class HGLBot {
         return eb;
     }
 
-    public static void logReport(Report report){
-        if(Config.instance.getReportChannelId().isEmpty()) return;
+    public static void logReport(Report report) {
+        if (Config.instance.getReportChannelId().isEmpty()) return;
         TextChannel logChannel = instance.getTextChannelById(Config.instance.getReportChannelId());
-        if(logChannel == null) return;
+        if (logChannel == null) return;
 
-        if(Reasoning.getChatReasons().contains(report.getReasoning())){
+        if (Reasoning.getChatReasons().contains(report.getReasoning())) {
             logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue(message -> {
                 report.setDiscordLog(message.getId());
             });
@@ -147,15 +154,14 @@ public class HGLBot {
                 report.setDiscordLog(message.getId());
             });
         }
-
     }
 
-    public static EmbedBuilder getReportEmbed(Report report, boolean incoming){
+    public static EmbedBuilder getReportEmbed(Report report, boolean incoming) {
         String title = incoming ? "Incoming Report: " + report.getId() : "Report: " + report.getId();
         Color color = Color.green;
 
-        if(report.getPriority() == Priority.MEDIUM) color = Color.yellow;
-        else if(report.getPriority() == Priority.HIGH) color = Color.red;
+        if (report.getPriority() == Priority.MEDIUM) color = Color.yellow;
+        else if (report.getPriority() == Priority.HIGH) color = Color.red;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle(title);
         eb.setColor(color);
@@ -173,10 +179,11 @@ public class HGLBot {
                 "State: " + report.getState().name();
         eb.setThumbnail("https://mc-heads.net/avatar/" + report.getReportedUUID());
         eb.setDescription(description);
+
         return eb;
     }
 
-    public static EmbedBuilder getReportMessagesEmbed(Report report){
+    public static EmbedBuilder getReportMessagesEmbed(Report report) {
         String title = "Message Log";
 
         EmbedBuilder eb = new EmbedBuilder();
@@ -187,12 +194,12 @@ public class HGLBot {
         StringBuilder description = new StringBuilder("```");
         String username = HGLModeration.instance.getPlayerNameEfficiently(report.getReportedUUID());
 
-        if(report.getReportedUserMessages().isEmpty()){
+        if (report.getReportedUserMessages().isEmpty()) {
             eb.setDescription("No messages sent");
             return eb;
         }
 
-        for(String message : report.getReportedUserMessages()){
+        for (String message : report.getReportedUserMessages()) {
             description.append(username).append(": ").append(message).append("\n");
         }
 
@@ -200,36 +207,35 @@ public class HGLBot {
 
         eb.setDescription(description.toString());
         return eb;
-
     }
 
-    public static ArrayList<MessageEmbed> getPunishmentEmbeds(Punishment punishment){
+    public static ArrayList<MessageEmbed> getPunishmentEmbeds(Punishment punishment) {
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("Incoming " + punishment.getTypesAsString());
+        eb.setTitle("Incoming " + PunishmentConverter.Companion.getTypesAsString(punishment));
         eb.setColor(Color.red);
         eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
         eb.setThumbnail(punishment.getTypes().contains(PunishmentType.IP_BAN) ? "https://as1.ftcdn.net/v2/jpg/00/54/65/16/1000_F_54651607_OJOGbrFBB3mDTpZDKmdjjR94lsbZMTVa.jpg" : "https://mc-heads.net/avatar/" + punishment.getIssuedTo());
 
-        String punishedName = punishment.getTypes().contains(PunishmentType.IP_BAN) ? punishment.getIssuedTo() : PlayerUtils.getUsernameFromUUID(punishment.getIssuedTo());
-        String punisherName = PlayerUtils.getUsernameFromUUID(punishment.getIssuerUUID());
+        String punishedName = punishment.getTypes().contains(PunishmentType.IP_BAN) ? punishment.getIssuedTo() : PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuedTo());
+        String punisherName = PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuerUUID());
 
-        if(punishedName == null || punisherName == null)
+        if (punishedName == null || punisherName == null)
             return embeds;
 
         String punishmentInfo = "Punished Player: " + punishedName + "\n" +
                 "Punished by: " + punisherName + "\n" +
                 "Reasoning: " + punishment.getReasoning().name() + "\n" +
                 "Punishment ID: " + punishment.getId() + "\n" +
-                "Duration: " + punishment.getDuration() + "\n" +
+                "Duration: " + PunishmentConverter.Companion.getDuration(punishment) + "\n" +
                 "Submitted at: <t:" + punishment.getIssuedAtTimestamp() + ":f>\n" +
                 "Ends at: <t:" + punishment.getEndsAtTimestamp() + ":f>";
 
         eb.setDescription(punishmentInfo);
         embeds.add(eb.build());
 
-        if(punishment.getNote().isEmpty())
+        if (punishment.getNote().isEmpty())
             return embeds;
 
         eb.setTitle("Reviewers Note");
@@ -241,28 +247,57 @@ public class HGLBot {
         return embeds;
     }
 
-    public static void logPunishment(Punishment punishment){
-        if(Config.instance.getReportChannelId().isEmpty()) return;
+    public static void logPunishment(Punishment punishment) {
+        if (Config.instance.getReportChannelId().isEmpty()) return;
         TextChannel punishmentChannel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
-        if(punishmentChannel == null) return;
+        if (punishmentChannel == null) return;
 
         punishmentChannel.sendMessageEmbeds(getPunishmentEmbeds(punishment)).queue();
     }
 
-    public static void logPunishmentPushFailure(Punishment punishment){
+    public static void logPunishmentPushFailure(Punishment punishment) {
         TextChannel channel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
 
-        if(channel == null) return;
+        if (channel == null) return;
 
         channel.sendMessageEmbeds(
                 HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't push Punishment to Database (ID:" + punishment.getId() + ")").build()
         ).queue();
     }
 
-    public static void logReportUpdateFailure(Report report){
+    public static void logPunishmentWarning(Player player, UUID target) {
+        TextChannel channel = instance.getTextChannelById(Config.instance.getPunishmentChannelId());
+        if (channel == null) return;
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("Someone tried to ban a greater Role");
+        eb.setColor(Color.RED);
+        eb.setThumbnail("https://mc-heads.net/avatar/" + player.getUniqueId().toString());
+
+        LuckPerms luckPerms = LuckPermsProvider.get();
+        String executorGroup = "Couldn't fetch";
+        String targetGroup = "Couldn't fetch";
+        try {
+            executorGroup = luckPerms.getUserManager().loadUser(player.getUniqueId()).get().getPrimaryGroup();
+            targetGroup = luckPerms.getUserManager().loadUser(target).get().getPrimaryGroup();
+        } catch (InterruptedException | ExecutionException ignored) {
+        }
+
+        String desc = "Watch out! A user tried to ban another user with a greater role.\n" +
+                "\n" +
+                "Executor: " + player.getUsername() + "\n" +
+                "Executor's Primary Role: " + executorGroup + "\n" +
+                "Target: " + PlayerUtils.Companion.getUsernameFromUUID(target.toString()) + "\n" +
+                "Target's Primary Role: " + targetGroup + "\n" +
+                "Attempted at: <t:" + Instant.now().getEpochSecond() + ":f>";
+        eb.setDescription(desc);
+
+        channel.sendMessageEmbeds(eb.build()).queue();
+    }
+
+    public static void logReportUpdateFailure(Report report) {
         TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
 
-        if(channel == null) return;
+        if (channel == null) return;
 
         channel.sendMessageEmbeds(
                 HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't update Reports in Database for Punishment (ID:" + report.getPunishmentId() + ")").build()

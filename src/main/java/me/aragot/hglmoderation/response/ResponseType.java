@@ -4,5 +4,4 @@ public enum ResponseType {
     DEFAULT,
     SUCCESS,
     ERROR,
-
 }

@@ -6,16 +6,17 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.admin.preset.Preset;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 
-import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.data.reports.ReportState;
+import me.aragot.hglmoderation.entity.reports.Report;
+import me.aragot.hglmoderation.entity.reports.ReportState;
+import me.aragot.hglmoderation.exceptions.DatabaseException;
+import me.aragot.hglmoderation.repository.ReportRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
-import me.aragot.hglmoderation.tools.PlayerUtils;
-import me.aragot.hglmoderation.tools.permissions.PermCompare;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
+import me.aragot.hglmoderation.service.permissions.PermCompare;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.UUID;
@@ -118,8 +119,13 @@ public class PresetCommand {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the preset you were looking for.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
+                                            ReportRepository reportRepository = new ReportRepository();
+                                            Report report = reportRepository.getReportById(reportId);
 
-                                            Report report = Report.getReportById(reportId);
+                                            if(report == null){
+                                                Responder.respond(context.getSource(), "Sorry but I couldn't find the report you were looking for.", ResponseType.ERROR);
+                                                return Command.SINGLE_SUCCESS;
+                                            }
 
                                             try {
                                                 int permission = PermCompare.comparePermissionOf(player.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
@@ -131,29 +137,28 @@ public class PresetCommand {
                                                 e.printStackTrace();
                                             }
 
-                                            if(report == null){
-                                                Responder.respond(context.getSource(), "Sorry but I couldn't find the report you were looking for.", ResponseType.ERROR);
-                                                return Command.SINGLE_SUCCESS;
-                                            }
 
                                             if(report.getState() == ReportState.DONE){
                                                 Responder.respond(context.getSource(), "Sorry but this report was already reviewed. Please check the ReportID for errors.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-
                                             if(!report.getReviewedBy().equalsIgnoreCase(player.getUniqueId().toString())){
-                                                String reviewer = PlayerUtils.getUsernameFromUUID(report.getReviewedBy());
+                                                String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
                                                 Responder.respond(player,
                                                         "Sorry but this is not within your scope. Please contact <red>" + reviewer +"</red> to talk about this case.",
                                                         ResponseType.DEFAULT);
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            preset.apply(report);
-                                            Responder.respond(context.getSource(),
-                                                    "<green>Thank you for reviewing this report. The reported player was successfully. Keep up the good work :)</green>",
-                                                    ResponseType.DEFAULT);
+                                            try {
+                                                preset.apply(report);
+                                                Responder.respond(context.getSource(),
+                                                        "<green>Thank you for reviewing this report. The reported player was successfully. Keep up the good work :)</green>",
+                                                        ResponseType.DEFAULT);
+                                            } catch (DatabaseException x) {
+                                                Responder.respond(context.getSource(), x.getMessage(), ResponseType.DEFAULT);
+                                            }
 
                                             return Command.SINGLE_SUCCESS;
                                         })

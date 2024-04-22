@@ -12,11 +12,11 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.aragot.hglmoderation.admin.config.Config;
 import me.aragot.hglmoderation.admin.preset.PresetHandler;
 import me.aragot.hglmoderation.commands.*;
-import me.aragot.hglmoderation.data.reports.Report;
-import me.aragot.hglmoderation.database.ModerationDB;
+import me.aragot.hglmoderation.repository.ReportRepository;
+import me.aragot.hglmoderation.service.database.ModerationDB;
 import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.events.PlayerListener;
-import me.aragot.hglmoderation.tools.PlayerUtils;
+import me.aragot.hglmoderation.service.player.PlayerUtils;
 import org.slf4j.Logger;
 
 import java.util.NoSuchElementException;
@@ -33,22 +33,18 @@ import java.util.UUID;
  * Discord Log change message? Channel.retrieveMessageById();
  *  -> Push report AFTER report message was sent to Channel
  *  -> Maybe ignore and delete options on click if its already reviewed?
- * Report Threshold -> No Spam
- * Keep Active Reports in RAM
  * Report add message id from discord in DB
  */
 
 public class HGLModeration {
-
     private final Logger logger;
     private final ProxyServer server;
     private ModerationDB database;
 
     public static HGLModeration instance;
 
-
     @Inject
-    public HGLModeration(ProxyServer server, Logger logger){
+    public HGLModeration(ProxyServer server, Logger logger) {
         this.server = server;
         this.logger = logger;
         instance = this;
@@ -63,7 +59,8 @@ public class HGLModeration {
 
         HGLBot.init(this.server, this.logger);
         this.database =  new ModerationDB(Config.instance.getDbConnectionString());
-        Report.findOpenReports();
+        ReportRepository reportRepository = new ReportRepository();
+        reportRepository.fetchUnfinishedReports();
     }
 
    @Subscribe
@@ -73,11 +70,11 @@ public class HGLModeration {
        database.closeConnection();
    }
 
-    private void registerEventListeners(){
+    private void registerEventListeners() {
         this.server.getEventManager().register(this, new PlayerListener());
     }
 
-    private void registerCommands(){
+    private void registerCommands() {
         CommandManager manager = this.server.getCommandManager();
 
         BrigadierCommand reportCommand = ReportCommand.createBrigadierCommand(this.server);
@@ -107,7 +104,7 @@ public class HGLModeration {
                 .plugin(this)
                 .build();
 
-        BrigadierCommand punishCommand = PunishCommand.createBrigadierCommand(this.server);
+        BrigadierCommand punishCommand = PunishCommand.createBrigadierCommand();
         CommandMeta punishMeta = manager.metaBuilder("punish")
                 .plugin(this)
                 .build();
@@ -133,23 +130,24 @@ public class HGLModeration {
         manager.register(fetcherMeta, fetcherCommand);
     }
 
-    public Logger getLogger(){
+    public Logger getLogger() {
         return this.logger;
     }
 
-    public ProxyServer getServer(){
+    public ProxyServer getServer() {
         return this.server;
     }
 
-    public ModerationDB getDatabase(){
+    public ModerationDB getDatabase() {
         return this.database;
     }
 
-    public String getPlayerNameEfficiently(String uuid){
-        try{
+    //Maybe remove this method? Cache is quite efficient?
+    public String getPlayerNameEfficiently(String uuid) {
+        try {
             return server.getPlayer(UUID.fromString(uuid)).orElseThrow().getUsername();
-        } catch(NoSuchElementException x){
-            return PlayerUtils.getUsernameFromUUID(uuid);
+        } catch(NoSuchElementException x) {
+            return PlayerUtils.Companion.getUsernameFromUUID(uuid);
         }
     }
 }

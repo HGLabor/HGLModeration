@@ -6,8 +6,9 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.data.punishments.Punishment;
+import me.aragot.hglmoderation.entity.punishments.Punishment;
 import me.aragot.hglmoderation.events.PlayerListener;
+import me.aragot.hglmoderation.repository.PunishmentRepository;
 import me.aragot.hglmoderation.response.Responder;
 import me.aragot.hglmoderation.response.ResponseType;
 
@@ -26,7 +27,8 @@ public class UnpunishCommand {
                 .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
                         .executes(context -> {
                             String id = context.getArgument("id", String.class);
-                            Punishment punishment = Punishment.getPunishmentById(id.toUpperCase());
+                            PunishmentRepository repository = new PunishmentRepository();
+                            Punishment punishment = repository.getPunishmentById(id.toUpperCase());
 
                             if(punishment == null){
                                 Responder.respond(context.getSource(), "Sorry but I couldn't find a punishment with the mentioned ID.", ResponseType.ERROR);
@@ -39,17 +41,17 @@ public class UnpunishCommand {
                             }
 
                             punishment.setEndsAt(Instant.now().getEpochSecond());
-
-                            boolean updated = HGLModeration.instance.getDatabase().updatePunishment(punishment);
+                            PunishmentRepository punishmentRepository = new PunishmentRepository();
+                            boolean updated = punishmentRepository.updateData(punishment);
 
                             if(!updated){
                                 Responder.respond(context.getSource(), "Couldn't update the Punishment. Please try again later.", ResponseType.ERROR);
                                 return Command.SINGLE_SUCCESS;
                             }
 
-                            Punishment mute = PlayerListener.playerMutes.get(punishment.getIssuedTo());
+                            Punishment mute = PlayerListener.Companion.getPlayerMutes().get(punishment.getIssuedTo());
                             if(mute != null && punishment.getId().equalsIgnoreCase(mute.getId())){
-                                PlayerListener.playerMutes.remove(punishment.getIssuedTo());
+                                PlayerListener.Companion.getPlayerMutes().remove(punishment.getIssuedTo());
                             }
 
                             Responder.respond(context.getSource(), "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);
