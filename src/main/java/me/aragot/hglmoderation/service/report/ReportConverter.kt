@@ -20,8 +20,7 @@ class ReportConverter {
         //necessary?
         private const val baseWhiteSpaces = "                    "
 
-        fun getMcReportOverview(report: Report, incoming: Boolean = false): Component
-        {
+        fun getMcReportOverview(report: Report, incoming: Boolean = false): Component {
             val mm = MiniMessage.miniMessage()
             val reportedUserName = getUsernameFromUUID(report.reportedUUID)
             val priority = "<white>Priority:</white> <red>" + report.priority.name + "</red>"
@@ -31,13 +30,15 @@ class ReportConverter {
 
             val viewDetails: String = this.getViewDetailsRaw(report)
 
-            val reviewReport = "<click:run_command:'/review " + report.id + "'><white>[<yellow><b>Review</b></yellow>]</white></click>"
+            val reviewReport =
+                "<click:run_command:'/review " + report.id + "'><white>[<yellow><b>Review</b></yellow>]</white></click>"
 
             return mm.deserialize(
                 if (incoming)
                     "<gold>============= <white>Incoming</white> <red>Report: #" + report.id + "</red> =============</gold>"
                 else
-                    "<gold>================= <red>Report: #" + report.id + "</red> =================</gold>")
+                    "<gold>================= <red>Report: #" + report.id + "</red> =================</gold>"
+            )
                 .appendNewline()
                 .appendNewline().append(mm.deserialize(baseWhiteSpaces + priority))
                 .appendNewline().append(mm.deserialize(baseWhiteSpaces + reason))
@@ -46,11 +47,11 @@ class ReportConverter {
                 .appendNewline()
                 .appendNewline().append(mm.deserialize("$baseWhiteSpaces$viewDetails   $reviewReport"))
                 .appendNewline()
-                .appendNewline().append(mm.deserialize("<gold>===================================================</gold>"))
+                .appendNewline()
+                .append(mm.deserialize("<gold>===================================================</gold>"))
         }
 
-        private fun getViewDetailsRaw(report: Report): String
-        {
+        private fun getViewDetailsRaw(report: Report): String {
             val reportedUserName = getUsernameFromUUID(report.reportedUUID)
             val reporterUserName = getUsernameFromUUID(report.reporterUUID)
 
@@ -67,7 +68,7 @@ class ReportConverter {
                 """.trimIndent()
 
 
-            if (Reasoning.getChatReasons().contains(report.reasoning)){
+            if (Reasoning.getChatReasons().contains(report.reasoning)) {
                 reportDetails += "<gray>User Messages:</gray><br>" + this.getFormattedUserMessages(report)
             }
 
@@ -91,22 +92,26 @@ class ReportConverter {
             val presetName = if (preset == null) "None" else preset.name
 
             val serverName = try {
-                HGLModeration.instance.server.getPlayer(UUID.fromString(report.reportedUUID))
+                HGLModeration.instance.server.getPlayer(report.reportedUUID)
                     .orElseThrow().currentServer.orElseThrow().serverInfo.name
             } catch (x: NoSuchElementException) {
                 "None"
             }
-            val firstLine = "<hover:show_text:'<green>Accept and Punish</green>'><click:suggest_command:'/preset apply $presetName ${report.id}'><white>[<green><b>Punish</b></green>]</white></click></hover>   <hover:show_text:'<red>Decline Report</red>'><click:suggest_command:'/review ${report.id} decline'><white>[<red><b>Decline</b></red>]</white></click></hover>   <hover:show_text:'<red>Mark as malicious</red>'><click:suggest_command:'/review ${report.id} malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click></hover>"
-            val secondLine = "<hover:show_text:'${PunishmentConverter.getFormattedPunishments(data)}'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>   <hover:show_text:'${getRawOtherReports(report)}'><white>[<blue><b>Other Reports</b></blue>]</white></hover>"
-            val thirdLine = "<hover:show_text:'<blue>Teleport to Server</blue>'><click:run_command:'/server $serverName'><white>[<blue><b>Follow Player</b></blue>]</white></click></hover>"
+            val firstLine =
+                "<hover:show_text:'<green>Accept and Punish</green>'><click:suggest_command:'/preset apply $presetName ${report.id}'><white>[<green><b>Punish</b></green>]</white></click></hover>   <hover:show_text:'<red>Decline Report</red>'><click:suggest_command:'/review ${report.id} decline'><white>[<red><b>Decline</b></red>]</white></click></hover>   <hover:show_text:'<red>Mark as malicious</red>'><click:suggest_command:'/review ${report.id} malicious'><white>[<red><b>Decline & Mark as malicious</b></red>]</white></click></hover>"
+            val secondLine =
+                "<hover:show_text:'${PunishmentConverter.getFormattedPunishments(data)}'><white>[<blue><b>Previous Punishments</b></blue>]</white></hover>   <hover:show_text:'${
+                    getRawOtherReports(report)
+                }'><white>[<blue><b>Other Reports</b></blue>]</white></hover>"
+            val thirdLine =
+                "<hover:show_text:'<blue>Teleport to Server</blue>'><click:run_command:'/server $serverName'><white>[<blue><b>Follow Player</b></blue>]</white></click></hover>"
 
             return mm.deserialize(firstLine)
                 .appendNewline().append(mm.deserialize(secondLine))
                 .appendNewline().append(mm.deserialize(thirdLine))
         }
 
-        private fun getRawOtherReports(report: Report): String
-        {
+        private fun getRawOtherReports(report: Report): String {
             val reportRepository = ReportRepository()
             val reports = reportRepository.getReportsForPlayerExcept(report.reportedUUID, report.id)
             if (reports.isEmpty()) return "No Reports found"
@@ -128,7 +133,7 @@ class ReportConverter {
             val messages = StringBuilder()
 
             val username = try {
-                HGLModeration.instance.server.getPlayer(UUID.fromString(report.reportedUUID)).orElseThrow().username
+                HGLModeration.instance.server.getPlayer(report.reportedUUID).orElseThrow().username
             } catch (x: NoSuchElementException) {
                 getUsernameFromUUID(report.reportedUUID)
             }
@@ -143,7 +148,7 @@ class ReportConverter {
             val reports = StringBuilder(Responder.prefix + " <gold>Current Reports:</gold>")
             if (reportList.isEmpty()) return MiniMessage.miniMessage()
                 .deserialize(reports.append("<white> None</white>").toString())
-            val userNameCache = HashMap<String, String?>()
+            val userNameCache = HashMap<UUID, String?>()
             val displayMax = 10
             var count = 0
             for (report in reportList) {

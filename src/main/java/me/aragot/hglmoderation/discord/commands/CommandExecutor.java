@@ -8,6 +8,7 @@ import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -21,8 +22,9 @@ import java.util.*;
 public class CommandExecutor {
     private final SlashCommandInteractionEvent event;
     public static HashMap<UUID, Map.Entry<Instant, String>> discordLinkKeys = new HashMap<>();
-    public CommandExecutor(SlashCommandInteractionEvent event){
-       //Usually do calculations and needed variables here, dunno if needed :/
+
+    public CommandExecutor(SlashCommandInteractionEvent event) {
+        //Usually do calculations and needed variables here, dunno if needed :/
         this.event = event;
     }
 
@@ -30,7 +32,16 @@ public class CommandExecutor {
     }
 
     public void onPreset() {
+        if (event.getMember() == null || (!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getUser().getIdLong() != 974206098364071977L)) {
+            EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.ERROR);
+            eb.setDescription("You don't have enough permisisons to do that.");
 
+            event.replyEmbeds(eb.build())
+                    .setEphemeral(true)
+                    .queue();
+
+            return;
+        }
         EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
         eb.setTitle("Presets");
         eb.setDescription("Welcome to the PresetGUI. You can view, modify, add and remove the current presets! Please choose an option from the menu below to start your journey.");
@@ -48,7 +59,6 @@ public class CommandExecutor {
                 .setEphemeral(true)
                 .addActionRow(presetPicker.build())
                 .queue();
-
     }
 
     public void onLogs() {
@@ -59,7 +69,7 @@ public class CommandExecutor {
 
                 if (ch.getType() != ChannelType.TEXT)
                     event.replyEmbeds(
-                       HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
+                            HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
                     ).queue();
 
                 if (channelType.equalsIgnoreCase("report"))
@@ -74,7 +84,7 @@ public class CommandExecutor {
                 event.replyEmbeds(
                         HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully set the log channel to: <#" + Config.instance.getReportChannelId() + ">").build()
                 ).queue();
-               break;
+                break;
             case "pingrole":
 
                 if (event.getOption("role") == null) {
@@ -94,6 +104,7 @@ public class CommandExecutor {
                 break;
         }
     }
+
     public void onLink() {
         if (event.getSubcommandName().equalsIgnoreCase("generate")) { //cannot be null
             UUID key = UUID.randomUUID();
@@ -121,9 +132,9 @@ public class CommandExecutor {
     }
 
     private PlayerData getDataByDiscordId(String discordId) {
-       for (PlayerData data : PlayerDataRepository.Companion.getDataList()) {
-           if(discordId.equalsIgnoreCase(data.getDiscordId())) return data;
-       }
-       return null;
+        for (PlayerData data : PlayerDataRepository.Companion.getDataList()) {
+            if (discordId.equalsIgnoreCase(data.getDiscordId())) return data;
+        }
+        return null;
     }
 }

@@ -56,7 +56,7 @@ public class PresetInteractions {
     public static EmbedBuilder setDurationFromModal(ModalInteractionEvent event) {
         String presetName = event.getValue("preset-name").getAsString();
         Preset preset = PresetHandler.instance.getPresetByName(presetName);
-        if(preset == null)
+        if (preset == null)
             return HGLBot.getEmbedTemplate(ResponseType.ERROR, "Cannot find this preset. Try refreshing your PresetGUI");
 
         int days;
@@ -217,7 +217,7 @@ public class PresetInteractions {
                 .build();
 
         return Modal.create("preset-create", "Create new Preset")
-                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(startInput), ActionRow.of(endInput),ActionRow.of(weight), ActionRow.of(presetDescriptionInput))
+                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(startInput), ActionRow.of(endInput), ActionRow.of(weight), ActionRow.of(presetDescriptionInput))
                 .build();
     }
 
@@ -258,7 +258,7 @@ public class PresetInteractions {
                 .build();
 
         return Modal.create("preset-edit", "Edit Preset")
-                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(startInput), ActionRow.of(endInput),ActionRow.of(weight), ActionRow.of(presetDescriptionInput))
+                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(startInput), ActionRow.of(endInput), ActionRow.of(weight), ActionRow.of(presetDescriptionInput))
                 .build();
     }
 
@@ -296,7 +296,7 @@ public class PresetInteractions {
 
 
         return Modal.create("preset-duration", "Set Duration")
-                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(daysInput), ActionRow.of(hoursInput),ActionRow.of(minutesInput))
+                .addComponents(ActionRow.of(presetNameInput), ActionRow.of(daysInput), ActionRow.of(hoursInput), ActionRow.of(minutesInput))
                 .build();
     }
 

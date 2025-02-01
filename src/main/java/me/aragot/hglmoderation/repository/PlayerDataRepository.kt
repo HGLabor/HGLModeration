@@ -3,25 +3,23 @@ package me.aragot.hglmoderation.repository
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
 import com.velocitypowered.api.proxy.Player
-import me.aragot.hglmoderation.HGLModeration
 import me.aragot.hglmoderation.entity.PlayerData
 import java.util.*
 
-class PlayerDataRepository: Repository() {
+class PlayerDataRepository : Repository() {
     companion object {
         val dataList: MutableList<PlayerData> = ArrayList()
     }
 
-    fun getPlayerData(player: Player): PlayerData
-    {
+    fun getPlayerData(player: Player): PlayerData {
         for (data in ::dataList.get()) {
-            if (data.playerId.equals(player.uniqueId.toString(), ignoreCase = true)) {
+            if (data.id.equals(player.uniqueId)) {
                 return data
             }
         }
 
 
-        var data = this.getPlayerData(uuid = player.uniqueId.toString())
+        var data = this.getPlayerData(uuid = player.uniqueId)
         if (data == null) {
             data = PlayerData(player)
             this.flushData(data)
@@ -31,14 +29,12 @@ class PlayerDataRepository: Repository() {
         return data
     }
 
-    fun getPlayerData(uuid: String): PlayerData?
-    {
-        val data = ::dataList.get().find { playerData -> playerData.playerId.equals(uuid, ignoreCase = true) }
+    fun getPlayerData(uuid: UUID): PlayerData? {
+        val data = ::dataList.get().find { playerData -> playerData.id.equals(uuid) }
         return if (data !== null) data else this.database.playerDataCollection.find(Filters.eq("_id", uuid)).first()
     }
 
-    fun flushData(data: PlayerData): Boolean
-    {
+    private fun flushData(data: PlayerData): Boolean {
         return try {
             this.database.playerDataCollection.insertOne(data)
             true
@@ -47,10 +43,9 @@ class PlayerDataRepository: Repository() {
         }
     }
 
-    fun updateData(data: PlayerData): Boolean
-    {
+    fun updateData(data: PlayerData): Boolean {
         return this.database.playerDataCollection.replaceOne(
-            Filters.eq("_id", data.playerId),
+            Filters.eq("_id", data.id),
             data
         ).wasAcknowledged()
     }

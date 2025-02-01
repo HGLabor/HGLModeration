@@ -21,16 +21,17 @@ import me.aragot.hglmoderation.service.player.PlayerUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class FetcherCommand {
 
-    public static BrigadierCommand createBrigadierCommand(){
-        LiteralCommandNode<CommandSource> fetcherNode = BrigadierCommand.literalArgumentBuilder("dcbot")
+    public static BrigadierCommand createBrigadierCommand() {
+        LiteralCommandNode<CommandSource> fetcherNode = BrigadierCommand.literalArgumentBuilder("fetcher")
                 .requires(source -> source.hasPermission("hglmoderation.fetcher"))
                 //execute when /fetcher
                 .executes(context -> {
                     CommandSource source = context.getSource();
-                    if(source instanceof Player)
+                    if (source instanceof Player)
                         Responder.respond(source, "Invalid usage. Please try using <white>/fetcher <type> <id/player></white>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
@@ -47,11 +48,11 @@ public class FetcherCommand {
                             String type = context.getArgument("type", String.class);
 
                             Player player;
-                            switch(type){
+                            switch (type) {
                                 case "player_data":
                                     player = context.getSource() instanceof Player ? ((Player) context.getSource()) : null;
 
-                                    if(player == null){
+                                    if (player == null) {
                                         Responder.respond(context.getSource(), "Sorry but you cannot use this command in that way with the console. Please try adding a username.", ResponseType.ERROR);
                                         break;
                                     }
@@ -66,14 +67,14 @@ public class FetcherCommand {
                                 case "punishment":
                                     player = context.getSource() instanceof Player ? ((Player) context.getSource()) : null;
 
-                                    if(player == null){
+                                    if (player == null) {
                                         Responder.respond(context.getSource(), "Sorry but you cannot use this command in that way with the console. Please try adding a username.", ResponseType.ERROR);
                                         break;
                                     }
                                     PunishmentRepository punishmentRepository = new PunishmentRepository();
-                                    ArrayList<Punishment> punishments = punishmentRepository.getPunishmentsFor(player.getUniqueId().toString(), player.getRemoteAddress().getAddress().getHostAddress());
+                                    ArrayList<Punishment> punishments = punishmentRepository.getPunishmentsFor(player.getUniqueId(), player.getRemoteAddress().getAddress().getHostAddress());
 
-                                    if(punishments.size() == 0){
+                                    if (punishments.isEmpty()) {
                                         Responder.respond(context.getSource(), "You currently don't have any punishments.", ResponseType.DEFAULT);
                                         break;
                                     }
@@ -104,7 +105,7 @@ public class FetcherCommand {
                                     String type = context.getArgument("type", String.class);
 
                                     PlayerData data = null;
-                                    String playerUuid = null;
+                                    UUID playerUuid = null;
                                     if (!id.equalsIgnoreCase("under_review")) {
                                         playerUuid = PlayerUtils.Companion.getUuidFromUsername(id);
                                     }
@@ -114,15 +115,15 @@ public class FetcherCommand {
                                         data = playerDataRepository.getPlayerData(playerUuid);
                                     }
 
-                                    switch(type){
+                                    switch (type) {
                                         case "player_data":
 
-                                            if(playerUuid == null){
+                                            if (playerUuid == null) {
                                                 Responder.respond(context.getSource(), "Sorry but you cannot use this command in that way with the console. Please try adding a username.", ResponseType.ERROR);
                                                 break;
                                             }
 
-                                            if(data == null){
+                                            if (data == null) {
                                                 Responder.respond(context.getSource(), "Sorry but this player never joined the server.", ResponseType.ERROR);
                                                 break;
                                             }
@@ -130,14 +131,14 @@ public class FetcherCommand {
                                             context.getSource().sendMessage(PlayerDataConverter.Companion.getComponentForPlayerData(data));
                                             break;
                                         case "report":
-                                            if(id.equalsIgnoreCase("under_review")){
+                                            if (id.equalsIgnoreCase("under_review")) {
                                                 List<Report> reportsInProgress = ReportRepository.Companion.getReportsInProgress();
 
                                                 context.getSource().sendMessage(ReportConverter.Companion.getComponentForReports(reportsInProgress));
                                                 break;
                                             }
 
-                                            if(playerUuid != null){
+                                            if (playerUuid != null) {
                                                 ReportRepository reportRepository = new ReportRepository();
                                                 ArrayList<Report> reportsForPlayer = reportRepository.getReportsForPlayer(playerUuid);
 
@@ -146,7 +147,7 @@ public class FetcherCommand {
                                             }
                                             ReportRepository reportRepository = new ReportRepository();
                                             Report report = reportRepository.getReportById(id);
-                                            if(report == null){
+                                            if (report == null) {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find this report in the database.", ResponseType.ERROR);
                                                 break;
                                             }
@@ -156,9 +157,14 @@ public class FetcherCommand {
                                         case "punishment":
                                             Punishment punishment;
                                             PunishmentRepository punishmentRepository = new PunishmentRepository();
-                                            if(playerUuid != null){ //if punishment != null then data cannot be null either
+                                            if (playerUuid != null) { //if punishment != null then data cannot be null either
+                                                if (data == null) {
+                                                    Responder.respond(context.getSource(), "This player didn't receive any punishments yet.", ResponseType.DEFAULT);
+                                                    break;
+                                                }
+
                                                 ArrayList<Punishment> punishments = punishmentRepository.getPunishmentsFor(playerUuid, data.getLatestIp());
-                                                if (punishments.size() == 0) {
+                                                if (punishments.isEmpty()) {
                                                     Responder.respond(context.getSource(), "This player didn't receive any punishments yet.", ResponseType.DEFAULT);
                                                     break;
                                                 }
@@ -170,7 +176,7 @@ public class FetcherCommand {
                                             }
                                             punishment = punishmentRepository.getPunishmentById(id);
 
-                                            if(punishment == null){
+                                            if (punishment == null) {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find this punishment in the database.", ResponseType.ERROR);
                                                 break;
                                             }

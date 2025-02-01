@@ -1,18 +1,20 @@
 package me.aragot.hglmoderation.service.player
 
+import com.velocitypowered.api.util.UuidUtils
 import org.bson.Document
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.URL
+import java.util.*
 import javax.net.ssl.HttpsURLConnection
+import kotlin.collections.ArrayList
 
 class PlayerUtils {
     companion object {
         private val playerCache = ArrayList<PlayerCacheEntry>()
-        
-        fun getUsernameFromUUID(uuid: String): String?
-        {
+
+        fun getUsernameFromUUID(uuid: UUID): String? {
             val cacheEntry = this.getCacheEntry(uuid = uuid)
             return if (cacheEntry !== null && cacheEntry.isValid()) {
                 cacheEntry.username
@@ -53,8 +55,7 @@ class PlayerUtils {
             }
         }
 
-        fun getUuidFromUsername(username: String): String?
-        {
+        fun getUuidFromUsername(username: String): UUID? {
             val cacheEntry = this.getCacheEntry(username = username)
             return if (cacheEntry !== null && cacheEntry.isValid()) cacheEntry.uuid
             else try {
@@ -79,7 +80,7 @@ class PlayerUtils {
                 connection.disconnect()
 
                 val doc = Document.parse(content.toString())
-                val uuid = addHyphensToUUID(doc.getString("id"))
+                val uuid = UuidUtils.fromUndashed(doc.getString("id"))
                 if (cacheEntry !== null) {
                     cacheEntry.uuid = uuid
                     cacheEntry.updateTimeStamp()
@@ -93,29 +94,14 @@ class PlayerUtils {
             }
         }
 
-        fun addHyphensToUUID(uuidWithoutHyphens: String): String
-        {
-            require(uuidWithoutHyphens.length == 32) { "Invalid UUID length" }
-
-            val sb = StringBuilder(uuidWithoutHyphens)
-            sb.insert(20, "-")
-            sb.insert(16, "-")
-            sb.insert(12, "-")
-            sb.insert(8, "-")
-
-            return sb.toString()
-        }
-
-        fun removePlayerFromCache(uuid: String? = null, username: String? = null)
-        {
+        fun removePlayerFromCache(uuid: UUID? = null, username: String? = null) {
             if (uuid === null && username === null) return
             playerCache.removeIf { entry: PlayerCacheEntry -> (username === entry.username || uuid === entry.uuid) }
         }
 
-        private fun getCacheEntry(username: String? = null, uuid: String? = null): PlayerCacheEntry?
-        {
+        private fun getCacheEntry(username: String? = null, uuid: UUID? = null): PlayerCacheEntry? {
             return if (username === null && uuid === null) null
-            else playerCache.find { entry: PlayerCacheEntry -> (username === entry.username || uuid === entry.uuid) }
+            else playerCache.find { entry: PlayerCacheEntry -> (username.equals(entry.username, ignoreCase = true) || uuid === entry.uuid) }
         }
     }
 }

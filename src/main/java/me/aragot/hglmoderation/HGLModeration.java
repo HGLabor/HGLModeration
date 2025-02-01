@@ -25,16 +25,9 @@ import java.util.UUID;
 @Plugin(
         id = "hglmoderation",
         name = "HGLModeration",
-        version = "1.0-SNAPSHOT",
+        version = "1.1-SNAPSHOT",
         authors = {"Aragot"}
 )
-
-/*TODO:
- * Discord Log change message? Channel.retrieveMessageById();
- *  -> Push report AFTER report message was sent to Channel
- *  -> Maybe ignore and delete options on click if its already reviewed?
- * Report add message id from discord in DB
- */
 
 public class HGLModeration {
     private final Logger logger;
@@ -55,20 +48,20 @@ public class HGLModeration {
         registerEventListeners();
         registerCommands();
         Config.loadConfig();
-        PresetHandler.loadPresets();
 
         HGLBot.init(this.server, this.logger);
-        this.database =  new ModerationDB(Config.instance.getDbConnectionString());
+        this.database = new ModerationDB(Config.instance.getDbConnectionString());
         ReportRepository reportRepository = new ReportRepository();
         reportRepository.fetchUnfinishedReports();
+        PresetHandler.loadPresets();
     }
 
-   @Subscribe
-   public void onProxyShutdown(ProxyShutdownEvent event) {
-       Config.saveConfig();
-       PresetHandler.savePresets();
-       database.closeConnection();
-   }
+    @Subscribe
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        Config.saveConfig();
+        PresetHandler.savePresets();
+        database.closeConnection();
+    }
 
     private void registerEventListeners() {
         this.server.getEventManager().register(this, new PlayerListener());
@@ -143,10 +136,10 @@ public class HGLModeration {
     }
 
     //Maybe remove this method? Cache is quite efficient?
-    public String getPlayerNameEfficiently(String uuid) {
+    public String getPlayerNameEfficiently(UUID uuid) {
         try {
-            return server.getPlayer(UUID.fromString(uuid)).orElseThrow().getUsername();
-        } catch(NoSuchElementException x) {
+            return server.getPlayer(uuid).orElseThrow().getUsername();
+        } catch (NoSuchElementException x) {
             return PlayerUtils.Companion.getUsernameFromUUID(uuid);
         }
     }

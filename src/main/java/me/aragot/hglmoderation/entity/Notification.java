@@ -5,11 +5,12 @@ public enum Notification {
     REPORT_STATE,
     REPORT;
 
-     public boolean requiresPermission() {
-         switch (this) {
-             case REPORT:
-                 return true;
-             default: return false;
-         }
+    public boolean requiresPermission() {
+        switch (this) {
+            case REPORT:
+                return true;
+            default:
+                return false;
+        }
     }
 }

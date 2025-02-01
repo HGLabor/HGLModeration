@@ -2,41 +2,34 @@ package me.aragot.hglmoderation.entity;
 
 
 import com.velocitypowered.api.proxy.Player;
-import me.aragot.hglmoderation.HGLModeration;
-import me.aragot.hglmoderation.entity.punishments.Punishment;
-import me.aragot.hglmoderation.repository.PunishmentRepository;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class PlayerData {
     private int reportScore; //Score of successful reports, needed to get Report Priority of a Player
     private int punishmentScore; // Punishment score of a Player, needed for punishment level
 
-    private final String _id;
+    private UUID _id;
     private String latestIp;
     private String discordId = "";
     private ArrayList<Notification> notifications = new ArrayList<>();
     private ArrayList<String> punishments = new ArrayList<>();
 
-    public static HashMap<Notification, ArrayList<String>> notificationGroups = new HashMap<>();
+    @BsonIgnore
+    public static HashMap<Notification, ArrayList<UUID>> notificationGroups = new HashMap<>();
 
     public PlayerData(Player player) {
-        this._id = player.getUniqueId().toString();
+        this._id = player.getUniqueId();
         this.latestIp = player.getRemoteAddress().getAddress().getHostAddress();
         this.notifications.add(Notification.GENERAL);
         this.notifications.add(Notification.REPORT_STATE);
     }
 
-    //Used only for Codec
-    public PlayerData(String _id,String latestIp, int reportScore, int punishmentScore, String discordId, ArrayList<Notification> notifications, ArrayList<String> punishments) {
-        this.reportScore = reportScore;
-        this.punishmentScore = punishmentScore;
-        this._id = _id;
-        this.latestIp = latestIp;
-        this.discordId = discordId;
-        this.notifications = notifications;
-        this.punishments = punishments;
+    // Used for Codec
+    public PlayerData() {
     }
 
     public int getPunishmentScore() {
@@ -47,7 +40,7 @@ public class PlayerData {
         this.punishmentScore = punishmentScore;
     }
 
-    public String getPlayerId() {
+    public UUID getId() {
         return this._id;
     }
 
@@ -67,13 +60,15 @@ public class PlayerData {
         this.discordId = discordId;
     }
 
+    @BsonIgnore
     public void addNotification(Notification notif) {
-        if(!this.notifications.contains(notif)) this.notifications.add(notif);
+        if (!this.notifications.contains(notif)) this.notifications.add(notif);
         notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
 
         notificationGroups.get(notif).add(this._id);
     }
 
+    @BsonIgnore
     public void removeNotification(Notification notif) {
         this.notifications.remove(notif);
         notificationGroups.computeIfAbsent(notif, k -> new ArrayList<>());
@@ -85,6 +80,7 @@ public class PlayerData {
         return this.punishments;
     }
 
+    @BsonIgnore
     public void addPunishment(String id) {
         this.punishments.add(id);
     }
@@ -98,7 +94,23 @@ public class PlayerData {
     }
 
     public ArrayList<Notification> getNotifications() {
-        if(this.notifications == null) this.notifications = new ArrayList<>();
+        if (this.notifications == null) this.notifications = new ArrayList<>();
         return this.notifications;
+    }
+
+    public void setId(UUID _id) {
+        this._id = _id;
+    }
+
+    public void setNotifications(ArrayList<Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public void setPunishments(ArrayList<String> punishments) {
+        this.punishments = punishments;
+    }
+
+    public static void setNotificationGroups(HashMap<Notification, ArrayList<UUID>> notificationGroups) {
+        PlayerData.notificationGroups = notificationGroups;
     }
 }

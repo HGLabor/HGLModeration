@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.entity.reports.Report;
 import me.aragot.hglmoderation.entity.reports.ReportState;
 import me.aragot.hglmoderation.repository.ReportRepository;
@@ -16,7 +17,6 @@ import me.aragot.hglmoderation.service.report.ReportManager;
 import me.aragot.hglmoderation.service.player.PlayerUtils;
 import me.aragot.hglmoderation.service.permissions.PermCompare;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class ReviewCommand {
@@ -47,18 +47,18 @@ public class ReviewCommand {
                             }
 
                             try {
-                                int permission = PermCompare.comparePermissionOf(executedBy.getUniqueId(), UUID.fromString(report.getReportedUUID())).get();
+                                int permission = PermCompare.comparePermissionOf(executedBy.getUniqueId(), report.getReportedUUID()).get();
                                 if(permission != PermCompare.GREATER_THAN){
                                     Responder.respond(executedBy, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
                                     return Command.SINGLE_SUCCESS;
                                 }
                             } catch (InterruptedException | ExecutionException e) {
-                                e.printStackTrace();
+                                HGLModeration.instance.getLogger().error("Couldn't compare permissions properly");
                             }
 
                             if (report.getState() == ReportState.OPEN) {
-                                new ReportManager().startReview(report, executedBy.getUniqueId().toString());
-                            } else if(!report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString())){
+                                new ReportManager().startReview(report, executedBy.getUniqueId());
+                            } else if(!report.getReviewedBy().equals(executedBy.getUniqueId())){
                                 String reviewer = PlayerUtils.Companion.getUsernameFromUUID(report.getReviewedBy());
 
                                 Responder.respond(
@@ -92,8 +92,8 @@ public class ReviewCommand {
                                     }
 
                                     if((report.getState() == ReportState.DONE) ||
-                                       (report.getState() == ReportState.UNDER_REVIEW && !report.getReviewedBy().equalsIgnoreCase(executedBy.getUniqueId().toString()))){
-                                        if(report.getReviewedBy() == null || report.getReviewedBy().isEmpty()){
+                                       (report.getState() == ReportState.UNDER_REVIEW && !report.getReviewedBy().equals(executedBy.getUniqueId()))){
+                                        if(report.getReviewedBy() == null){
                                             Responder.respond(executedBy, "Please start reviewing this report before handling it. Use /review " + report.getId() + " to start the review process", ResponseType.ERROR);
                                             return Command.SINGLE_SUCCESS;
                                         }

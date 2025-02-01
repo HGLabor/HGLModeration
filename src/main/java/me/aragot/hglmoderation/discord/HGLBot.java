@@ -94,7 +94,6 @@ public class HGLBot {
                                 new SubcommandData("generate", "Generates a new key to Link your account with")
                         ),
                 Commands.slash("preset", "Displays the PresetGUI to modify punishment presets.")
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
         ).queue();
         author = instance.retrieveUserById(authorId).complete();
         logger.info("Discord Bot has been initialized started!");
@@ -115,9 +114,10 @@ public class HGLBot {
                 eb.setColor(Color.BLUE);
         }
 
-        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName(), author.getAvatarUrl());
         return eb;
     }
+
     public static EmbedBuilder getEmbedTemplate(ResponseType type, String description) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setDescription(description);
@@ -136,7 +136,7 @@ public class HGLBot {
                 break;
         }
 
-        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName(), author.getAvatarUrl());
         return eb;
     }
 
@@ -146,13 +146,9 @@ public class HGLBot {
         if (logChannel == null) return;
 
         if (Reasoning.getChatReasons().contains(report.getReasoning())) {
-            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue(message -> {
-                report.setDiscordLog(message.getId());
-            });
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build(), getReportMessagesEmbed(report).build()).queue(message -> report.setDiscordLog(message.getId()));
         } else {
-            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build()).queue(message -> {
-                report.setDiscordLog(message.getId());
-            });
+            logChannel.sendMessageEmbeds(getReportEmbed(report, true).build()).queue(message -> report.setDiscordLog(message.getId()));
         }
     }
 
@@ -165,7 +161,7 @@ public class HGLBot {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle(title);
         eb.setColor(color);
-        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName(), author.getAvatarUrl());
 
         String reportedName = HGLModeration.instance.getPlayerNameEfficiently(report.getReportedUUID());
         String reporterName = HGLModeration.instance.getPlayerNameEfficiently(report.getReporterUUID());
@@ -189,7 +185,7 @@ public class HGLBot {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle(title);
         eb.setColor(Color.blue);
-        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName(), author.getAvatarUrl());
 
         StringBuilder description = new StringBuilder("```");
         String username = HGLModeration.instance.getPlayerNameEfficiently(report.getReportedUUID());
@@ -215,22 +211,28 @@ public class HGLBot {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Incoming " + PunishmentConverter.Companion.getTypesAsString(punishment));
         eb.setColor(Color.red);
-        eb.setFooter("Found a bug? Please contact my author: @" + author.getName() , author.getAvatarUrl());
+        eb.setFooter("Found a bug? Please contact my author: @" + author.getName(), author.getAvatarUrl());
         eb.setThumbnail(punishment.getTypes().contains(PunishmentType.IP_BAN) ? "https://as1.ftcdn.net/v2/jpg/00/54/65/16/1000_F_54651607_OJOGbrFBB3mDTpZDKmdjjR94lsbZMTVa.jpg" : "https://mc-heads.net/avatar/" + punishment.getIssuedTo());
 
-        String punishedName = punishment.getTypes().contains(PunishmentType.IP_BAN) ? punishment.getIssuedTo() : PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuedTo());
-        String punisherName = PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuerUUID());
+        UUID playerUuid = null;
+        try {
+            playerUuid = UUID.fromString(punishment.getIssuedTo());
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        String punishedName = punishment.getTypes().contains(PunishmentType.IP_BAN) || playerUuid == null ? punishment.getIssuedTo() : PlayerUtils.Companion.getUsernameFromUUID(playerUuid);
+        String punisherName = PlayerUtils.Companion.getUsernameFromUUID(punishment.getIssuedBy());
 
         if (punishedName == null || punisherName == null)
             return embeds;
 
         String punishmentInfo = "Punished Player: " + punishedName + "\n" +
                 "Punished by: " + punisherName + "\n" +
-                "Reasoning: " + punishment.getReasoning().name() + "\n" +
+                "Reasoning: " + punishment.getReason().name() + "\n" +
                 "Punishment ID: " + punishment.getId() + "\n" +
                 "Duration: " + PunishmentConverter.Companion.getDuration(punishment) + "\n" +
-                "Submitted at: <t:" + punishment.getIssuedAtTimestamp() + ":f>\n" +
-                "Ends at: <t:" + punishment.getEndsAtTimestamp() + ":f>";
+                "Submitted at: <t:" + punishment.getIssuedAt() + ":f>\n" +
+                "Ends at: <t:" + punishment.getEndsAt() + ":f>";
 
         eb.setDescription(punishmentInfo);
         embeds.add(eb.build());
@@ -286,21 +288,11 @@ public class HGLBot {
                 "\n" +
                 "Executor: " + player.getUsername() + "\n" +
                 "Executor's Primary Role: " + executorGroup + "\n" +
-                "Target: " + PlayerUtils.Companion.getUsernameFromUUID(target.toString()) + "\n" +
+                "Target: " + PlayerUtils.Companion.getUsernameFromUUID(target) + "\n" +
                 "Target's Primary Role: " + targetGroup + "\n" +
                 "Attempted at: <t:" + Instant.now().getEpochSecond() + ":f>";
         eb.setDescription(desc);
 
         channel.sendMessageEmbeds(eb.build()).queue();
-    }
-
-    public static void logReportUpdateFailure(Report report) {
-        TextChannel channel = HGLBot.instance.getTextChannelById(Config.instance.getPunishmentChannelId());
-
-        if (channel == null) return;
-
-        channel.sendMessageEmbeds(
-                HGLBot.getEmbedTemplate(ResponseType.ERROR, "Couldn't update Reports in Database for Punishment (ID:" + report.getPunishmentId() + ")").build()
-        ).queue();
     }
 }

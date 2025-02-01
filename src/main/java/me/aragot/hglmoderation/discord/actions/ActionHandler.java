@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import javax.annotation.Nonnull;
+
 import static me.aragot.hglmoderation.discord.actions.presets.PresetInteractions.*;
 
 public class ActionHandler extends ListenerAdapter {
@@ -124,7 +125,7 @@ public class ActionHandler extends ListenerAdapter {
                         HGLBot.getEmbedTemplate(
                                 ResponseType.ERROR,
                                 "Hey I don't remember that Modal. That's weird. Please report this if you expected a different reply."
-                                ).build()).queue();
+                        ).build()).queue();
                 break;
         }
 

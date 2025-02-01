@@ -14,12 +14,12 @@ import me.aragot.hglmoderation.response.ResponseType;
 import me.aragot.hglmoderation.service.StringUtils;
 
 public class NotificationCommand {
-    public static BrigadierCommand createBrigadierCommand(){
+    public static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> notificationNode = BrigadierCommand.literalArgumentBuilder("notification")
                 .requires(source -> source.hasPermission("hglmoderation.notification"))
                 .executes(context -> {
                     CommandSource source = context.getSource();
-                    if(source instanceof Player)
+                    if (source instanceof Player)
                         Responder.respond(source, "Invalid usage. Please try using <white>/notification <add/remove/list> <type></white>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
@@ -39,14 +39,14 @@ public class NotificationCommand {
                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             PlayerDataRepository repository = new PlayerDataRepository();
 
-                            if(player == null)
+                            if (player == null)
                                 return BrigadierCommand.FORWARD;
 
-                            if(action.equalsIgnoreCase("list")){
+                            if (action.equalsIgnoreCase("list")) {
                                 PlayerData data = repository.getPlayerData(player);
                                 StringBuilder notificationGroups = new StringBuilder(data.getNotifications().isEmpty() ? "<br><gray>-</gray> <white>None</white>" : "");
 
-                                for(Notification notif : data.getNotifications())
+                                for (Notification notif : data.getNotifications())
                                     notificationGroups.append("<br><gray>-</gray> <white>").append(StringUtils.Companion.prettyEnum(notif)).append("</white>");
 
                                 Responder.respond(player, "You're currently in the following notification groups:<br>" + notificationGroups, ResponseType.SUCCESS);
@@ -61,8 +61,8 @@ public class NotificationCommand {
                                 .suggests((context, builder) -> {
 
                                     boolean hasPerms = context.getSource().hasPermission("hglmoderation.moderation.notifications");
-                                    for(Notification notif : Notification.values()){
-                                        if(notif.requiresPermission() && !hasPerms)
+                                    for (Notification notif : Notification.values()) {
+                                        if (notif.requiresPermission() && !hasPerms)
                                             continue;
                                         builder.suggest(notif.name());
                                     }
@@ -76,7 +76,7 @@ public class NotificationCommand {
                                     Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                                     PlayerDataRepository repository = new PlayerDataRepository();
 
-                                    if(player == null) return BrigadierCommand.FORWARD;
+                                    if (player == null) return BrigadierCommand.FORWARD;
 
                                     Notification notif;
 
@@ -88,18 +88,18 @@ public class NotificationCommand {
                                     }
 
                                     boolean hasPerms = context.getSource().hasPermission("hglmoderation.moderation.notifications");
-                                    if(notif.requiresPermission() && !hasPerms){
+                                    if (notif.requiresPermission() && !hasPerms) {
                                         Responder.respond(player, "You don't have the permissions modify these notifications!", ResponseType.ERROR);
                                         return Command.SINGLE_SUCCESS;
                                     }
 
                                     //Retrieve data in if statements to be more efficient
 
-                                    if(action.equalsIgnoreCase("add")){
+                                    if (action.equalsIgnoreCase("add")) {
                                         PlayerData data = repository.getPlayerData(player);
                                         data.addNotification(notif);
                                         Responder.respond(player, "Successfully added you to the " + StringUtils.Companion.prettyEnum(notif) + " notification group!", ResponseType.SUCCESS);
-                                    } else if(action.equalsIgnoreCase("remove")){
+                                    } else if (action.equalsIgnoreCase("remove")) {
                                         PlayerData data = repository.getPlayerData(player);
                                         data.removeNotification(notif);
                                         Responder.respond(player, "Successfully removed you to the " + StringUtils.Companion.prettyEnum(notif) + " notification group!", ResponseType.SUCCESS);
