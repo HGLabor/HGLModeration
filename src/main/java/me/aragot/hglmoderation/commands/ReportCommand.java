@@ -40,9 +40,7 @@ public class ReportCommand {
                             Player reporter = context.getSource() instanceof Player ? (Player) context.getSource() : null;
                             if(reporter == null) return builder.buildFuture();
 
-                            reporter.getCurrentServer().ifPresent((currentServer) -> {
-                                currentServer.getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername()));
-                            });
+                            reporter.getCurrentServer().ifPresent((currentServer) -> currentServer.getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername())));
                            return builder.buildFuture();
                         })
 
@@ -70,7 +68,7 @@ public class ReportCommand {
                         })
                         .then(BrigadierCommand.requiredArgumentBuilder("reasoning", StringArgumentType.word())
                             .suggests((context, builder) -> {
-                                for(Reasoning reason : Reasoning.values())
+                                for(Reasoning reason : Reasoning.getReportableReasonings())
                                     builder.suggest(reason.name());
                                 return builder.buildFuture();
                             })
@@ -101,16 +99,22 @@ public class ReportCommand {
                                 }
 
                                 String reasoning = context.getArgument("reasoning", String.class);
-
+                                Reasoning reason;
                                 try {
-                                    Reasoning reason = Reasoning.valueOf(reasoning.toUpperCase());
-                                    ReportManager manager = new ReportManager();
-                                    manager.submitReport(reportedPlayer.getUniqueId().toString(), reporter.getUniqueId().toString(), reason, manager.getPriorityForPlayer(reporter));
-                                    latestReports.add(new AbstractMap.SimpleEntry<>(reporter.getUniqueId(), Instant.now().getEpochSecond() + 120));
-                                    Responder.respond(reporter, "Your report has been submitted. Our team will review your report as soon as possible. Thank you for your patience!", ResponseType.SUCCESS);
+                                     reason = Reasoning.valueOf(reasoning.toUpperCase());
+                                     if (!Reasoning.getReportableReasonings().contains(reason)) {
+                                         throw new IllegalArgumentException();
+                                     }
                                 } catch (IllegalArgumentException x) {
                                     reportSuggestion(reporter, reported);
+                                    return Command.SINGLE_SUCCESS;
                                 }
+
+                                ReportManager manager = new ReportManager();
+                                manager.submitReport(reportedPlayer.getUniqueId().toString(), reporter.getUniqueId().toString(), reason, manager.getPriorityForPlayer(reporter));
+                                latestReports.add(new AbstractMap.SimpleEntry<>(reporter.getUniqueId(), Instant.now().getEpochSecond() + 120));
+                                Responder.respond(reporter, "Your report has been submitted. Our team will review your report as soon as possible. Thank you for your patience!", ResponseType.SUCCESS);
+
                                 return Command.SINGLE_SUCCESS;
                             }))
                 )
@@ -123,7 +127,7 @@ public class ReportCommand {
         MiniMessage mm = MiniMessage.miniMessage();
         Component reportText = mm.deserialize(Responder.prefix + " You are about to report <b><red>" + reportedName + "</red></b>.<br>" + "Please pick a reasoning for the report:<br><br>");
 
-        for(Reasoning reason : Reasoning.values()){
+        for(Reasoning reason : Reasoning.getReportableReasonings()){
             String name = StringUtils.Companion.prettyEnum(reason);
             reportText = reportText.append(
                     mm.deserialize("   <gray>☉</gray><red> " + name + "</red>")

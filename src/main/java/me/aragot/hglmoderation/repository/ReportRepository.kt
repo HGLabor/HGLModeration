@@ -11,12 +11,11 @@ import org.bson.conversions.Bson
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
-class ReportRepository: Repository() {
+class ReportRepository : Repository() {
     companion object {
         var unfinishedReports: MutableList<Report> = java.util.ArrayList()
 
-        fun getReportsInProgress(): List<Report>
-        {
+        fun getReportsInProgress(): List<Report> {
             return unfinishedReports.stream().filter { report: Report -> report.state == ReportState.UNDER_REVIEW }
                 .collect(Collectors.toList())
         }
@@ -27,13 +26,11 @@ class ReportRepository: Repository() {
         }
     }
 
-    fun getReportById(id: String): Report?
-    {
+    fun getReportById(id: String): Report? {
         return this.database.reportCollection.find(Filters.eq("_id", id)).first()
     }
 
-    fun flushData(report: Report): Boolean
-    {
+    fun flushData(report: Report): Boolean {
         return try {
             this.database.reportCollection.insertOne(report)
             true
@@ -42,8 +39,7 @@ class ReportRepository: Repository() {
         }
     }
 
-    fun getReportsForPlayer(uuid: String): ArrayList<Report>
-    {
+    fun getReportsForPlayer(uuid: String): ArrayList<Report> {
         return this.database.reportCollection.find(
             Filters.and(
                 Filters.eq("reportedUUID", uuid),
@@ -52,8 +48,7 @@ class ReportRepository: Repository() {
         ).into(ArrayList())
     }
 
-    fun getReportsForPlayerExcept(playerId: String, reportId: String): ArrayList<Report>
-    {
+    fun getReportsForPlayerExcept(playerId: String, reportId: String): ArrayList<Report> {
         return this.database.reportCollection.find(
             Filters.and(
                 Filters.eq("reportedUUID", playerId),
@@ -81,8 +76,7 @@ class ReportRepository: Repository() {
         return this.database.reportCollection.updateMany(filter, updates).wasAcknowledged()
     }
 
-    fun fetchUnfinishedReports()
-    {
+    fun fetchUnfinishedReports() {
         val cursor: MongoCursor<Report> = this.database.reportCollection.aggregate(
             listOf<Bson>(
                 Aggregates.match(

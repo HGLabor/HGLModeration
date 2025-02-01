@@ -25,16 +25,9 @@ import java.util.UUID;
 @Plugin(
         id = "hglmoderation",
         name = "HGLModeration",
-        version = "1.0-SNAPSHOT",
+        version = "1.1-SNAPSHOT",
         authors = {"Aragot"}
 )
-
-/*TODO:
- * Discord Log change message? Channel.retrieveMessageById();
- *  -> Push report AFTER report message was sent to Channel
- *  -> Maybe ignore and delete options on click if its already reviewed?
- * Report add message id from discord in DB
- */
 
 public class HGLModeration {
     private final Logger logger;
@@ -55,12 +48,12 @@ public class HGLModeration {
         registerEventListeners();
         registerCommands();
         Config.loadConfig();
-        PresetHandler.loadPresets();
 
         HGLBot.init(this.server, this.logger);
         this.database =  new ModerationDB(Config.instance.getDbConnectionString());
         ReportRepository reportRepository = new ReportRepository();
         reportRepository.fetchUnfinishedReports();
+        PresetHandler.loadPresets();
     }
 
    @Subscribe

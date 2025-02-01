@@ -4,17 +4,17 @@ import me.aragot.hglmoderation.entity.Reasoning;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class Punishment {
-    private final String _id;
-    private final long issuedAt; //Unix Timestamp
-    private final String issuedTo;
-    private final String issuedBy; //Minecraft Player UUID
-    private final ArrayList<PunishmentType> types;
+
+    private String _id;
+    private long issuedAt; //Unix Timestamp
+    private String issuedTo;
+    private String issuedBy; //Minecraft Player UUID
+    private ArrayList<PunishmentType> types;
     private long endsAt; // Unix Timestamp; Value(-1) = Permanent Punishment;
-    private final Reasoning reason;
-    private final String note;
+    private Reasoning reason;
+    private String note;
 
     public static ArrayList<Punishment> punishments;
 
@@ -29,11 +29,14 @@ public class Punishment {
         this.note = note;
     }
 
+    // Used for Codec
+    public Punishment() {}
+
     public String getIssuedTo() {
         return this.issuedTo;
     }
 
-    public String getIssuerUUID() {
+    public String getIssuedBy() {
         return this.issuedBy;
     }
 
@@ -53,19 +56,51 @@ public class Punishment {
         return this.types;
     }
 
-    public Reasoning getReasoning() {
+    public Reasoning getReason() {
         return this.reason;
     }
 
-    public long getIssuedAtTimestamp() {
+    public long getIssuedAt() {
         return this.issuedAt;
     }
 
-    public long getEndsAtTimestamp() {
+    public long getEndsAt() {
         return this.endsAt;
     }
 
     public String getNote() {
         return this.note;
+    }
+
+    public void setId(String _id) {
+        this._id = _id;
+    }
+
+    public void setIssuedAt(long issuedAt) {
+        this.issuedAt = issuedAt;
+    }
+
+    public void setIssuedTo(String issuedTo) {
+        this.issuedTo = issuedTo;
+    }
+
+    public void setIssuedBy(String issuedBy) {
+        this.issuedBy = issuedBy;
+    }
+
+    public void setTypes(ArrayList<PunishmentType> types) {
+        this.types = types;
+    }
+
+    public void setReason(Reasoning reason) {
+        this.reason = reason;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public static void setPunishments(ArrayList<Punishment> punishments) {
+        Punishment.punishments = punishments;
     }
 }

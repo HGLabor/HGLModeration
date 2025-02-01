@@ -8,6 +8,7 @@ import me.aragot.hglmoderation.discord.HGLBot;
 import me.aragot.hglmoderation.repository.PlayerDataRepository;
 import me.aragot.hglmoderation.response.ResponseType;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -30,7 +31,16 @@ public class CommandExecutor {
     }
 
     public void onPreset() {
+        if (event.getMember() == null || (!event.getMember().hasPermission(Permission.ADMINISTRATOR) && event.getUser().getIdLong() != 974206098364071977L)) {
+            EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.ERROR);
+            eb.setDescription("You don't have enough permisisons to do that.");
 
+            event.replyEmbeds(eb.build())
+                    .setEphemeral(true)
+                    .queue();
+
+            return;
+        }
         EmbedBuilder eb = HGLBot.getEmbedTemplate(ResponseType.DEFAULT);
         eb.setTitle("Presets");
         eb.setDescription("Welcome to the PresetGUI. You can view, modify, add and remove the current presets! Please choose an option from the menu below to start your journey.");
@@ -48,7 +58,6 @@ public class CommandExecutor {
                 .setEphemeral(true)
                 .addActionRow(presetPicker.build())
                 .queue();
-
     }
 
     public void onLogs() {
