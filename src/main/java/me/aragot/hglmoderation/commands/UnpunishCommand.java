@@ -5,7 +5,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import me.aragot.hglmoderation.HGLModeration;
 import me.aragot.hglmoderation.entity.punishments.Punishment;
 import me.aragot.hglmoderation.events.PlayerListener;
 import me.aragot.hglmoderation.repository.PunishmentRepository;

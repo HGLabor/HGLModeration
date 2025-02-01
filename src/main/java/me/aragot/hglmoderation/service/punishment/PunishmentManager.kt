@@ -48,8 +48,8 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
         return Punishment(
             this.getNextId(),
             Instant.now().epochSecond,
-            if(types.contains(PunishmentType.IP_BAN)) punished.latestIp else punished.playerId,
-            punisher.playerId,
+            if(types.contains(PunishmentType.IP_BAN)) punished.latestIp else punished.id,
+            punisher.id,
             types,
             endsAt,
             reason,
@@ -64,7 +64,7 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
         val muteComponent = PunishmentConverter.getMuteComponent(punishment)
 
         if (loginEvent !== null) {
-            loginEvent.result = ResultedEvent.ComponentResult.denied(PunishmentConverter.getBanComponent(punishment));
+            loginEvent.result = ResultedEvent.ComponentResult.denied(PunishmentConverter.getBanComponent(punishment))
             return
         }
 

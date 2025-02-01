@@ -59,7 +59,7 @@ class PlayerListener {
         val hostAddress = event.player.remoteAddress.address.hostAddress
         data.latestIp = hostAddress
 
-        val activePunishments = punishmentRepository.getActivePunishmentsFor(data.playerId, hostAddress)
+        val activePunishments = punishmentRepository.getActivePunishmentsFor(data.id, hostAddress)
         if (activePunishments.isNotEmpty()) {
             val manager = PunishmentManager()
             for (punishment in activePunishments) {
@@ -76,7 +76,7 @@ class PlayerListener {
         } else if (data.punishments.isNotEmpty() && data.punishmentScore > 0) {
             val latest = punishmentRepository.getPunishmentById(data.punishments[data.punishments.size - 1])
             //Reset score after one year since last punishment
-            if (latest != null && latest.endsAtTimestamp + 60 * 60 * 24 * 365 <= Instant.now().epochSecond) {
+            if (latest != null && latest.endsAt + (60 * 60 * 24 * 365) <= Instant.now().epochSecond) {
                 data.punishmentScore = 0
             }
         }

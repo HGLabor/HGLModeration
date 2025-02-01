@@ -13,7 +13,7 @@ class PlayerDataConverter {
     companion object {
         fun getComponentForPlayerData(data: PlayerData): Component {
             val raw = """
-                ${Responder.prefix} <white>Data for Player</white> <red>${getUsernameFromUUID(data.playerId)}</red>
+                ${Responder.prefix} <white>Data for Player</white> <red>${getUsernameFromUUID(data.id)}</red>
                 <white>Latest Ip:</white> <red>${data.latestIp}</red>
                 <white>Report Score:</white> <red>${data.reportScore}</red>
                 <white>Punishment score:</white> <red>${data.punishmentScore}</red>

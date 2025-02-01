@@ -24,7 +24,7 @@ class PunishmentConverter {
                 <red><b>You were banned from our network.</b></red>
                 
                 <gray>Punishment ID:</gray> <red>${punishment.id}</red>
-                <gray>Reason:</gray> <red>${Reasoning.getPrettyReasoning(punishment.reasoning)}</red>
+                <gray>Reason:</gray> <red>${Reasoning.getPrettyReasoning(punishment.reason)}</red>
                 <gray>Duration:</gray> <red>${getRemainingTime(punishment)}</red>
                 
                 <red><b>DO NOT SHARE YOUR PUNISHMENT ID TO OTHERS!!!</b></red>
@@ -42,7 +42,7 @@ class PunishmentConverter {
 
                 $baseWhiteSpaces<red>You were muted for misbehaving.</red>
         
-                $baseWhiteSpaces<gray>Reason:</gray> <red>${Reasoning.getPrettyReasoning(punishment.reasoning)}</red>
+                $baseWhiteSpaces<gray>Reason:</gray> <red>${Reasoning.getPrettyReasoning(punishment.reason)}</red>
                 $baseWhiteSpaces<gray>Duration:</gray> <red>${getRemainingTime(punishment)}</red>
         
                 <gold>=================================================</gold>
@@ -56,10 +56,10 @@ class PunishmentConverter {
             val raw = """
                 ${Responder.prefix} <white>Showing Details for ID:</white> <red>${punishment.id}</red>
                 <white>Punished Player:</white> <red>${ if (punishment.issuedTo.contains(".")) punishment.issuedTo else getUsernameFromUUID(punishment.issuedTo) }</red>
-                <white>Issued By:</white> <red>${getUsernameFromUUID(punishment.issuerUUID)}</red>
+                <white>Issued By:</white> <red>${getUsernameFromUUID(punishment.issuedBy)}</red>
                 <white>Duration:</white> <red>${getDuration(punishment)}</red>
                 <white>Types:</white> <red>${getTypesAsString(punishment)}</red>
-                <white>Reasoning:</white> <red>${Reasoning.getPrettyReasoning(punishment.reasoning)}</red>
+                <white>Reasoning:</white> <red>${Reasoning.getPrettyReasoning(punishment.reason)}</red>
                 <white>Note:</white> <br><red>${punishment.note}</red>
                 """.trimIndent()
             return MiniMessage.miniMessage().deserialize(raw)
@@ -68,21 +68,21 @@ class PunishmentConverter {
         fun getFormattedPunishments(data: PlayerData): String {
             if (data.punishments.isEmpty()) return "No Punishments found"
             val repository = PunishmentRepository()
-            val punishments = repository.getPunishmentsFor(data.playerId, data.latestIp)
+            val punishments = repository.getPunishmentsFor(data.id, data.latestIp)
             val formatted =
                 StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>")
             for (punishment in punishments) {
                 formatted.append("<br><gray>").append(punishment.id).append(" |</gray> <yellow>")
                     .append(getTypesAsString(punishment)).append("</yellow> <gray>|</gray> <red>")
-                    .append(punishment.reasoning).append("</red> <gray>|</gray> ")
+                    .append(punishment.reason).append("</red> <gray>|</gray> ")
                     .append(if (punishment.isActive) "<green>⊙</green>" else "<red>⊙</red>")
             }
             return formatted.toString()
         }
 
         fun getDuration(punishment: Punishment): String {
-            if (punishment.endsAtTimestamp == -1L) return "Permanent"
-            val differenceSeconds: Long = punishment.endsAtTimestamp - punishment.issuedAtTimestamp
+            if (punishment.endsAt == -1L) return "Permanent"
+            val differenceSeconds: Long = punishment.endsAt - punishment.issuedAt
             val days = TimeUnit.SECONDS.toDays(differenceSeconds)
             val hours = TimeUnit.SECONDS.toHours(differenceSeconds) % 24
             val minutes = TimeUnit.SECONDS.toMinutes(differenceSeconds) % 60
@@ -102,8 +102,8 @@ class PunishmentConverter {
 
         private fun getRemainingTime(punishment: Punishment): String {
             if (!punishment.isActive) return "It's over"
-            if (punishment.endsAtTimestamp == -1L) return "Permanent"
-            val differenceSeconds: Long = punishment.endsAtTimestamp - Instant.now().epochSecond
+            if (punishment.endsAt == -1L) return "Permanent"
+            val differenceSeconds: Long = punishment.endsAt - Instant.now().epochSecond
             val days = TimeUnit.SECONDS.toDays(differenceSeconds)
             val hours = TimeUnit.SECONDS.toHours(differenceSeconds) % 24
             val minutes = TimeUnit.SECONDS.toMinutes(differenceSeconds) % 60

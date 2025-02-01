@@ -7,15 +7,15 @@ import java.util.*;
 
 public class Report {
 
-    private final String _id;
-    private final String reportedUUID; //Reported Player UUID
+    private String _id;
+    private String reportedUUID; //Reported Player UUID
 
     //Maybe change to HashMap<String, Long> for uuid and submitDate?
-    private final String reporterUUID; //Reporter Player UUID
-    private final long submittedAt;
-    private final Reasoning reasoning;
+    private String reporterUUID; //Reporter Player UUID
+    private long submittedAt;
+    private Reasoning reasoning;
     private ReportState state;
-    private final Priority priority;
+    private Priority priority;
 
     private String reviewedBy = ""; //Minecraft Player UUID
     private String punishmentId = "";
@@ -34,20 +34,8 @@ public class Report {
         this.state = state;
     }
 
-    //Used for ReportCodec
-    public Report(String reportId, String reportedUUID, String reporterUUID, long submittedAt, Reasoning reasoning, ReportState state, Priority priority, String reviewedBy, String punishmentId, String discordLog, ArrayList<String> reportedUserMessages) {
-        this._id = reportId;
-        this.reportedUUID = reportedUUID;
-        this.reporterUUID = reporterUUID;
-        this.submittedAt = submittedAt;
-        this.reasoning = reasoning;
-        this.state = state;
-        this.priority = priority;
-        this.reviewedBy = reviewedBy;
-        this.punishmentId = punishmentId;
-        this.discordLog = discordLog;
-        this.reportedUserMessages = reportedUserMessages;
-    }
+    // Used for Codec
+    public Report() {}
 
     public void setReviewedBy(String reviewerId) {
         this.reviewedBy = reviewerId;
@@ -106,5 +94,33 @@ public class Report {
 
     public void setDiscordLog(String messageId) {
         this.discordLog = messageId;
+    }
+
+    public void setId(String _id) {
+        this._id = _id;
+    }
+
+    public void setReportedUUID(String reportedUUID) {
+        this.reportedUUID = reportedUUID;
+    }
+
+    public void setReporterUUID(String reporterUUID) {
+        this.reporterUUID = reporterUUID;
+    }
+
+    public void setSubmittedAt(long submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public void setReasoning(Reasoning reasoning) {
+        this.reasoning = reasoning;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public void setReportedUserMessages(ArrayList<String> reportedUserMessages) {
+        this.reportedUserMessages = reportedUserMessages;
     }
 }
