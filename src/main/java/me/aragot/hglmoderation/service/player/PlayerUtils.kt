@@ -1,6 +1,7 @@
 package me.aragot.hglmoderation.service.player
 
 import com.velocitypowered.api.util.UuidUtils
+import me.aragot.hglmoderation.HGLModeration
 import org.bson.Document
 import java.io.BufferedReader
 import java.io.IOException
@@ -59,13 +60,14 @@ class PlayerUtils {
             val cacheEntry = this.getCacheEntry(username = username)
             return if (cacheEntry !== null && cacheEntry.isValid()) cacheEntry.uuid
             else try {
-                val url = URL("https://api.mojang.com/users/profiles/minecraft/$username")
+                val apiLink = "https://api.mojang.com/users/profiles/minecraft/$username"
+                val url = URL(apiLink)
                 val connection = url.openConnection() as HttpsURLConnection
                 connection.setRequestProperty("Content-Type", "application/json")
                 connection.connectTimeout = 2000
                 connection.readTimeout = 2000
                 val status = connection.responseCode
-
+                HGLModeration.instance.logger.info("Fetched $apiLink and got response code: $status")
                 if (status > 299) {
                     return null
                 }
