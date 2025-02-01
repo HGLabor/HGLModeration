@@ -21,6 +21,7 @@ import me.aragot.hglmoderation.service.player.PlayerUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class FetcherCommand {
 
@@ -71,7 +72,7 @@ public class FetcherCommand {
                                         break;
                                     }
                                     PunishmentRepository punishmentRepository = new PunishmentRepository();
-                                    ArrayList<Punishment> punishments = punishmentRepository.getPunishmentsFor(player.getUniqueId().toString(), player.getRemoteAddress().getAddress().getHostAddress());
+                                    ArrayList<Punishment> punishments = punishmentRepository.getPunishmentsFor(player.getUniqueId(), player.getRemoteAddress().getAddress().getHostAddress());
 
                                     if (punishments.isEmpty()) {
                                         Responder.respond(context.getSource(), "You currently don't have any punishments.", ResponseType.DEFAULT);
@@ -104,7 +105,7 @@ public class FetcherCommand {
                                     String type = context.getArgument("type", String.class);
 
                                     PlayerData data = null;
-                                    String playerUuid = null;
+                                    UUID playerUuid = null;
                                     if (!id.equalsIgnoreCase("under_review")) {
                                         playerUuid = PlayerUtils.Companion.getUuidFromUsername(id);
                                     }
@@ -157,7 +158,7 @@ public class FetcherCommand {
                                             Punishment punishment;
                                             PunishmentRepository punishmentRepository = new PunishmentRepository();
                                             if (playerUuid != null) { //if punishment != null then data cannot be null either
-                                                if(data == null){
+                                                if (data == null) {
                                                     Responder.respond(context.getSource(), "This player didn't receive any punishments yet.", ResponseType.DEFAULT);
                                                     break;
                                                 }

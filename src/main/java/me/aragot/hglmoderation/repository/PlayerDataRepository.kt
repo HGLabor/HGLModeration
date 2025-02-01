@@ -13,13 +13,13 @@ class PlayerDataRepository : Repository() {
 
     fun getPlayerData(player: Player): PlayerData {
         for (data in ::dataList.get()) {
-            if (data.id.equals(player.uniqueId.toString(), ignoreCase = true)) {
+            if (data.id.equals(player.uniqueId)) {
                 return data
             }
         }
 
 
-        var data = this.getPlayerData(uuid = player.uniqueId.toString())
+        var data = this.getPlayerData(uuid = player.uniqueId)
         if (data == null) {
             data = PlayerData(player)
             this.flushData(data)
@@ -29,12 +29,12 @@ class PlayerDataRepository : Repository() {
         return data
     }
 
-    fun getPlayerData(uuid: String): PlayerData? {
-        val data = ::dataList.get().find { playerData -> playerData.id.equals(uuid, ignoreCase = true) }
+    fun getPlayerData(uuid: UUID): PlayerData? {
+        val data = ::dataList.get().find { playerData -> playerData.id.equals(uuid) }
         return if (data !== null) data else this.database.playerDataCollection.find(Filters.eq("_id", uuid)).first()
     }
 
-    fun flushData(data: PlayerData): Boolean {
+    private fun flushData(data: PlayerData): Boolean {
         return try {
             this.database.playerDataCollection.insertOne(data)
             true

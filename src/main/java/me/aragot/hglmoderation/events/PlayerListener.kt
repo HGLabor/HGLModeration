@@ -14,17 +14,20 @@ import me.aragot.hglmoderation.service.player.PlayerUtils
 import me.aragot.hglmoderation.service.punishment.PunishmentConverter.Companion.getMuteComponent
 import me.aragot.hglmoderation.service.punishment.PunishmentManager
 import java.time.Instant
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class PlayerListener {
 
     companion object {
-        var userMessages = HashMap<String, ArrayList<String>>()
-        var playerMutes = HashMap<String, Punishment>()
+        var userMessages = HashMap<UUID, ArrayList<String>>()
+        var playerMutes = HashMap<UUID, Punishment>()
     }
 
     @Subscribe
     fun onPlayerChat(event: PlayerChatEvent) {
-        val mute = playerMutes[event.player.uniqueId.toString()]
+        val mute = playerMutes[event.player.uniqueId]
 
         if (mute != null) {
             if (mute.isActive) {
@@ -32,13 +35,13 @@ class PlayerListener {
                 event.player.sendMessage(getMuteComponent(mute))
                 return
             }
-            playerMutes.remove(event.player.uniqueId.toString())
+            playerMutes.remove(event.player.uniqueId)
         }
 
-        val messages = userMessages[event.player.uniqueId.toString()]
+        val messages = userMessages[event.player.uniqueId]
 
         if (messages == null) {
-            userMessages[event.player.uniqueId.toString()] = ArrayList(listOf(event.message))
+            userMessages[event.player.uniqueId] = ArrayList(listOf(event.message))
             return
         }
 
@@ -81,7 +84,7 @@ class PlayerListener {
             }
         }
 
-        val uuid = event.player.uniqueId.toString()
+        val uuid = event.player.uniqueId
         for (notif in data.notifications) {
             PlayerData.notificationGroups.computeIfAbsent(
                 notif
@@ -95,14 +98,14 @@ class PlayerListener {
         val repository = PlayerDataRepository()
         val data = repository.getPlayerData(event.player)
 
-        val uuid = event.player.uniqueId.toString()
+        val uuid = event.player.uniqueId
         for (notif in data.notifications)
             PlayerData.notificationGroups[notif]!!.remove(uuid)
 
-        playerMutes.remove(event.player.uniqueId.toString())
+        playerMutes.remove(event.player.uniqueId)
         userMessages.remove(uuid)
 
         repository.updateData(data)
-        PlayerUtils.removePlayerFromCache(event.player.uniqueId.toString())
+        PlayerUtils.removePlayerFromCache(event.player.uniqueId)
     }
 }

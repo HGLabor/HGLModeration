@@ -22,8 +22,9 @@ import java.util.*;
 public class CommandExecutor {
     private final SlashCommandInteractionEvent event;
     public static HashMap<UUID, Map.Entry<Instant, String>> discordLinkKeys = new HashMap<>();
-    public CommandExecutor(SlashCommandInteractionEvent event){
-       //Usually do calculations and needed variables here, dunno if needed :/
+
+    public CommandExecutor(SlashCommandInteractionEvent event) {
+        //Usually do calculations and needed variables here, dunno if needed :/
         this.event = event;
     }
 
@@ -68,7 +69,7 @@ public class CommandExecutor {
 
                 if (ch.getType() != ChannelType.TEXT)
                     event.replyEmbeds(
-                       HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
+                            HGLBot.getEmbedTemplate(ResponseType.ERROR, "Sorry, you can only use text channels for the logchannel").build()
                     ).queue();
 
                 if (channelType.equalsIgnoreCase("report"))
@@ -83,7 +84,7 @@ public class CommandExecutor {
                 event.replyEmbeds(
                         HGLBot.getEmbedTemplate(ResponseType.SUCCESS, "Successfully set the log channel to: <#" + Config.instance.getReportChannelId() + ">").build()
                 ).queue();
-               break;
+                break;
             case "pingrole":
 
                 if (event.getOption("role") == null) {
@@ -103,6 +104,7 @@ public class CommandExecutor {
                 break;
         }
     }
+
     public void onLink() {
         if (event.getSubcommandName().equalsIgnoreCase("generate")) { //cannot be null
             UUID key = UUID.randomUUID();
@@ -130,9 +132,9 @@ public class CommandExecutor {
     }
 
     private PlayerData getDataByDiscordId(String discordId) {
-       for (PlayerData data : PlayerDataRepository.Companion.getDataList()) {
-           if(discordId.equalsIgnoreCase(data.getDiscordId())) return data;
-       }
-       return null;
+        for (PlayerData data : PlayerDataRepository.Companion.getDataList()) {
+            if (discordId.equalsIgnoreCase(data.getDiscordId())) return data;
+        }
+        return null;
     }
 }

@@ -50,18 +50,18 @@ public class HGLModeration {
         Config.loadConfig();
 
         HGLBot.init(this.server, this.logger);
-        this.database =  new ModerationDB(Config.instance.getDbConnectionString());
+        this.database = new ModerationDB(Config.instance.getDbConnectionString());
         ReportRepository reportRepository = new ReportRepository();
         reportRepository.fetchUnfinishedReports();
         PresetHandler.loadPresets();
     }
 
-   @Subscribe
-   public void onProxyShutdown(ProxyShutdownEvent event) {
-       Config.saveConfig();
-       PresetHandler.savePresets();
-       database.closeConnection();
-   }
+    @Subscribe
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        Config.saveConfig();
+        PresetHandler.savePresets();
+        database.closeConnection();
+    }
 
     private void registerEventListeners() {
         this.server.getEventManager().register(this, new PlayerListener());
@@ -136,10 +136,10 @@ public class HGLModeration {
     }
 
     //Maybe remove this method? Cache is quite efficient?
-    public String getPlayerNameEfficiently(String uuid) {
+    public String getPlayerNameEfficiently(UUID uuid) {
         try {
-            return server.getPlayer(UUID.fromString(uuid)).orElseThrow().getUsername();
-        } catch(NoSuchElementException x) {
+            return server.getPlayer(uuid).orElseThrow().getUsername();
+        } catch (NoSuchElementException x) {
             return PlayerUtils.Companion.getUsernameFromUUID(uuid);
         }
     }

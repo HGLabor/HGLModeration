@@ -15,12 +15,12 @@ import java.util.UUID;
 public class Notifier {
     public static void notify(Notification group, Component component) {
         ProxyServer server = HGLModeration.instance.getServer();
-        ArrayList<String> notifGroup = PlayerData.notificationGroups.get(group);
+        ArrayList<UUID> notifGroup = PlayerData.notificationGroups.get(group);
         if (notifGroup == null)
             return;
 
-        for (String playerId : notifGroup) {
-            server.getPlayer(UUID.fromString(playerId)).ifPresent(player -> player.sendMessage(component));
+        for (UUID playerId : notifGroup) {
+            server.getPlayer(playerId).ifPresent(player -> player.sendMessage(component));
         }
     }
 

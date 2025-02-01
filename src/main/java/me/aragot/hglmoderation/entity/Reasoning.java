@@ -22,7 +22,7 @@ public enum Reasoning {
     }
 
     public static String getPrettyReasoning(Reasoning reasoning) {
-        switch(reasoning){
+        switch (reasoning) {
             case HACKING:
                 return "Prohibited Modifications (Hacking/Cheating)";
             case SPAM:

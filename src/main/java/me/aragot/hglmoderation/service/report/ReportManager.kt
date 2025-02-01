@@ -18,8 +18,7 @@ import java.util.stream.Collectors
 class ReportManager(repo: ReportRepository = ReportRepository()) {
     private val repository: ReportRepository = repo
 
-    fun submitReport(reportedUUID: String, reporterUuid: String, reasoning: Reasoning, priority: Priority)
-    {
+    fun submitReport(reportedUUID: UUID, reporterUuid: UUID, reasoning: Reasoning, priority: Priority) {
         val report = Report(
             getNextId(),
             reportedUUID,
@@ -40,8 +39,7 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
         Notifier.notify(Notification.REPORT, ReportConverter.getMcReportOverview(report, incoming = true))
     }
 
-    fun getPriorityForPlayer(player: Player): Priority
-    {
+    fun getPriorityForPlayer(player: Player): Priority {
         val playerDataRepository = PlayerDataRepository()
         val data = playerDataRepository.getPlayerData(player)
 
@@ -50,12 +48,11 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
         return Priority.MEDIUM
     }
 
-    fun startReview(report: Report, reviewer: String)
-    {
+    fun startReview(report: Report, reviewer: UUID) {
         report.reviewedBy = reviewer
         report.state = ReportState.UNDER_REVIEW
-        for(other: Report in ReportRepository.unfinishedReports) {
-            if (!report.reportedUUID.equals(other.reportedUUID, ignoreCase = true) || report.reasoning !== other.reasoning) {
+        for (other: Report in ReportRepository.unfinishedReports) {
+            if (!report.reportedUUID.equals(other.reportedUUID) || report.reasoning !== other.reasoning) {
                 continue
             }
             other.reviewedBy = reviewer
@@ -65,19 +62,17 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
         this.repository.updateReportsBasedOn(report)
     }
 
-    fun decline(report: Report)
-    {
+    fun decline(report: Report) {
         report.state = ReportState.DONE
         val reviewableReports = ReportRepository.unfinishedReports.stream().filter { other: Report ->
-            other.reportedUUID.equals(report.reportedUUID, ignoreCase = true) && other.reasoning == report.reasoning
+            other.reportedUUID.equals(report.reportedUUID) && other.reasoning == report.reasoning
         }.collect(Collectors.toList())
 
         repository.updateReportsBasedOn(report)
         ReportRepository.unfinishedReports.removeAll(reviewableReports)
     }
 
-    fun malicious(report: Report)
-    {
+    fun malicious(report: Report) {
         this.decline(report)
         val playerDataRepository = PlayerDataRepository()
         val data: PlayerData? = playerDataRepository.getPlayerData(report.reporterUUID)
@@ -85,17 +80,16 @@ class ReportManager(repo: ReportRepository = ReportRepository()) {
             data.reportScore -= 2
     }
 
-    fun accept(report: Report, punishmentId: String)
-    {
+    fun accept(report: Report, punishmentId: String) {
         val reviewableReports = ReportRepository.unfinishedReports.stream().filter { other: Report ->
-            other.reportedUUID.equals(report.reportedUUID, ignoreCase = true) && other.reasoning === report.reasoning
+            other.reportedUUID.equals(report.reportedUUID) && other.reasoning === report.reasoning
         }.collect(Collectors.toList())
 
         report.punishmentId = punishmentId
         report.state = ReportState.DONE
 
         val reporters = ArrayList<UUID>()
-        for (other in reviewableReports) reporters.add(UUID.fromString(other.reporterUUID))
+        for (other in reviewableReports) reporters.add(other.reporterUUID)
 
         repository.updateReportsBasedOn(report)
         ReportRepository.unfinishedReports.removeAll(reviewableReports)

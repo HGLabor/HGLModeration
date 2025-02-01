@@ -1,4 +1,4 @@
 package me.aragot.hglmoderation.exceptions
 
-class DatabaseException(message: String): Exception(message) {
+class DatabaseException(message: String) : Exception(message) {
 }

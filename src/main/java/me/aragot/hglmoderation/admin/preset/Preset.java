@@ -39,7 +39,8 @@ public class Preset {
         this.weight = weight;
     }
 
-    public Preset() {}
+    public Preset() {
+    }
 
     public UUID getId() {
         return this._id;
@@ -159,7 +160,7 @@ public class Preset {
     public String getReasoningScopeAsString() {
         StringBuilder builder = new StringBuilder();
 
-        for(Reasoning reasoning : this.getReasoningScope())
+        for (Reasoning reasoning : this.getReasoningScope())
             builder.append(reasoning.name()).append(",");
 
         builder.replace(builder.length() - 1, builder.length(), "");
@@ -170,7 +171,7 @@ public class Preset {
     public String getPunishmentTypesAsString() {
         StringBuilder builder = new StringBuilder();
 
-        for(PunishmentType reasoning : this.getPunishmentsTypes())
+        for (PunishmentType reasoning : this.getPunishmentsTypes())
             builder.append(reasoning.name()).append(",");
 
         builder.replace(builder.length() - 1, builder.length(), "");
@@ -192,7 +193,7 @@ public class Preset {
         reporter.setReportScore(reporter.getReportScore() + 1);
         reported.setPunishmentScore(reported.getPunishmentScore() + this.getWeight());
         PunishmentManager manager = new PunishmentManager();
-        Punishment punishment = manager.createPunishment(reported, reviewer, this.getPunishmentsTypes(), report.getReasoning(), Instant.now().getEpochSecond() + this.duration, "Preset used:" + this.presetName);
+        Punishment punishment = manager.createPunishment(reported, reviewer, this.getPunishmentsTypes(), report.getReasoning(), Instant.now().getEpochSecond() + this.duration, "Preset used: " + this.presetName);
 
         manager.submitPunishment(reported, punishment, this.weight, report);
     }

@@ -8,8 +8,10 @@ import com.mongodb.client.model.Updates
 import me.aragot.hglmoderation.entity.reports.Report
 import me.aragot.hglmoderation.entity.reports.ReportState
 import org.bson.conversions.Bson
+import java.util.*
 import java.util.function.Predicate
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 
 class ReportRepository : Repository() {
     companion object {
@@ -39,7 +41,7 @@ class ReportRepository : Repository() {
         }
     }
 
-    fun getReportsForPlayer(uuid: String): ArrayList<Report> {
+    fun getReportsForPlayer(uuid: UUID): ArrayList<Report> {
         return this.database.reportCollection.find(
             Filters.and(
                 Filters.eq("reportedUUID", uuid),
@@ -48,7 +50,7 @@ class ReportRepository : Repository() {
         ).into(ArrayList())
     }
 
-    fun getReportsForPlayerExcept(playerId: String, reportId: String): ArrayList<Report> {
+    fun getReportsForPlayerExcept(playerId: UUID, reportId: String): ArrayList<Report> {
         return this.database.reportCollection.find(
             Filters.and(
                 Filters.eq("reportedUUID", playerId),

@@ -8,22 +8,22 @@ import java.util.*;
 public class Report {
 
     private String _id;
-    private String reportedUUID; //Reported Player UUID
+    private UUID reportedUUID; //Reported Player UUID
 
-    //Maybe change to HashMap<String, Long> for uuid and submitDate?
-    private String reporterUUID; //Reporter Player UUID
+    //Maybe change to HashMap<UUID, Long> for uuid and submitDate?
+    private UUID reporterUUID; //Reporter Player UUID
     private long submittedAt;
     private Reasoning reasoning;
     private ReportState state;
     private Priority priority;
 
-    private String reviewedBy = ""; //Minecraft Player UUID
-    private String punishmentId = "";
-    private String discordLog = "";
+    private UUID reviewedBy; //Minecraft Player UUID
+    private String punishmentId;
+    private String discordLog;
 
     private ArrayList<String> reportedUserMessages;
 
-    public Report(String reportId, String reportedUUID, String reporterUUID, long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
+    public Report(String reportId, UUID reportedUUID, UUID reporterUUID, long submittedAt, Reasoning reasoning, Priority priority, ReportState state){
         this._id = reportId;
         this.reportedUUID = reportedUUID;
         this.reporterUUID = reporterUUID;
@@ -37,22 +37,22 @@ public class Report {
     // Used for Codec
     public Report() {}
 
-    public void setReviewedBy(String reviewerId) {
+    public void setReviewedBy(UUID reviewerId) {
         this.reviewedBy = reviewerId;
     }
 
-    public String getReviewedBy() {
+    public UUID getReviewedBy() {
         return this.reviewedBy;
     }
     public String getId() {
         return _id;
     }
 
-    public String getReportedUUID() {
+    public UUID getReportedUUID() {
         return reportedUUID;
     }
 
-    public String getReporterUUID() {
+    public UUID getReporterUUID() {
         return reporterUUID;
     }
 
@@ -100,11 +100,11 @@ public class Report {
         this._id = _id;
     }
 
-    public void setReportedUUID(String reportedUUID) {
+    public void setReportedUUID(UUID reportedUUID) {
         this.reportedUUID = reportedUUID;
     }
 
-    public void setReporterUUID(String reporterUUID) {
+    public void setReporterUUID(UUID reporterUUID) {
         this.reporterUUID = reporterUUID;
     }
 

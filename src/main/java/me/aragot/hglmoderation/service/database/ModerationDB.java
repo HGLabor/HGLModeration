@@ -60,7 +60,7 @@ public class ModerationDB {
         this.presetCollection = mongoDB.getCollection(dbPrefix + "presets", Preset.class);
     }
 
-    public void closeConnection(){
+    public void closeConnection() {
         this.mongoClient.close();
     }
 }

@@ -5,6 +5,8 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
 import me.aragot.hglmoderation.entity.punishments.Punishment
 import java.time.Instant
+import java.util.*
+import kotlin.collections.ArrayList
 
 class PunishmentRepository : Repository() {
     fun flushData(punishment: Punishment): Boolean {
@@ -27,7 +29,7 @@ class PunishmentRepository : Repository() {
         return this.database.punishmentCollection.find(Filters.eq("_id", id)).first()
     }
 
-    fun getActivePunishmentsFor(uuid: String, hostAddress: String): ArrayList<Punishment> {
+    fun getActivePunishmentsFor(uuid: UUID, hostAddress: String): ArrayList<Punishment> {
         return this.database.punishmentCollection.find(
             Filters.and(
                 Filters.or(
@@ -35,17 +37,17 @@ class PunishmentRepository : Repository() {
                     Filters.gt("endsAt", Instant.now().epochSecond)
                 ),
                 Filters.or(
-                    Filters.eq("issuedTo", uuid),
+                    Filters.eq("issuedTo", uuid.toString()),
                     Filters.eq("issuedTo", hostAddress)
                 )
             )
         ).into(ArrayList())
     }
 
-    fun getPunishmentsFor(uuid: String, hostAddress: String): ArrayList<Punishment> {
+    fun getPunishmentsFor(uuid: UUID, hostAddress: String): ArrayList<Punishment> {
         return this.database.punishmentCollection.find(
             Filters.or(
-                Filters.eq("issuedTo", uuid),
+                Filters.eq("issuedTo", uuid.toString()),
                 Filters.eq("issuedTo", hostAddress)
             )
         ).sort(Sorts.descending("issuedAt")).into(java.util.ArrayList<Punishment>())

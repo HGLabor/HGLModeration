@@ -9,8 +9,8 @@ public class Punishment {
 
     private String _id;
     private long issuedAt; //Unix Timestamp
-    private String issuedTo;
-    private String issuedBy; //Minecraft Player UUID
+    private String issuedTo; // Minecraft Player UUID or IPv4 address
+    private UUID issuedBy; //Minecraft Player UUID
     private ArrayList<PunishmentType> types;
     private long endsAt; // Unix Timestamp; Value(-1) = Permanent Punishment;
     private Reasoning reason;
@@ -18,7 +18,7 @@ public class Punishment {
 
     public static ArrayList<Punishment> punishments;
 
-    public Punishment(String _id, long issuedAt, String issuedTo, String issuedBy, ArrayList<PunishmentType> types, long endsAt, Reasoning reason, String note) {
+    public Punishment(String _id, long issuedAt, String issuedTo, UUID issuedBy, ArrayList<PunishmentType> types, long endsAt, Reasoning reason, String note) {
         this._id = _id;
         this.issuedAt = issuedAt;
         this.issuedTo = issuedTo;
@@ -30,13 +30,14 @@ public class Punishment {
     }
 
     // Used for Codec
-    public Punishment() {}
+    public Punishment() {
+    }
 
     public String getIssuedTo() {
         return this.issuedTo;
     }
 
-    public String getIssuedBy() {
+    public UUID getIssuedBy() {
         return this.issuedBy;
     }
 
@@ -84,7 +85,7 @@ public class Punishment {
         this.issuedTo = issuedTo;
     }
 
-    public void setIssuedBy(String issuedBy) {
+    public void setIssuedBy(UUID issuedBy) {
         this.issuedBy = issuedBy;
     }
 

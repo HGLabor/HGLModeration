@@ -34,6 +34,7 @@ public class PunishCommand {
                 /punish player type reason duration
      */
     private static final String invalidUsage = "Invalid usage. Please try using <white>/punish <player> <presetName> <reason></white> or <white>/punish <player> <type> <reason> <duration> <weight></white>";
+
     public static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> reviewNode = BrigadierCommand.literalArgumentBuilder("punish")
                 .requires(source -> source.hasPermission("hglmoderation.punish"))
@@ -49,7 +50,7 @@ public class PunishCommand {
                 .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             Player executedBy = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                            if(executedBy == null) return builder.buildFuture();
+                            if (executedBy == null) return builder.buildFuture();
 
                             try {
                                 executedBy.getCurrentServer().orElseThrow().getServer().getPlayersConnected().forEach(player -> builder.suggest(player.getUsername()));
@@ -68,10 +69,10 @@ public class PunishCommand {
                         })
                         .then(BrigadierCommand.requiredArgumentBuilder("type", StringArgumentType.word())
                                 .suggests((context, builder) -> {
-                                    for(PunishmentType type : PunishmentType.values()){
+                                    for (PunishmentType type : PunishmentType.values()) {
                                         builder.suggest(type.name());
                                     }
-                                    for(Preset preset : PresetHandler.instance.getPresetList()){
+                                    for (Preset preset : PresetHandler.instance.getPresetList()) {
                                         builder.suggest(preset.getName());
                                     }
                                     return builder.buildFuture();
@@ -86,7 +87,7 @@ public class PunishCommand {
                                 })
                                 .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.word())
                                         .suggests((context, builder) -> {
-                                            for(Reasoning reasoning : Reasoning.values()){
+                                            for (Reasoning reasoning : Reasoning.values()) {
                                                 builder.suggest(reasoning.name());
                                             }
                                             return builder.buildFuture();
@@ -98,20 +99,17 @@ public class PunishCommand {
                                             String reason = context.getArgument("reason", String.class);
 
                                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                            if(player == null) return Command.SINGLE_SUCCESS;
+                                            if (player == null) return Command.SINGLE_SUCCESS;
 
-                                            String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
-                                            if (rawUuid == null) {
+                                            UUID toPunishUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                            if (toPunishUuid == null) {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            UUID toPunishUuid = UUID.fromString(rawUuid);
-
-
                                             Preset preset = PresetHandler.instance.getPresetByName(presetName);
 
-                                            if(preset == null){
+                                            if (preset == null) {
                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the preset you were looking for.", ResponseType.ERROR);
                                                 return Command.SINGLE_SUCCESS;
                                             }
@@ -124,11 +122,11 @@ public class PunishCommand {
                                                 return Command.SINGLE_SUCCESS;
                                             }
 
-                                            if(!hasPermission(player, toPunishUuid))
+                                            if (!hasPermission(player, toPunishUuid))
                                                 return Command.SINGLE_SUCCESS;
 
                                             PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
+                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid);
                                             PlayerData punisher = playerDataRepository.getPlayerData(player);
 
                                             if (victim == null) {
@@ -157,15 +155,13 @@ public class PunishCommand {
                                                     String durationFormat = context.getArgument("duration", String.class);
 
                                                     Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                                    if(player == null) return Command.SINGLE_SUCCESS;
+                                                    if (player == null) return Command.SINGLE_SUCCESS;
 
-                                                    String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
-                                                    if (rawUuid == null) {
+                                                    UUID toPunishUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                                    if (toPunishUuid == null) {
                                                         Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                         return Command.SINGLE_SUCCESS;
                                                     }
-
-                                                    UUID toPunishUuid = UUID.fromString(rawUuid);
 
                                                     PunishmentType punishmentType;
 
@@ -187,13 +183,13 @@ public class PunishCommand {
                                                     long duration;
 
                                                     //only set duration multiplier
-                                                    if(durationFormat.contains("d")){
+                                                    if (durationFormat.contains("d")) {
                                                         duration = 24 * 60 * 60;
-                                                    } else if(durationFormat.contains("h")){
+                                                    } else if (durationFormat.contains("h")) {
                                                         duration = 60 * 60;
-                                                    } else if(durationFormat.contains("m")) {
+                                                    } else if (durationFormat.contains("m")) {
                                                         duration = 60;
-                                                    } else if(durationFormat.equalsIgnoreCase("p")){
+                                                    } else if (durationFormat.equalsIgnoreCase("p")) {
                                                         duration = -1L;
                                                     } else {
                                                         Responder.respond(player, "Sorry but I couldn't read the time format you have entered.", ResponseType.ERROR);
@@ -201,7 +197,7 @@ public class PunishCommand {
                                                     }
 
 
-                                                    if(duration != -1L){
+                                                    if (duration != -1L) {
                                                         try {
                                                             durationFormat = durationFormat.replaceAll("[dhm]", "");
                                                             duration *= Long.parseLong(durationFormat);
@@ -211,11 +207,11 @@ public class PunishCommand {
                                                         }
                                                     }
 
-                                                    if(!hasPermission(player, toPunishUuid))
+                                                    if (!hasPermission(player, toPunishUuid))
                                                         return Command.SINGLE_SUCCESS;
 
                                                     PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                                    PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
+                                                    PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid);
                                                     PlayerData punisher = playerDataRepository.getPlayerData(player);
 
                                                     if (victim == null) {
@@ -245,15 +241,13 @@ public class PunishCommand {
                                                             String weightString = context.getArgument("weight", String.class);
 
                                                             Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
-                                                            if(player == null) return Command.SINGLE_SUCCESS;
+                                                            if (player == null) return Command.SINGLE_SUCCESS;
 
-                                                            String rawUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
-                                                            if (rawUuid == null) {
+                                                            UUID toPunishUuid = PlayerUtils.Companion.getUuidFromUsername(punishedPlayer);
+                                                            if (toPunishUuid == null) {
                                                                 Responder.respond(context.getSource(), "Sorry but I couldn't find the player you were looking for.", ResponseType.ERROR);
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
-
-                                                            UUID toPunishUuid = UUID.fromString(rawUuid);
 
                                                             PunishmentType punishmentType;
 
@@ -275,20 +269,20 @@ public class PunishCommand {
                                                             long duration;
 
                                                             //only set duration multiplier
-                                                            if(durationFormat.contains("d")){
+                                                            if (durationFormat.contains("d")) {
                                                                 duration = 24 * 60 * 60;
-                                                            } else if(durationFormat.contains("h")){
+                                                            } else if (durationFormat.contains("h")) {
                                                                 duration = 60 * 60;
-                                                            } else if(durationFormat.contains("m")) {
+                                                            } else if (durationFormat.contains("m")) {
                                                                 duration = 60;
-                                                            } else if(durationFormat.equalsIgnoreCase("p")){
+                                                            } else if (durationFormat.equalsIgnoreCase("p")) {
                                                                 duration = -1L;
                                                             } else {
                                                                 Responder.respond(player, "Sorry but I couldn't read the time format you have entered.", ResponseType.ERROR);
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
 
-                                                            if(duration != -1L){
+                                                            if (duration != -1L) {
                                                                 try {
                                                                     durationFormat = durationFormat.replaceAll("[dhm]", "");
                                                                     duration *= Long.parseLong(durationFormat);
@@ -306,11 +300,11 @@ public class PunishCommand {
                                                                 return Command.SINGLE_SUCCESS;
                                                             }
 
-                                                            if(!hasPermission(player, toPunishUuid))
+                                                            if (!hasPermission(player, toPunishUuid))
                                                                 return Command.SINGLE_SUCCESS;
 
                                                             PlayerDataRepository playerDataRepository = new PlayerDataRepository();
-                                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid.toString());
+                                                            PlayerData victim = playerDataRepository.getPlayerData(toPunishUuid);
                                                             PlayerData punisher = playerDataRepository.getPlayerData(player);
 
                                                             if (victim == null) {
@@ -341,10 +335,10 @@ public class PunishCommand {
         return new BrigadierCommand(reviewNode);
     }
 
-    private static boolean hasPermission(Player base, UUID toCompare){
+    private static boolean hasPermission(Player base, UUID toCompare) {
         try {
             int permission = PermCompare.comparePermissionOf(base.getUniqueId(), toCompare).get();
-            if(permission != PermCompare.GREATER_THAN){
+            if (permission != PermCompare.GREATER_THAN) {
                 Responder.respond(base, "Sorry but you don't have enough permissions to review this report. The reported user has a higher role than you.", ResponseType.ERROR);
                 HGLBot.logPunishmentWarning(base, toCompare);
                 return false;

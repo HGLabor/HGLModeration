@@ -21,8 +21,7 @@ import java.util.function.Consumer
 class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
     private val repository: PunishmentRepository = repo
 
-    fun submitPunishment(punished: PlayerData, punishment: Punishment, weight: Int, report: Report? = null): Boolean
-    {
+    fun submitPunishment(punished: PlayerData, punishment: Punishment, weight: Int, report: Report? = null): Boolean {
         val isBotActive = HGLBot.instance !== null
         if (!repository.flushData(punishment) && isBotActive) {
             HGLBot.logPunishmentPushFailure(punishment)
@@ -43,12 +42,18 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
         return true
     }
 
-    fun createPunishment(punished: PlayerData, punisher: PlayerData, types: ArrayList<PunishmentType>, reason: Reasoning, endsAt: Long, note: String = ""): Punishment
-    {
+    fun createPunishment(
+        punished: PlayerData,
+        punisher: PlayerData,
+        types: ArrayList<PunishmentType>,
+        reason: Reasoning,
+        endsAt: Long,
+        note: String = ""
+    ): Punishment {
         return Punishment(
             this.getNextId(),
             Instant.now().epochSecond,
-            if(types.contains(PunishmentType.IP_BAN)) punished.latestIp else punished.id,
+            if (types.contains(PunishmentType.IP_BAN)) punished.latestIp else punished.id.toString(),
             punisher.id,
             types,
             endsAt,
@@ -57,8 +62,7 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
         )
     }
 
-    fun enforcePunishment(punishment: Punishment, player: Player? = null, loginEvent: LoginEvent? = null)
-    {
+    fun enforcePunishment(punishment: Punishment, player: Player? = null, loginEvent: LoginEvent? = null) {
         val server = HGLModeration.instance.server
         val banComponent = PunishmentConverter.getBanComponent(punishment)
         val muteComponent = PunishmentConverter.getMuteComponent(punishment)
@@ -83,11 +87,17 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
         }
 
 
-        val realPlayer: Player? = if (player !== null) player else server.getPlayer(UUID.fromString(punishment.issuedTo)).orElse(null)
+        val realPlayer: Player? =
+            if (player !== null) player else server.getPlayer(UUID.fromString(punishment.issuedTo)).orElse(null)
         if (realPlayer === null) return
+        var playerUuid: UUID? = null
+        try {
+            playerUuid = UUID.fromString(punishment.issuedTo)
+        } catch (_: IllegalArgumentException) {
+        }
 
-        if (punishment.types.contains(PunishmentType.MUTE)) {
-            PlayerListener.playerMutes[punishment.issuedTo] = punishment
+        if (punishment.types.contains(PunishmentType.MUTE) && playerUuid !== null) {
+            PlayerListener.playerMutes[playerUuid] = punishment
             realPlayer.sendMessage(muteComponent)
         }
 
@@ -95,6 +105,7 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
             realPlayer.disconnect(banComponent)
         }
     }
+
     private fun getNextId(): String {
         //table is a hex number
         //Report id is random 8 digit hex number

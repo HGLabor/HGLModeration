@@ -10,6 +10,7 @@ import me.aragot.hglmoderation.service.player.PlayerUtils.Companion.getUsernameF
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class PunishmentConverter {
@@ -53,9 +54,15 @@ class PunishmentConverter {
         fun getComponentForPunishment(punishment: Punishment?): Component {
             if (punishment == null) return MiniMessage.miniMessage()
                 .deserialize(Responder.prefix + " <red>This player was never punished before</red>")
+            var playerUuid: UUID? = null
+            try {
+                playerUuid = UUID.fromString(punishment.issuedTo)
+            } catch (_: IllegalArgumentException) {
+            }
+
             val raw = """
                 ${Responder.prefix} <white>Showing Details for ID:</white> <red>${punishment.id}</red>
-                <white>Punished Player:</white> <red>${ if (punishment.issuedTo.contains(".")) punishment.issuedTo else getUsernameFromUUID(punishment.issuedTo) }</red>
+                <white>Punished Player:</white> <red>${ if (playerUuid == null) punishment.issuedTo else getUsernameFromUUID(playerUuid) }</red>
                 <white>Issued By:</white> <red>${getUsernameFromUUID(punishment.issuedBy)}</red>
                 <white>Duration:</white> <red>${getDuration(punishment)}</red>
                 <white>Types:</white> <red>${getTypesAsString(punishment)}</red>

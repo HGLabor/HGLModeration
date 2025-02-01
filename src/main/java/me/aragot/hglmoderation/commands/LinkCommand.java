@@ -19,13 +19,13 @@ import java.util.UUID;
 
 public class LinkCommand {
 
-    public static BrigadierCommand createBrigadierCommand(){
+    public static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> linkNode = BrigadierCommand.literalArgumentBuilder("link")
                 .requires(source -> source.hasPermission("hglmoderation.link"))
                 .executes(context -> {
 
                     CommandSource source = context.getSource();
-                    if(source instanceof Player)
+                    if (source instanceof Player)
                         Responder.respond(source, "Invalid usage. Please try using <white>/link <key/reset>", ResponseType.ERROR);
 
                     return Command.SINGLE_SUCCESS;
@@ -43,15 +43,15 @@ public class LinkCommand {
         return new BrigadierCommand(linkNode);
     }
 
-    public static int getCommandStatus(CommandContext<CommandSource> context){
+    public static int getCommandStatus(CommandContext<CommandSource> context) {
         String action = context.getArgument("action", String.class);
         Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
         PlayerDataRepository repository = new PlayerDataRepository();
 
-        if(player == null) return BrigadierCommand.FORWARD;
+        if (player == null) return BrigadierCommand.FORWARD;
 
 
-        if(action.equalsIgnoreCase("reset")){
+        if (action.equalsIgnoreCase("reset")) {
             PlayerData data = repository.getPlayerData(player);
             data.setDiscordId("");
 
@@ -61,20 +61,20 @@ public class LinkCommand {
 
         Map.Entry<Instant, String> keyData;
 
-        try{
+        try {
             keyData = CommandExecutor.discordLinkKeys.get(UUID.fromString(action));
         } catch (IllegalArgumentException x) {
             Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
             return Command.SINGLE_SUCCESS;
         }
 
-        if(keyData == null){
+        if (keyData == null) {
             Responder.respond(player, "Invalid key. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
             return Command.SINGLE_SUCCESS;
         }
 
         //900 Secs == 15 Minutes
-        if(keyData.getKey().plusSeconds(900).isBefore(Instant.now())){
+        if (keyData.getKey().plusSeconds(900).isBefore(Instant.now())) {
             Responder.respond(player, "Your key expired. Please request a new key from the discord bot by using <white>/link</white> in the discord server.", ResponseType.ERROR);
             return Command.SINGLE_SUCCESS;
         }
