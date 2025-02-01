@@ -9,6 +9,6 @@ class PlayerCacheEntry(var username: String, var uuid: UUID, private var timesta
     }
 
     fun isValid(): Boolean {
-        return Instant.now().epochSecond - this.timestamp > 300
+        return Instant.now().epochSecond - this.timestamp < 300
     }
 }
