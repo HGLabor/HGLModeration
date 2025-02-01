@@ -101,7 +101,7 @@ class PlayerUtils {
 
         private fun getCacheEntry(username: String? = null, uuid: UUID? = null): PlayerCacheEntry? {
             return if (username === null && uuid === null) null
-            else playerCache.find { entry: PlayerCacheEntry -> (username === entry.username || uuid === entry.uuid) }
+            else playerCache.find { entry: PlayerCacheEntry -> (username.equals(entry.username, ignoreCase = true) || uuid === entry.uuid) }
         }
     }
 }
