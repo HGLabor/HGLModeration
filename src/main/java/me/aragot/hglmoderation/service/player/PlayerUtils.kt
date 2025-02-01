@@ -1,5 +1,6 @@
 package me.aragot.hglmoderation.service.player
 
+import com.velocitypowered.api.util.UuidUtils
 import org.bson.Document
 import java.io.BufferedReader
 import java.io.IOException
@@ -79,7 +80,7 @@ class PlayerUtils {
                 connection.disconnect()
 
                 val doc = Document.parse(content.toString())
-                val uuid = UUID.fromString(addHyphensToUUID(doc.getString("id")))
+                val uuid = UuidUtils.fromUndashed(doc.getString("id"))
                 if (cacheEntry !== null) {
                     cacheEntry.uuid = uuid
                     cacheEntry.updateTimeStamp()
@@ -91,18 +92,6 @@ class PlayerUtils {
             } catch (e: IOException) {
                 null
             }
-        }
-
-        fun addHyphensToUUID(uuidWithoutHyphens: String): String {
-            require(uuidWithoutHyphens.length == 32) { "Invalid UUID length" }
-
-            val sb = StringBuilder(uuidWithoutHyphens)
-            sb.insert(20, "-")
-            sb.insert(16, "-")
-            sb.insert(12, "-")
-            sb.insert(8, "-")
-
-            return sb.toString()
         }
 
         fun removePlayerFromCache(uuid: UUID? = null, username: String? = null) {
