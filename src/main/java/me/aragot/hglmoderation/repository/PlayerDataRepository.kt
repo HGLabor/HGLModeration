@@ -18,7 +18,6 @@ class PlayerDataRepository : Repository() {
             }
         }
 
-
         var data = this.getPlayerData(uuid = player.uniqueId)
         if (data == null) {
             data = PlayerData(player)

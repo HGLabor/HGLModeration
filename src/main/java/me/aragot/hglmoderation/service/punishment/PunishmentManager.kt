@@ -77,9 +77,9 @@ class PunishmentManager(repo: PunishmentRepository = PunishmentRepository()) {
                 if (connected.remoteAddress.address.hostAddress.equals(punishment.issuedTo, ignoreCase = true)) {
                     val playerDataRepository = PlayerDataRepository()
                     val data = playerDataRepository.getPlayerData(connected)
-                    if (!data.punishments
-                            .contains(punishment.id)
-                    ) data.addPunishment(punishment.id)
+                    if (!data.punishments.contains(punishment.id)) {
+                        data.addPunishment(punishment.id)
+                    }
                     connected.disconnect(banComponent)
                 }
             }))

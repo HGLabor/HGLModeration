@@ -75,7 +75,7 @@ class PunishmentConverter {
         fun getFormattedPunishments(data: PlayerData): String {
             if (data.punishments.isEmpty()) return "No Punishments found"
             val repository = PunishmentRepository()
-            val punishments = repository.getPunishmentsFor(data.id, data.latestIp)
+            val punishments = repository.getPunishmentsFor(data.id, data.latestIp, data.punishments)
             val formatted =
                 StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>")
             for (punishment in punishments) {
