@@ -29,7 +29,7 @@ class PunishmentRepository : Repository() {
         return this.database.punishmentCollection.find(Filters.eq("_id", id)).first()
     }
 
-    fun getActivePunishmentsFor(uuid: UUID, hostAddress: String): ArrayList<Punishment> {
+    fun getActivePunishmentsFor(uuid: UUID, hostAddress: String, punishmentIds: List<String> = ArrayList()): ArrayList<Punishment> {
         return this.database.punishmentCollection.find(
             Filters.and(
                 Filters.or(
@@ -38,18 +38,20 @@ class PunishmentRepository : Repository() {
                 ),
                 Filters.or(
                     Filters.eq("issuedTo", uuid.toString()),
-                    Filters.eq("issuedTo", hostAddress)
+                    Filters.eq("issuedTo", hostAddress),
+                    Filters.`in`("_id", punishmentIds)
                 )
             )
         ).into(ArrayList())
     }
 
-    fun getPunishmentsFor(uuid: UUID, hostAddress: String): ArrayList<Punishment> {
+    fun getPunishmentsFor(uuid: UUID, hostAddress: String, punishmentIds: List<String> = ArrayList()): ArrayList<Punishment> {
         return this.database.punishmentCollection.find(
             Filters.or(
                 Filters.eq("issuedTo", uuid.toString()),
-                Filters.eq("issuedTo", hostAddress)
+                Filters.eq("issuedTo", hostAddress),
+                Filters.`in`("_id", punishmentIds)
             )
-        ).sort(Sorts.descending("issuedAt")).into(java.util.ArrayList<Punishment>())
+        ).sort(Sorts.descending("issuedAt")).into(ArrayList())
     }
 }
