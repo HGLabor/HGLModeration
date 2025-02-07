@@ -97,7 +97,7 @@ class PunishmentConverter {
                     .append(getTypesAsString(punishment)).append("</yellow> <gray>|</gray> <red>")
                     .append(punishment.reason).append("</red> <gray>|</gray> ")
                     .append(if (punishment.isActive) "<green>⊙</green>" else "<red>⊙</red>").append(" <gray>|</gray> ")
-                    .append("<hover:show_text:'<green>Unpunish</green>'><click:suggest_command:'/unpunish punishment ${punishment.id}'><white>[<green><b>Unpunish</b></green>]</white></click></hover>")
+                    .append("<hover:show_text:'<green>Unpunish #${punishment.id}</green>'><click:suggest_command:'/unpunish punishment ${punishment.id}'><white>[<green><b>Unpunish</b></green>]</white></click></hover>")
             }
 
             return formatted.toString()
