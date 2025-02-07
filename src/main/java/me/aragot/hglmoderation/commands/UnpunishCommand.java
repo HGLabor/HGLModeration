@@ -77,7 +77,7 @@ public class UnpunishCommand {
         }
 
         if (userId == null) {
-            Responder.respond(context.getSource(), "Sorry, but this user was not on the server before", ResponseType.ERROR);
+            Responder.respond(context.getSource(), "Sorry, but I couldn't find the player from the Mojang API", ResponseType.ERROR);
 
             return Command.SINGLE_SUCCESS;
         }
