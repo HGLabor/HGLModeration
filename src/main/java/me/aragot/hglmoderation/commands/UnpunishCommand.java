@@ -43,13 +43,13 @@ public class UnpunishCommand {
         return new BrigadierCommand(unpunishNode);
     }
 
-    public static int handleInvalidUsage(CommandContext<CommandSource> context) {
+    private static int handleInvalidUsage(CommandContext<CommandSource> context) {
         Responder.respond(context.getSource(), "Invalid usage. Please try using <white>/unpunish <player/punishment> <name/punishmentId></white>", ResponseType.ERROR);
 
         return Command.SINGLE_SUCCESS;
     }
 
-    public static int handleTypeAndId(CommandContext<CommandSource> context) {
+    private static int handleTypeAndId(CommandContext<CommandSource> context) {
         String type = context.getArgument("type", String.class).toLowerCase();
         switch (type) {
             case "player" -> {
@@ -64,7 +64,7 @@ public class UnpunishCommand {
         }
     }
 
-    public static int handleUnpunishOfPlayer(CommandContext<CommandSource> context) {
+    private static int handleUnpunishOfPlayer(CommandContext<CommandSource> context) {
         String id = context.getArgument("id", String.class);
 
         UUID userId = null;
@@ -104,7 +104,7 @@ public class UnpunishCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    public static int handleUnpunishOfPunishment(CommandContext<CommandSource> context) {
+    private static int handleUnpunishOfPunishment(CommandContext<CommandSource> context) {
         String id = context.getArgument("id", String.class);
         PunishmentRepository repository = new PunishmentRepository();
         Punishment punishment = repository.getPunishmentById(id.toUpperCase());
