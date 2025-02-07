@@ -27,14 +27,14 @@ public class UnpunishCommand {
                 .requires(source -> source.hasPermission("hglmoderation.unpunish"))
                 .executes(UnpunishCommand::handleInvalidUsage)
                 .then(BrigadierCommand.requiredArgumentBuilder("type", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            builder.suggest("player");
+                            builder.suggest("punishment");
+
+                            return builder.buildFuture();
+                        })
                         .executes(UnpunishCommand::handleInvalidUsage)
                         .then(BrigadierCommand.requiredArgumentBuilder("id", StringArgumentType.word())
-                                .suggests((context, builder) -> {
-                                    builder.suggest("player");
-                                    builder.suggest("punishment");
-
-                                    return builder.buildFuture();
-                                })
                                 .executes(UnpunishCommand::handleTypeAndId)
                         )
                 )
@@ -92,15 +92,19 @@ public class UnpunishCommand {
         }
 
         PunishmentRepository punishmentRepository = new PunishmentRepository();
-        List<Punishment> activePunishments = punishmentRepository.getActivePunishmentsFor(data.getId(), data.getLatestIp());
+        List<Punishment> activePunishments = punishmentRepository.getActivePunishmentsFor(data.getId(), data.getLatestIp(), data.getPunishments());
 
         if (activePunishments.isEmpty()) {
             Responder.respond(context.getSource(), "This user does not have any active Punishments", ResponseType.DEFAULT);
 
             return Command.SINGLE_SUCCESS;
+        } else if (activePunishments.size() == 1) {
+            pardonPunishment(context.getSource(), activePunishments.get(0));
+
+            return Command.SINGLE_SUCCESS;
         }
 
-        Responder.respond(context.getSource(), PunishmentConverter.Companion.getFormattedUnpunishComponents(activePunishments), ResponseType.DEFAULT);
+        Responder.respond(context.getSource(), id + "'s Punishments: <br>" + PunishmentConverter.Companion.getFormattedUnpunishComponents(activePunishments), ResponseType.DEFAULT);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -109,14 +113,20 @@ public class UnpunishCommand {
         PunishmentRepository repository = new PunishmentRepository();
         Punishment punishment = repository.getPunishmentById(id.toUpperCase());
 
+        pardonPunishment(context.getSource(), punishment);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static void pardonPunishment(CommandSource source, Punishment punishment) {
         if (punishment == null) {
-            Responder.respond(context.getSource(), "Sorry but I couldn't find a punishment with the mentioned ID.", ResponseType.ERROR);
-            return Command.SINGLE_SUCCESS;
+            Responder.respond(source, "Sorry but I couldn't find a punishment with the mentioned ID.", ResponseType.ERROR);
+            return;
         }
 
         if (!punishment.isActive()) {
-            Responder.respond(context.getSource(), "Sorry but this punishment is currently not active.", ResponseType.ERROR);
-            return Command.SINGLE_SUCCESS;
+            Responder.respond(source, "Sorry but this punishment is currently not active.", ResponseType.ERROR);
+            return;
         }
 
         punishment.setEndsAt(Instant.now().getEpochSecond());
@@ -124,8 +134,8 @@ public class UnpunishCommand {
         boolean updated = punishmentRepository.updateData(punishment);
 
         if (!updated) {
-            Responder.respond(context.getSource(), "Couldn't update the Punishment. Please try again later.", ResponseType.ERROR);
-            return Command.SINGLE_SUCCESS;
+            Responder.respond(source, "Couldn't update the Punishment. Please try again later.", ResponseType.ERROR);
+            return;
         }
         UUID playerUuid = null;
 
@@ -137,8 +147,8 @@ public class UnpunishCommand {
 
         if (playerUuid == null) {
             // This means that the punishment was an IP related punishment
-            Responder.respond(context.getSource(), "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);
-            return Command.SINGLE_SUCCESS;
+            Responder.respond(source, "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);
+            return;
         }
 
         Punishment mute = PlayerListener.Companion.getPlayerMutes().get(playerUuid);
@@ -146,8 +156,6 @@ public class UnpunishCommand {
             PlayerListener.Companion.getPlayerMutes().remove(playerUuid);
         }
 
-        Responder.respond(context.getSource(), "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);
-
-        return Command.SINGLE_SUCCESS;
+        Responder.respond(source, "Successfully ended Punishment(" + punishment.getId() + ") early.", ResponseType.SUCCESS);
     }
 }
