@@ -72,10 +72,6 @@ public class UnpunishCommand {
             userId = UUID.fromString(id);
         } catch (IllegalArgumentException ignored) {}
 
-
-
-
-
         if (userId == null) {
             userId = PlayerUtils.Companion.getUuidFromUsername(id);
         }
