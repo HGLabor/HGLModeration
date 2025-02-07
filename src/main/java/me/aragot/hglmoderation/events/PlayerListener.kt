@@ -62,7 +62,7 @@ class PlayerListener {
         val hostAddress = event.player.remoteAddress.address.hostAddress
         data.latestIp = hostAddress
 
-        val activePunishments = punishmentRepository.getActivePunishmentsFor(data.id, hostAddress)
+        val activePunishments = punishmentRepository.getActivePunishmentsFor(data.id, hostAddress, data.punishments)
         if (activePunishments.isNotEmpty()) {
             val manager = PunishmentManager()
             for (punishment in activePunishments) {

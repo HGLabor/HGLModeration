@@ -64,11 +64,13 @@ class PlayerUtils {
                 val url = URL(apiLink)
                 val connection = url.openConnection() as HttpsURLConnection
                 connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("User-Agent", "HGLabor/HGLModeration (https://github.com/HGLabor)")
                 connection.connectTimeout = 2000
                 connection.readTimeout = 2000
                 val status = connection.responseCode
-                HGLModeration.instance.logger.info("Fetched $apiLink and got response code: $status")
+
                 if (status > 299) {
+                    HGLModeration.instance.logger.error("Couldn't fetch the UUID of '$username', received response code: $status")
                     return null
                 }
 

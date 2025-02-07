@@ -25,7 +25,7 @@ import java.util.UUID;
 @Plugin(
         id = "hglmoderation",
         name = "HGLModeration",
-        version = "1.1-SNAPSHOT",
+        version = "1.1.1-SNAPSHOT",
         authors = {"Aragot"}
 )
 

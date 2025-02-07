@@ -22,14 +22,7 @@ public class LinkCommand {
     public static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> linkNode = BrigadierCommand.literalArgumentBuilder("link")
                 .requires(source -> source.hasPermission("hglmoderation.link"))
-                .executes(context -> {
-
-                    CommandSource source = context.getSource();
-                    if (source instanceof Player)
-                        Responder.respond(source, "Invalid usage. Please try using <white>/link <key/reset>", ResponseType.ERROR);
-
-                    return Command.SINGLE_SUCCESS;
-                })
+                .executes(LinkCommand::handleInvalidUsage)
                 .then(BrigadierCommand.requiredArgumentBuilder("action", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             builder.suggest("reset");
@@ -43,7 +36,15 @@ public class LinkCommand {
         return new BrigadierCommand(linkNode);
     }
 
-    public static int getCommandStatus(CommandContext<CommandSource> context) {
+    private static int handleInvalidUsage(CommandContext<CommandSource> context) {
+        CommandSource source = context.getSource();
+        if (source instanceof Player)
+            Responder.respond(source, "Invalid usage. Please try using <white>/link <key/reset>", ResponseType.ERROR);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int getCommandStatus(CommandContext<CommandSource> context) {
         String action = context.getArgument("action", String.class);
         Player player = context.getSource() instanceof Player ? (Player) context.getSource() : null;
         PlayerDataRepository repository = new PlayerDataRepository();
@@ -87,5 +88,4 @@ public class LinkCommand {
 
         return Command.SINGLE_SUCCESS;
     }
-
 }
