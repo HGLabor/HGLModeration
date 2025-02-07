@@ -87,6 +87,22 @@ class PunishmentConverter {
             return formatted.toString()
         }
 
+        fun getFormattedUnpunishComponents(activePunishments: List<Punishment>): String {
+            if (activePunishments.isEmpty()) return "No Punishments found"
+
+            val formatted =
+                StringBuilder("<gray><blue>ID</blue>   |   <blue>Type</blue>   |   <blue>Reason</blue>   |   <blue>Status</blue></gray>")
+            for (punishment in activePunishments) {
+                formatted.append("<br><gray>").append(punishment.id).append(" |</gray> <yellow>")
+                    .append(getTypesAsString(punishment)).append("</yellow> <gray>|</gray> <red>")
+                    .append(punishment.reason).append("</red> <gray>|</gray> ")
+                    .append(if (punishment.isActive) "<green>⊙</green>" else "<red>⊙</red>").append(" <gray>|</gray> ")
+                    .append("<hover:show_text:'<green>Unpunish</green>'><click:suggest_command:'/unpunish punishment ${punishment.id}'><white>[<green><b>Unpunish</b></green>]</white></click></hover>")
+            }
+
+            return formatted.toString()
+        }
+
         fun getDuration(punishment: Punishment): String {
             if (punishment.endsAt == -1L) return "Permanent"
             val differenceSeconds: Long = punishment.endsAt - punishment.issuedAt
